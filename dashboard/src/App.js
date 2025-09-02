@@ -111,13 +111,19 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:3002/auth/logout', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });
     } catch (error) {
       console.error('Error during logout:', error);
     }
+    
+    // Clear all authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('authenticated');
     
     setUser(null);
     setIsAuthenticated(false);
