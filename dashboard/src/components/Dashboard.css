@@ -1,0 +1,613 @@
+/* Dashboard Base Styles */
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #424242;
+  background-color: #f5f7fa;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 16px;
+  font-weight: 500;
+  color: #1f2937;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0 0 1em;
+  color: #424242;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+a {
+  color: #387ed1;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: #2c6ba8;
+  text-decoration: underline;
+}
+
+/* Layout */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
+/* Header */
+.app-bar {
+  box-shadow: none !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  background-color: #ffffff !important;
+}
+
+/* Navigation Tabs */
+.MuiTabs-root {
+  min-height: 64px;
+}
+
+.MuiTabs-indicator {
+  height: 3px !important;
+  background-color: #387ed1 !important;
+}
+
+.MuiTab-root {
+  min-width: auto !important;
+  padding: 0 16px !important;
+  margin: 0 4px;
+  font-size: 13px;
+  text-transform: none;
+  opacity: 1 !important;
+  min-height: 64px;
+  color: #424242 !important;
+  font-weight: 500;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.MuiTab-root:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.MuiTab-root.Mui-selected {
+  color: #387ed1 !important;
+  font-weight: 600;
+}
+
+/* Buttons */
+.MuiButton-root {
+  text-transform: none !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em;
+  border-radius: 4px !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  box-shadow: none !important;
+  transition: all 0.2s !important;
+}
+
+.MuiButton-contained {
+  background-color: #387ed1 !important;
+}
+
+.MuiButton-contained:hover {
+  background-color: #2c6ba8 !important;
+  box-shadow: 0 2px 8px rgba(44, 107, 168, 0.25) !important;
+}
+
+.MuiButton-outlined {
+  border: 1px solid #e0e0e0 !important;
+  color: #424242 !important;
+}
+
+.MuiButton-outlined:hover {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+  border-color: #bdbdbd !important;
+}
+
+.MuiButton-text {
+  color: #387ed1 !important;
+  padding: 6px 8px !important;
+}
+
+.MuiButton-text:hover {
+  background-color: rgba(56, 126, 209, 0.08) !important;
+}
+
+/* Input Fields */
+.MuiInputBase-root {
+  font-size: 13px !important;
+}
+
+.MuiOutlinedInput-root {
+  border-radius: 4px !important;
+  background-color: #ffffff;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: #e0e0e0 !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #bdbdbd !important;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #387ed1 !important;
+  box-shadow: 0 0 0 2px rgba(56, 126, 209, 0.2);
+}
+
+.MuiInputLabel-root {
+  font-size: 13px !important;
+  color: #757575 !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: #387ed1 !important;
+}
+
+/* Cards and Paper */
+.MuiPaper-root {
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e0e0e0 !important;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.MuiPaper-root:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Tables */
+.MuiTable-root {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.MuiTableHead-root {
+  background-color: #f9fafb;
+}
+
+.MuiTableCell-head {
+  font-weight: 600 !important;
+  color: #424242 !important;
+  background-color: #f9fafb !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  white-space: nowrap;
+  padding: 12px 16px !important;
+}
+
+.MuiTableCell-body {
+  color: #424242 !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  padding: 12px 16px !important;
+}
+
+.MuiTableRow-root:hover .MuiTableCell-body {
+  background-color: #f9fafb !important;
+}
+
+/* Tabs */
+.MuiTabs-flexContainer {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Icons */
+.MuiSvgIcon-root {
+  font-size: 1.25rem !important;
+}
+
+/* Badges */
+.MuiBadge-badge {
+  font-size: 10px !important;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+}
+
+/* Tooltips */
+.MuiTooltip-tooltip {
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+  background-color: #424242 !important;
+}
+
+.MuiTooltip-arrow {
+  color: #424242 !important;
+}
+
+/* Dialogs */
+.MuiDialog-paper {
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.MuiDialogTitle-root {
+  padding: 16px 24px !important;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f9fafb;
+}
+
+.MuiDialogContent-root {
+  padding: 20px 24px !important;
+}
+
+.MuiDialogActions-root {
+  padding: 12px 24px !important;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f9fafb;
+}
+
+/* Alerts */
+.MuiAlert-root {
+  border-radius: 4px !important;
+  font-size: 13px;
+}
+
+.MuiAlert-icon {
+  padding: 7px 0;
+}
+
+.MuiAlert-message {
+  padding: 8px 0;
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 4px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 900px) {
+  .MuiTabs-root {
+    display: none;
+  }
+  
+  .MuiToolbar-root {
+    padding: 0 8px !important;
+  }
+}
+
+/* Animation for page transitions */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.page-transition {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Utility Classes */
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-primary {
+  color: #387ed1 !important;
+}
+
+.text-success {
+  color: #4caf50 !important;
+}
+
+.text-error {
+  color: #f44336 !important;
+}
+
+.text-warning {
+  color: #ff9800 !important;
+}
+
+.text-muted {
+  color: #757575 !important;
+}
+
+.bg-light {
+  background-color: #f9fafb !important;
+}
+
+/* Custom Scrollbar for specific elements */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+
+.MuiTabs-indicator {
+  height: 3px !important;
+  background-color: #1e40af !important;
+}
+
+/* Cards */
+.MuiPaper-root {
+  border-radius: 8px !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+/* Buttons */
+.MuiButton-contained {
+  text-transform: none !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+}
+
+.MuiButton-containedPrimary {
+  background-color: #1e40af !important;
+}
+
+.MuiButton-outlined {
+  text-transform: none !important;
+  padding: 7px 15px !important;
+  border-radius: 6px !important;
+}
+
+/* Tables */
+.MuiTable-root {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.MuiTableHead-root {
+  background-color: #f9fafb;
+}
+
+.MuiTableCell-head {
+  font-weight: 600 !important;
+  color: #4b5563 !important;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb !important;
+  white-space: nowrap;
+}
+
+.MuiTableCell-body {
+  border-bottom: 1px solid #f3f4f6 !important;
+  padding: 12px 16px !important;
+}
+
+/* Form Elements */
+.MuiOutlinedInput-root {
+  border-radius: 6px !important;
+}
+
+.MuiOutlinedInput-input {
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+}
+
+.MuiInputLabel-outlined {
+  transform: translate(14px, 14px) scale(1) !important;
+}
+
+.MuiInputLabel-outlined.MuiInputLabel-shrink {
+  transform: translate(14px, -6px) scale(0.75) !important;
+  background: white;
+  padding: 0 4px;
+}
+
+/* Badges */
+.MuiBadge-badge {
+  font-size: 10px !important;
+  height: 18px;
+  min-width: 18px;
+  padding: 0 5px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+  .dashboard-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .MuiTabs-root {
+    display: none !important;
+  }
+  
+  .search-container {
+    width: 100% !important;
+    margin: 10px 0;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Utility Classes */
+.text-primary {
+  color: #1e40af;
+}
+
+.text-success {
+  color: #059669;
+}
+
+.text-danger {
+  color: #dc2626;
+}
+
+.text-muted {
+  color: #6b7280;
+}
+
+.bg-light {
+  background-color: #f9fafb;
+}
+
+.rounded {
+  border-radius: 6px;
+}
+
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Components */
+.stock-up {
+  color: #059669;
+}
+
+.stock-down {
+  color: #dc2626;
+}
+
+/* Loading State */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+/* Error State */
+.error-message {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Trade Modal */
+.trade-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1300;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.trade-modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Responsive Helpers */
+.hide-on-mobile {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none;
+  }
+}

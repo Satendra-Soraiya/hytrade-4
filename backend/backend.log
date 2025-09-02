@@ -1,0 +1,22 @@
+
+> backend@1.0.0 start
+> nodemon index.js
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node index.js`[39m
+[dotenv@17.2.1] injecting env (2) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+Connecting to MongoDB Atlas...
+Connecting to MongoDB Atlas...
+(node:21217) [MONGODB DRIVER] Warning: useNewUrlParser is a deprecated option: useNewUrlParser has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21217) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+✅ MongoDB Atlas connected successfully
+✅ MongoDB Atlas connected successfully
+Test user ensured: Updated existing user
+App started on port 3002!
+Test user ensured: Updated existing user
+New user registered: monty1@gmail.com at 2025-09-02T11:29:09.209Z
+User logged in: monty1@gmail.com at 2025-09-02T11:29:25.579Z
