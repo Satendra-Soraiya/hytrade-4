@@ -56,9 +56,11 @@ function Login() {
     }
 
     try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      
       setBackendResponse('🔄 Sending login request to backend...');
       
-      const response = await fetch('http://localhost:3002/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,12 +77,39 @@ function Login() {
       // Show detailed backend response
       setBackendResponse(`📡 Backend Response (${response.status}): ${JSON.stringify(data, null, 2)}`);
 
-      if (response.ok && data.message === 'Login successful') {
+      if (response.ok && (data.message === 'Login successful' || data.token)) {
         setSuccess('✅ Login successful! Verifying session...');
         setBackendResponse(prev => prev + '\n\n✅ SUCCESS: Login successful, creating session');
         
-        // Verify session after login
-        const sessionResponse = await fetch('http://localhost:3002/auth/verify-session', {
+        // If JWT token is provided, use it
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('authenticated', 'true');
+          if (data.user) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+          
+          setSuccess('✅ Login successful! Redirecting to dashboard...');
+          setBackendResponse(prev => prev + '\n\n✅ SUCCESS: JWT token received, user authenticated');
+          
+          // Get the returnTo URL from query parameters or default to dashboard
+          const urlParams = new URLSearchParams(window.location.search);
+          let returnTo = urlParams.get('returnTo');
+          
+          // If no returnTo URL is specified, default to the dashboard
+          if (!returnTo) {
+            returnTo = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3001';
+          }
+          
+          // Navigate to the specified destination after successful login
+          setTimeout(() => {
+            window.location.href = returnTo;
+          }, 1500);
+          return;
+        }
+        
+        // Fallback to session verification
+        const sessionResponse = await fetch(`${API_URL}/auth/verify-session`, {
           method: 'GET',
           credentials: 'include'
         });
@@ -103,7 +132,7 @@ function Login() {
           
           // If no returnTo URL is specified, default to the dashboard
           if (!returnTo) {
-            returnTo = 'http://localhost:3001';
+            returnTo = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3001';
           }
           
           // Navigate to the specified destination after successful login
@@ -133,7 +162,7 @@ function Login() {
       }
     } catch (error) {
       setError('❌ Network Error: Could not connect to backend server');
-      setBackendResponse(`🚫 NETWORK ERROR: ${error.message}\n\nPlease check:\n- Backend server is running on localhost:3002\n- Internet connection is stable`);
+      setBackendResponse(`🚫 NETWORK ERROR: ${error.message}\n\nPlease check:\n- Backend server is running on ${process.env.REACT_APP_API_URL || 'http://localhost:3002'}\n- Internet connection is stable`);
       console.error('Login error:', error);
     } finally {
       setLoading(false);

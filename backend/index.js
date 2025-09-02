@@ -431,9 +431,31 @@ app.post("/auth/login", loginLimiter, async (req, res) => {
         // Log successful login (without sensitive data)
         console.log(`User logged in: ${normalizedEmail} at ${new Date().toISOString()}`);
 
-        // Return success message (no sensitive data)
+        // Generate JWT token for cross-domain compatibility
+        const token = jwt.sign(
+          { 
+            userId: user._id,
+            email: user.email,
+            role: user.role || 'user'
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+
+        // Return success message with JWT token
         res.status(200).json({ 
-          message: "Login successful"
+          message: "Login successful",
+          token: token,
+          user: {
+            id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role || 'user',
+            accountBalance: user.accountBalance,
+            lastLoginAt: user.lastLoginAt,
+            createdAt: user.createdAt
+          }
         });
       });
     });
