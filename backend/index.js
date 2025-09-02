@@ -136,11 +136,11 @@ app.use(session({
     ttl: 24 * 60 * 60 // 24 hours in seconds
   }),
   cookie: {
-    secure: false, // Set to false for localhost development (true in production)
+    secure: process.env.NODE_ENV === 'production', // true in production for HTTPS
     httpOnly: true, // Prevent XSS
     maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-    sameSite: 'lax', // Changed from 'none' to 'lax' for better security and compatibility
-    domain: 'localhost', // Explicit domain for cross-port cookie sharing
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-domain in production
+    domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost', // Remove domain restriction in production
     path: '/' // Ensure cookie is sent for all paths
   }
 }));
