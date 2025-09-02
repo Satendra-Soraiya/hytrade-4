@@ -101,9 +101,15 @@ function Login() {
             returnTo = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3001';
           }
           
-          // Navigate to the specified destination after successful login
+          // Pass authentication data via URL parameters to dashboard
+          const dashboardUrl = new URL(returnTo);
+          dashboardUrl.searchParams.set('token', data.token);
+          dashboardUrl.searchParams.set('user', JSON.stringify(data.user));
+          dashboardUrl.searchParams.set('authenticated', 'true');
+          
+          // Navigate to the dashboard with authentication parameters
           setTimeout(() => {
-            window.location.href = returnTo;
+            window.location.href = dashboardUrl.toString();
           }, 1500);
           return;
         }

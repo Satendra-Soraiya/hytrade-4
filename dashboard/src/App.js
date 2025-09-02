@@ -72,6 +72,25 @@ function App() {
 
   // Check authentication status on app load
   useEffect(() => {
+    // First, check for authentication data in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    const urlUser = urlParams.get('user');
+    const urlAuth = urlParams.get('authenticated');
+    
+    if (urlToken && urlUser && urlAuth === 'true') {
+      // Store authentication data from URL parameters
+      localStorage.setItem('token', urlToken);
+      localStorage.setItem('user', urlUser);
+      localStorage.setItem('authenticated', 'true');
+      
+      // Clean up URL parameters
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      
+      console.log('Authentication data received from URL parameters');
+    }
+    
     checkAuthStatus();
   }, []);
 
