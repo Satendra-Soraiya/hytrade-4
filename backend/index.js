@@ -88,7 +88,12 @@ async function createTestUser() {
 
 // Configure CORS with specific options
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: [
+    'http://localhost:3000', 
+    'http://localhost:3001',
+    'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app',
+    /\.vercel\.app$/
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
