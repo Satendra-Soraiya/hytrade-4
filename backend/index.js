@@ -92,6 +92,7 @@ const corsOptions = {
     'http://localhost:3000', 
     'http://localhost:3001',
     'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app',
+    'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app',
     /\.vercel\.app$/
   ],
   credentials: true,
