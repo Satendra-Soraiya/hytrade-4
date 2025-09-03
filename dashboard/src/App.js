@@ -94,43 +94,67 @@ function App() {
     checkAuthStatus();
   }, []);
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+
   const checkAuthStatus = async () => {
-    try {
-      setIsLoading(true);
-      console.log('Checking authentication status...');
-      
-      const response = await fetch('http://localhost:3002/auth/verify-session', {
-        method: 'GET',
-        credentials: 'include', // Include session cookies
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const data = await response.json();
-      console.log('Auth check response:', data);
-
-      if (data.authenticated && data.user) {
-        setUser(data.user);
-        setIsAuthenticated(true);
-        console.log('User authenticated:', data.user.firstName || data.user.name);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-        console.log('User not authenticated');
+    console.log('Checking authentication status...');
+    
+    // First check localStorage for existing authentication
+    const token = localStorage.getItem('token');
+    const storedAuth = localStorage.getItem('authenticated');
+    const storedUser = localStorage.getItem('user');
+    
+    if (token && storedAuth === 'true' && storedUser) {
+      console.log('Found valid authentication in localStorage');
+      setIsAuthenticated(true);
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error('Error parsing stored user data:', e);
       }
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      setUser(null);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
+      return;
     }
+    
+    // If no local auth, try to verify with backend using token
+    if (token) {
+      try {
+        const response = await fetch(`${API_URL}/auth/verify-token`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        console.log('Auth check response:', data);
+        
+        if (response.ok && data.authenticated) {
+          setIsAuthenticated(true);
+          if (data.user) {
+            setUser(data.user);
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+          localStorage.setItem('authenticated', 'true');
+          return;
+        }
+      } catch (error) {
+        console.error('Token verification failed:', error);
+      }
+    }
+    
+    // No valid authentication found
+    console.log('User not authenticated');
+    setIsAuthenticated(false);
+    setUser(null);
+    // Clear invalid data
+    localStorage.removeItem('token');
+    localStorage.removeItem('authenticated');
+    localStorage.removeItem('user');
   };
 
   const handleLogout = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
       await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'

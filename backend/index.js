@@ -24,6 +24,9 @@ const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/fathersadv
 
 const app = express();
 
+// Trust proxy for Render deployment
+app.set('trust proxy', 1);
+
 // Database connection
 async function connectDB() {
   try {
@@ -146,51 +149,41 @@ app.use(session({
   }
 }));
 
-// JWT Verification Middleware
-const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Access denied. No token provided.' });
-  }
-
-  const token = authHeader.split(' ')[1];
-
+// JWT Token Verification Endpoint
+app.get("/auth/verify-token", async (req, res) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.userId = decoded.userId;
-    req.userEmail = decoded.email;
-    next();
-  } catch (error) {
-    console.error('Token verification failed:', error);
-    return res.status(401).json({ message: 'Invalid or expired token' });
-  }
-};
-
-// Auth verification endpoint
-app.get("/auth/verify-token", verifyToken, async (req, res) => {
-  try {
-    // If we got here, the token is valid (thanks to verifyToken middleware)
-    // Now get the full user data
-    const user = await CustomUserModel.findById(req.userId).select('-password');
+    const authHeader = req.headers.authorization;
     
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ authenticated: false, error: "No token provided" });
     }
     
-    res.json({ 
-      success: true, 
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    // Verify JWT token
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Find user in database
+    const user = await CustomUserModel.findById(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ authenticated: false, error: "User not found" });
+    }
+    
+    // Return user data
+    res.json({
+      authenticated: true,
       user: {
         id: user._id,
-        email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        email: user.email,
+        role: user.role || 'user',
         accountBalance: user.accountBalance
       }
     });
   } catch (error) {
-    console.error('Error in verify-token:', error);
-    res.status(500).json({ message: 'Server error during token verification' });
+    console.error('Token verification error:', error);
+    res.status(401).json({ authenticated: false, error: "Invalid token" });
   }
 });
 
