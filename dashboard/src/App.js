@@ -70,125 +70,119 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check authentication status on app load
   useEffect(() => {
-    const processAuthenticationAndCheck = async () => {
-      // FIRST: Process URL parameters if they exist
+    const authenticateUser = async () => {
+      console.log('Dashboard: Starting authentication check...');
+      setIsLoading(true);
+      
+      // Check URL for token first
       const urlParams = new URLSearchParams(window.location.search);
-      const urlToken = urlParams.get('token');
-      const urlUser = urlParams.get('user');
-      const urlAuth = urlParams.get('authenticated');
+      const token = urlParams.get('token');
       
-      if (urlToken && urlUser && urlAuth === 'true') {
-        // Store authentication data from URL parameters
-        localStorage.setItem('token', urlToken);
-        localStorage.setItem('user', urlUser);
-        localStorage.setItem('authenticated', 'true');
-        
-        // Clean up URL parameters
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-        
-        console.log('Authentication data received from URL parameters');
-        
-        // Set authentication state immediately
-        setIsAuthenticated(true);
+      if (token) {
+        console.log('Dashboard: Token found in URL, validating...');
         try {
-          setUser(JSON.parse(urlUser));
-        } catch (e) {
-          console.error('Error parsing user data from URL:', e);
+          const API_URL = process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com';
+          const response = await fetch(`${API_URL}/auth/user/${token}`);
+          const data = await response.json();
+          
+          console.log('Dashboard: Token validation response:', data);
+          
+          if (data.success && data.authenticated) {
+            // Store token and user data
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('authenticated', 'true');
+            
+            // Set authentication state
+            setIsAuthenticated(true);
+            setUser(data.user);
+            setIsLoading(false);
+            
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            console.log('Dashboard: Authentication successful via URL token');
+            return;
+          } else {
+            console.log('Dashboard: Token validation failed');
+          }
+        } catch (error) {
+          console.error('Dashboard: Token validation error:', error);
         }
-        return; // Exit early, we're authenticated
       }
       
-      // SECOND: If no URL params, check existing localStorage
-      await checkAuthStatus();
-    };
-    
-    processAuthenticationAndCheck();
-  }, []);
-
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
-
-  const checkAuthStatus = async () => {
-    console.log('Checking authentication status...');
-    
-    // First check localStorage for existing authentication
-    const token = localStorage.getItem('token');
-    const storedAuth = localStorage.getItem('authenticated');
-    const storedUser = localStorage.getItem('user');
-    
-    if (token && storedAuth === 'true' && storedUser) {
-      console.log('Found valid authentication in localStorage');
-      setIsAuthenticated(true);
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Error parsing stored user data:', e);
-      }
-      return;
-    }
-    
-    // If no local auth, try to verify with backend using token
-    if (token) {
-      try {
-        console.log('DEBUG: Attempting to verify token with backend');
-        console.log('DEBUG: Token being sent:', token.substring(0, 50) + '...');
-        console.log('DEBUG: API URL:', API_URL);
-        
-        const response = await fetch(`${API_URL}/auth/verify-token`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('DEBUG: Response status:', response.status);
-        const data = await response.json();
-        console.log('Auth check response:', data);
-        
-        if (response.ok && data.authenticated) {
-          setIsAuthenticated(true);
-          if (data.user) {
+      // Check localStorage for existing token
+      const storedToken = localStorage.getItem('authToken');
+      if (storedToken) {
+        console.log('Dashboard: Checking stored token...');
+        try {
+          const API_URL = process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com';
+          const response = await fetch(`${API_URL}/auth/user/${storedToken}`);
+          const data = await response.json();
+          
+          console.log('Dashboard: Stored token validation response:', data);
+          
+          if (data.success && data.authenticated) {
+            setIsAuthenticated(true);
             setUser(data.user);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            setIsLoading(false);
+            console.log('Dashboard: Authentication successful via stored token');
+            return;
+          } else {
+            // Clear invalid token
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('authenticated');
+            console.log('Dashboard: Stored token invalid, cleared localStorage');
           }
-          localStorage.setItem('authenticated', 'true');
-          return;
+        } catch (error) {
+          console.error('Dashboard: Stored token validation error:', error);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          localStorage.removeItem('authenticated');
         }
-      } catch (error) {
-        console.error('Token verification failed:', error);
       }
-    }
-    
-    // No valid authentication found
-    console.log('User not authenticated');
-    setIsAuthenticated(false);
-    setUser(null);
-    // Clear invalid data
-    localStorage.removeItem('token');
-    localStorage.removeItem('authenticated');
-    localStorage.removeItem('user');
-  };
+      
+      // No valid authentication found
+      console.log('Dashboard: No valid authentication found');
+      setIsAuthenticated(false);
+      setUser(null);
+      setIsLoading(false);
+    };
+
+    authenticateUser();
+  }, []);
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      const API_URL = process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com';
+      const token = localStorage.getItem('authToken');
+      
+      if (token) {
+        await fetch(`${API_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
+      }
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('Logout error:', error);
     }
     
     // Clear all authentication data
-    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     localStorage.removeItem('authenticated');
     
-    setUser(null);
+    // Reset state
     setIsAuthenticated(false);
+    setUser(null);
+    
+    // Redirect to login
+    window.location.href = 'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app/login';
   };
 
   return (
@@ -200,7 +194,7 @@ function App() {
             isAuthenticated={isAuthenticated} 
             isLoading={isLoading}
             onLogout={handleLogout}
-            onAuthSuccess={checkAuthStatus}
+            onAuthSuccess={() => {}}
           />
         </div>
       </Router>
