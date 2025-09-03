@@ -33,7 +33,7 @@ function Login() {
     try {
       console.log('Attempting login with new auth system...');
       
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_URL = process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com';
       
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
