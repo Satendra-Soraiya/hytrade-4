@@ -88,35 +88,22 @@ function Login() {
         
         // If JWT token is provided, use it
         if (data.token) {
-          console.log('DEBUG: Taking JWT token path');
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('authenticated', 'true');
-          if (data.user) {
-            localStorage.setItem('user', JSON.stringify(data.user));
-          }
-          
           setSuccess('✅ Login successful! Redirecting to dashboard...');
           setBackendResponse(prev => prev + '\n\n✅ SUCCESS: JWT token received, user authenticated');
           
-          // Get the returnTo URL from query parameters or default to dashboard
-          const urlParams = new URLSearchParams(window.location.search);
-          let returnTo = urlParams.get('returnTo');
+          // Get dashboard URL
+          const dashboardUrl = process.env.REACT_APP_DASHBOARD_URL || 'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app';
           
-          // If no returnTo URL is specified, default to the dashboard
-          if (!returnTo) {
-            returnTo = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3001';
-          }
+          // Create URL with authentication parameters
+          const redirectUrl = new URL(dashboardUrl);
+          redirectUrl.searchParams.set('token', data.token);
+          redirectUrl.searchParams.set('user', JSON.stringify(data.user));
+          redirectUrl.searchParams.set('authenticated', 'true');
           
-          // Pass authentication data via URL parameters to dashboard
-          const dashboardUrl = new URL(returnTo);
-          dashboardUrl.searchParams.set('token', data.token);
-          dashboardUrl.searchParams.set('user', JSON.stringify(data.user));
-          dashboardUrl.searchParams.set('authenticated', 'true');
-          
-          // Navigate to the dashboard with authentication parameters
+          // Navigate to dashboard immediately
           setTimeout(() => {
-            window.location.href = dashboardUrl.toString();
-          }, 1500);
+            window.location.href = redirectUrl.toString();
+          }, 1000);
           return;
         }
         

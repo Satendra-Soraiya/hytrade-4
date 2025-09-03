@@ -72,26 +72,40 @@ function App() {
 
   // Check authentication status on app load
   useEffect(() => {
-    // First, check for authentication data in URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlToken = urlParams.get('token');
-    const urlUser = urlParams.get('user');
-    const urlAuth = urlParams.get('authenticated');
-    
-    if (urlToken && urlUser && urlAuth === 'true') {
-      // Store authentication data from URL parameters
-      localStorage.setItem('token', urlToken);
-      localStorage.setItem('user', urlUser);
-      localStorage.setItem('authenticated', 'true');
+    const processAuthenticationAndCheck = async () => {
+      // FIRST: Process URL parameters if they exist
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get('token');
+      const urlUser = urlParams.get('user');
+      const urlAuth = urlParams.get('authenticated');
       
-      // Clean up URL parameters
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+      if (urlToken && urlUser && urlAuth === 'true') {
+        // Store authentication data from URL parameters
+        localStorage.setItem('token', urlToken);
+        localStorage.setItem('user', urlUser);
+        localStorage.setItem('authenticated', 'true');
+        
+        // Clean up URL parameters
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        
+        console.log('Authentication data received from URL parameters');
+        
+        // Set authentication state immediately
+        setIsAuthenticated(true);
+        try {
+          setUser(JSON.parse(urlUser));
+        } catch (e) {
+          console.error('Error parsing user data from URL:', e);
+        }
+        return; // Exit early, we're authenticated
+      }
       
-      console.log('Authentication data received from URL parameters');
-    }
+      // SECOND: If no URL params, check existing localStorage
+      await checkAuthStatus();
+    };
     
-    checkAuthStatus();
+    processAuthenticationAndCheck();
   }, []);
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
