@@ -158,3 +158,15 @@ Test user ensured: Updated existing user
 App started on port 3002!
 Test user ensured: Updated existing user
 New user registered: popy1@gmail.com at 2025-09-03T08:14:24.585Z
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node index.js`[39m
+[dotenv@17.2.1] injecting env (2) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+Connecting to MongoDB Atlas...
+Connecting to MongoDB Atlas...
+(node:35433) [MONGODB DRIVER] Warning: useNewUrlParser is a deprecated option: useNewUrlParser has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35433) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+✅ MongoDB Atlas connected successfully
+❌ MongoDB connection failed: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/
+Please check your internet connection and MongoDB Atlas settings
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
