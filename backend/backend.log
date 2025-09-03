@@ -144,3 +144,16 @@ Connecting to MongoDB Atlas...
 Test user ensured: Updated existing user
 App started on port 3002!
 Test user ensured: Updated existing user
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node index.js`[39m
+[dotenv@17.2.1] injecting env (2) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+Connecting to MongoDB Atlas...
+Connecting to MongoDB Atlas...
+(node:34577) [MONGODB DRIVER] Warning: useNewUrlParser is a deprecated option: useNewUrlParser has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:34577) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+✅ MongoDB Atlas connected successfully
+✅ MongoDB Atlas connected successfully
+Test user ensured: Updated existing user
+App started on port 3002!
+Test user ensured: Updated existing user

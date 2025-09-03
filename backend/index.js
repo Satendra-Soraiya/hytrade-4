@@ -152,23 +152,34 @@ app.use(session({
 // JWT Token Verification Endpoint
 app.get("/auth/verify-token", async (req, res) => {
   try {
+    console.log('DEBUG: JWT verification request received');
+    console.log('DEBUG: Headers:', req.headers);
+    
     const authHeader = req.headers.authorization;
+    console.log('DEBUG: Auth header:', authHeader);
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('DEBUG: No valid auth header found');
       return res.status(401).json({ authenticated: false, error: "No token provided" });
     }
     
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    console.log('DEBUG: Extracted token:', token.substring(0, 50) + '...');
     
     // Verify JWT token
+    console.log('DEBUG: Verifying token with JWT_SECRET');
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log('DEBUG: Token decoded successfully:', decoded);
     
     // Find user in database
+    console.log('DEBUG: Looking up user with ID:', decoded.userId);
     const user = await CustomUserModel.findById(decoded.userId);
     if (!user) {
+      console.log('DEBUG: User not found in database');
       return res.status(401).json({ authenticated: false, error: "User not found" });
     }
     
+    console.log('DEBUG: User found, returning success response');
     // Return user data
     res.json({
       authenticated: true,
@@ -182,7 +193,8 @@ app.get("/auth/verify-token", async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Token verification error:', error);
+    console.error('DEBUG: Token verification error:', error.message);
+    console.error('DEBUG: Error stack:', error.stack);
     res.status(401).json({ authenticated: false, error: "Invalid token" });
   }
 });

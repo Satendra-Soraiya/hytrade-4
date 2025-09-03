@@ -118,6 +118,10 @@ function App() {
     // If no local auth, try to verify with backend using token
     if (token) {
       try {
+        console.log('DEBUG: Attempting to verify token with backend');
+        console.log('DEBUG: Token being sent:', token.substring(0, 50) + '...');
+        console.log('DEBUG: API URL:', API_URL);
+        
         const response = await fetch(`${API_URL}/auth/verify-token`, {
           method: 'GET',
           headers: {
@@ -126,6 +130,7 @@ function App() {
           }
         });
         
+        console.log('DEBUG: Response status:', response.status);
         const data = await response.json();
         console.log('Auth check response:', data);
         
