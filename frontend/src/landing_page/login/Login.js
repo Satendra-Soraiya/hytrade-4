@@ -81,8 +81,14 @@ function Login() {
         setSuccess('✅ Login successful! Verifying session...');
         setBackendResponse(prev => prev + '\n\n✅ SUCCESS: Login successful, creating session');
         
+        // Debug: Log token presence
+        console.log('DEBUG: Token present?', !!data.token);
+        console.log('DEBUG: Token value:', data.token);
+        console.log('DEBUG: User data:', data.user);
+        
         // If JWT token is provided, use it
         if (data.token) {
+          console.log('DEBUG: Taking JWT token path');
           localStorage.setItem('token', data.token);
           localStorage.setItem('authenticated', 'true');
           if (data.user) {
@@ -113,6 +119,8 @@ function Login() {
           }, 1500);
           return;
         }
+        
+        console.log('DEBUG: No token found, falling back to session verification');
         
         // Fallback to session verification
         const sessionResponse = await fetch(`${API_URL}/auth/verify-session`, {

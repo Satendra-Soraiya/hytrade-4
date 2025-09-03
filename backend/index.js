@@ -429,9 +429,6 @@ app.post("/auth/login", loginLimiter, async (req, res) => {
           return res.status(500).json({ error: "Internal server error" });
         }
 
-        // Log successful login (without sensitive data)
-        console.log(`User logged in: ${normalizedEmail} at ${new Date().toISOString()}`);
-
         // Generate JWT token for cross-domain compatibility
         const token = jwt.sign(
           { 
@@ -443,8 +440,8 @@ app.post("/auth/login", loginLimiter, async (req, res) => {
           { expiresIn: '24h' }
         );
 
-        // Return success message with JWT token
-        res.status(200).json({ 
+        // Prepare response data
+        const responseData = { 
           message: "Login successful",
           token: token,
           user: {
@@ -457,7 +454,14 @@ app.post("/auth/login", loginLimiter, async (req, res) => {
             lastLoginAt: user.lastLoginAt,
             createdAt: user.createdAt
           }
-        });
+        };
+
+        // Debug: Log what we're sending
+        console.log('DEBUG: Sending response with token:', !!token);
+        console.log('DEBUG: Response data:', JSON.stringify(responseData, null, 2));
+
+        // Return success message with JWT token
+        res.status(200).json(responseData);
       });
     });
 
