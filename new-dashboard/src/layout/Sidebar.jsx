@@ -1,0 +1,218 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
+import {
+  Box,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  Avatar,
+  Tooltip,
+} from '@mui/material';
+import {
+  Dashboard as DashboardIcon,
+  AccountBalanceWallet as WalletIcon,
+  ShowChart as ChartIcon,
+  SwapHoriz as TradeIcon,
+  StarBorder as WatchlistIcon,
+  Receipt as HistoryIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+} from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
+
+const drawerWidth = 260;
+
+const Sidebar = ({ open, onClose, isMobile }) => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+  const [activeItem, setActiveItem] = useState('dashboard');
+
+  useEffect(() => {
+    // Update active item based on current route
+    const path = location.pathname.split('/')[1] || 'dashboard';
+    setActiveItem(path);
+  }, [location]);
+
+  const menuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: 'dashboard' },
+    { text: 'Portfolio', icon: <WalletIcon />, path: 'portfolio' },
+    { text: 'Markets', icon: <ChartIcon />, path: 'markets' },
+    { text: 'Trade', icon: <TradeIcon />, path: 'trade' },
+    { text: 'Watchlist', icon: <WatchlistIcon />, path: 'watchlist' },
+    { text: 'History', icon: <HistoryIcon />, path: 'history' },
+    { text: 'Settings', icon: <SettingsIcon />, path: 'settings' },
+  ];
+
+  const handleNavigation = (path) => {
+    navigate(`/${path}`);
+    if (isMobile) {
+      onClose();
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const drawer = (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        bgcolor: 'background.paper',
+      }}
+    >
+      {/* Logo and Close Button */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          p: 2,
+          height: 64,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <img 
+            src="/media/Images/logo.png" 
+            alt="Hytrade" 
+            style={{ height: 32, marginRight: 8 }} 
+          />
+          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
+            Hytrade
+          </Typography>
+        </Box>
+        {isMobile && (
+          <IconButton onClick={onClose}>
+            {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </IconButton>
+        )}
+      </Box>
+
+      {/* User Profile */}
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Avatar 
+          sx={{ 
+            width: 40, 
+            height: 40,
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            mr: 2
+          }}
+        >
+          {user?.name?.[0]?.toUpperCase() || 'U'}
+        </Avatar>
+        <Box>
+          <Typography variant="subtitle2" noWrap>
+            {user?.name || 'User Name'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {user?.email || 'user@example.com'}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Navigation Items */}
+      <List sx={{ flex: 1, overflowY: 'auto' }}>
+        {menuItems.map((item) => (
+          <ListItem key={item.path} disablePadding>
+            <ListItemButton
+              selected={activeItem === item.path}
+              onClick={() => handleNavigation(item.path)}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'action.selected',
+                  '&:hover': {
+                    backgroundColor: 'action.selected',
+                  },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+
+      {/* Logout Button */}
+      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+        <ListItemButton onClick={handleLogout}>
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <LogoutIcon />
+          </ListItemIcon>
+          <ListItemText primary="Logout" />
+        </ListItemButton>
+      </Box>
+    </Box>
+  );
+
+  return (
+    <Box
+      component="nav"
+      sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+      aria-label="mailbox folders"
+    >
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={open && isMobile}
+        onClose={onClose}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            borderRight: 'none',
+          },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Desktop Drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            borderRight: 'none',
+          },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </Box>
+  );
+};
+
+export default Sidebar;

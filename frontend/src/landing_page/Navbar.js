@@ -6,38 +6,11 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle dashboard button click - Session-based authentication
-  const handleDashboardClick = async (e) => {
+  // Handle dashboard button click - Direct access
+  const handleDashboardClick = (e) => {
     e.preventDefault();
-    
-    try {
-      // Check if user is authenticated with session-based auth
-      const response = await fetch('http://localhost:3002/auth/verify-session', {
-        method: 'GET',
-        credentials: 'include', // Include session cookies
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (data.authenticated && data.user) {
-        // User is logged in, redirect to dashboard
-        console.log('User authenticated, redirecting to dashboard');
-        window.location.href = 'http://localhost:3001';
-      } else {
-        // User is not logged in, redirect to login with return URL
-        console.log('User not authenticated, redirecting to login');
-        const returnTo = encodeURIComponent('http://localhost:3001');
-        window.location.href = `/login?returnTo=${returnTo}`;
-      }
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      // On error, assume not logged in and redirect to login
-      const returnTo = encodeURIComponent('http://localhost:3001');
-      window.location.href = `/login?returnTo=${returnTo}`;
-    }
+    // Directly navigate to dashboard without authentication
+    window.location.href = 'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app';
   };
 
   // Function to check and update auth state - Session-based authentication
@@ -192,7 +165,7 @@ function Navbar() {
               <button 
                 onClick={handleDashboardClick}
                 className="btn btn-primary me-2"
-                title={user ? "Go to your trading dashboard" : "Login to access dashboard"}
+                title="Go to trading dashboard"
               >
                 Dashboard
               </button>
