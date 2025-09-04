@@ -33,7 +33,8 @@ function Login() {
     try {
       console.log('Attempting login with credentials:', { email: formData.email });
       
-      const API_URL = process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com';
+      // Use direct backend URL with /api prefix
+      const API_URL = 'https://hytrade-backend.onrender.com/api';
       
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
@@ -50,17 +51,14 @@ function Login() {
       console.log('Login response:', data);
 
       if (data.success && data.authToken) {
-        console.log('Login successful, redirecting to dashboard with token:', data.authToken);
-        
-        // Redirect to the new dashboard with the token
-        const dashboardUrl = `https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app?token=${data.authToken}`;
-        window.location.href = dashboardUrl;
+        // Redirect to dashboard with token in URL
+        window.location.href = `https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app?token=${data.authToken}`;
       } else {
         setError(data.message || 'Login failed. Please check your credentials.');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('Network error. Please try again.');
+      setError('Unable to connect to server. Please try again later.');
     } finally {
       setLoading(false);
     }
