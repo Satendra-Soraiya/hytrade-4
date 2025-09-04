@@ -50,7 +50,7 @@ function Login() {
         console.log('Login successful, redirecting to dashboard with token:', data.authToken);
         
         // Redirect to dashboard with auth token
-        const dashboardUrl = `https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app?token=${data.authToken}`;
+        const dashboardUrl = `https://hytrade-new-dashboard.vercel.app?token=${data.authToken}`;
         window.location.href = dashboardUrl;
       } else {
         setError(data.message || 'Login failed');

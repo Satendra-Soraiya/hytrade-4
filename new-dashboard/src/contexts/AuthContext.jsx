@@ -31,11 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const validateToken = async (authToken) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/verify-token`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      });
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/user/${authToken}`);
 
       if (response.ok) {
         const userData = await response.json();
