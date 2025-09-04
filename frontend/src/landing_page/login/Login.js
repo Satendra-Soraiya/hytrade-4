@@ -31,7 +31,7 @@ function Login() {
     setError('');
 
     try {
-      console.log('Attempting login with new auth system...');
+      console.log('Attempting login with credentials:', { email: formData.email });
       
       const API_URL = process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com';
       
@@ -40,20 +40,23 @@ function Login() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
+        body: JSON.stringify({ 
+          email: formData.email.trim().toLowerCase(), 
+          password: formData.password 
+        }),
       });
 
       const data = await response.json();
       console.log('Login response:', data);
 
-      if (data.success) {
+      if (data.success && data.authToken) {
         console.log('Login successful, redirecting to dashboard with token:', data.authToken);
         
-        // Redirect to dashboard with auth token
-        const dashboardUrl = `https://hytrade-new-dashboard.vercel.app?token=${data.authToken}`;
+        // Redirect to the new dashboard with the token
+        const dashboardUrl = `https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app?token=${data.authToken}`;
         window.location.href = dashboardUrl;
       } else {
-        setError(data.message || 'Login failed');
+        setError(data.message || 'Login failed. Please check your credentials.');
       }
     } catch (error) {
       console.error('Login error:', error);

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -13,147 +13,86 @@ const getDesignTokens = (mode) => ({
     mode,
     ...(mode === 'light'
       ? {
-          // Light mode - Inspired by Notion, Linear, and Vercel
           primary: {
-            main: '#2563eb', // Vibrant blue
+            main: '#2563eb',
             light: '#3b82f6',
             dark: '#1d4ed8',
             contrastText: '#ffffff',
           },
           secondary: {
-            main: '#7c3aed', // Purple
+            main: '#7c3aed',
             light: '#8b5cf6',
             dark: '#6d28d9',
             contrastText: '#ffffff',
           },
-          error: {
-            main: '#dc2626', // Red
-          },
-          success: {
-            main: '#16a34a', // Green
-          },
-          warning: {
-            main: '#d97706', // Amber
-          },
-          info: {
-            main: '#0284c7', // Sky blue
-          },
+          error: { main: '#dc2626' },
+          success: { main: '#16a34a' },
+          warning: { main: '#d97706' },
+          info: { main: '#0284c7' },
           background: {
-            default: '#f8fafc', // Light gray
+            default: '#f8fafc',
             paper: '#ffffff',
           },
           text: {
-            primary: '#0f172a', // Almost black
-            secondary: '#475569', // Dark gray
-            disabled: '#94a3b8', // Medium gray
+            primary: '#0f172a',
+            secondary: '#475569',
+            disabled: '#94a3b8',
           },
           divider: 'rgba(0, 0, 0, 0.06)',
         }
       : {
-          // Dark mode - Inspired by Linear, Vercel, and GitHub
           primary: {
-            main: '#3b82f6', // Bright blue
+            main: '#3b82f6',
             light: '#60a5fa',
             dark: '#2563eb',
             contrastText: '#ffffff',
           },
           secondary: {
-            main: '#8b5cf6', // Purple
+            main: '#8b5cf6',
             light: '#a78bfa',
             dark: '#7c3aed',
             contrastText: '#ffffff',
           },
-          error: {
-            main: '#ef4444',
-          },
-          success: {
-            main: '#22c55e',
-          },
-          warning: {
-            main: '#f59e0b',
-          },
-          info: {
-            main: '#0ea5e9',
-          },
           background: {
-            default: '#0f172a', // Dark blue-gray
-            paper: '#1e293b', // Slightly lighter blue-gray
+            default: '#0f172a',
+            paper: '#1e293b',
           },
           text: {
-            primary: '#f8fafc', // Off-white
-            secondary: '#cbd5e1', // Light gray
-            disabled: '#64748b', // Medium gray
+            primary: '#f8fafc',
+            secondary: '#cbd5e1',
+            disabled: '#94a3b8',
           },
-          divider: 'rgba(255, 255, 255, 0.08)',
+          divider: 'rgba(255, 255, 255, 0.1)',
         }),
   },
   typography: {
-    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    h1: { 
-      fontSize: '2.5rem', 
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
       fontWeight: 700,
-      letterSpacing: '-0.025em',
+      fontSize: '2.5rem',
     },
-    h2: { 
-      fontSize: '2rem', 
-      fontWeight: 700,
-      letterSpacing: '-0.025em',
-    },
-    h3: { 
-      fontSize: '1.5rem', 
+    h2: {
       fontWeight: 600,
-      letterSpacing: '-0.025em',
+      fontSize: '2rem',
     },
-    h4: { 
-      fontSize: '1.25rem', 
+    h3: {
       fontWeight: 600,
-    },
-    h5: { 
-      fontSize: '1.125rem', 
-      fontWeight: 600,
-    },
-    h6: { 
-      fontSize: '1rem', 
-      fontWeight: 600,
+      fontSize: '1.5rem',
     },
     button: {
       textTransform: 'none',
       fontWeight: 500,
-      letterSpacing: '0.01em',
-    },
-    body1: {
-      fontSize: '1rem',
-      lineHeight: 1.6,
-    },
-    body2: {
-      fontSize: '0.875rem',
-      lineHeight: 1.5,
     },
   },
-  shape: {
-    borderRadius: 8,
-  },
-  shadows: [
-    'none',
-    '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-    '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-    '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-    '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-    '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-  ],
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
           borderRadius: 8,
           padding: '8px 16px',
-          fontWeight: 500,
-          boxShadow: 'none',
-          '&:hover': {
-            boxShadow: 'none',
-          },
         },
         contained: {
+          boxShadow: 'none',
           '&:hover': {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
           },
@@ -164,34 +103,10 @@ const getDesignTokens = (mode) => ({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-          transition: 'transform 0.2s, box-shadow 0.2s',
+          boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)',
           '&:hover': {
-            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-            transform: 'translateY(-2px)',
+            boxShadow: '0 8px 30px 0 rgba(0,0,0,0.1)',
           },
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-          },
-        },
-      },
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: mode === 'dark' ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-          borderBottom: mode === 'dark' 
-            ? '1px solid rgba(255, 255, 255, 0.08)' 
-            : '1px solid rgba(0, 0, 0, 0.05)',
         },
       },
     },
@@ -200,40 +115,52 @@ const getDesignTokens = (mode) => ({
 
 const AppContent = () => {
   const [mode, setMode] = useState('light');
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    
+    if (token && !user && !isLoading) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location, user, isLoading]);
+
   const theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
-  const toggleColorMode = () => {
-    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
-  };
+
+  if (isLoading) {
+    return <div>Loading...</div>; 
+  }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
         <Route
-          path="/*"
+          path="/"
           element={
             <ProtectedRoute>
-              <MainLayout toggleDarkMode={toggleColorMode} darkMode={mode === 'dark'}>
-                <Routes>
-                  <Route path="/" element={<DashboardPage />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+              <MainLayout>
+                <DashboardPage />
               </MainLayout>
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </ThemeProvider>
   );
 };
 
-function App() {
+const App = () => {
   return (
     <AuthProvider>
       <AppContent />
     </AuthProvider>
   );
-}
+};
 
 export default App;

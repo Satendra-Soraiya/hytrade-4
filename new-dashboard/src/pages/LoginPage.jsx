@@ -9,7 +9,8 @@ import {
   Container, 
   Paper, 
   Alert,
-  CircularProgress
+  CircularProgress,
+  Link
 } from '@mui/material';
 
 export const LoginPage = () => {
@@ -62,18 +63,59 @@ export const LoginPage = () => {
           alignItems: 'center',
         }}
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h5" align="center" gutterBottom>
-            Dashboard Login
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 4, 
+            width: '100%',
+            maxWidth: 400,
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          <Typography 
+            component="h1" 
+            variant="h5" 
+            align="center" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 600,
+              mb: 3,
+              color: 'primary.main'
+            }}
+          >
+            Welcome to Hytrade
+          </Typography>
+          <Typography 
+            variant="body2" 
+            color="textSecondary" 
+            align="center" 
+            sx={{ mb: 3 }}
+          >
+            Sign in to access your trading dashboard
           </Typography>
           
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 3,
+                borderRadius: 1,
+                '& .MuiAlert-message': {
+                  width: '100%'
+                }
+              }}
+            >
               {error}
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <Box 
+            component="form" 
+            onSubmit={handleSubmit} 
+            noValidate 
+            sx={{ mt: 1 }}
+          >
             <TextField
               margin="normal"
               required
@@ -85,6 +127,13 @@ export const LoginPage = () => {
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1,
+                },
+                mb: 2
+              }}
             />
             <TextField
               margin="normal"
@@ -97,16 +146,60 @@ export const LoginPage = () => {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1,
+                },
+                mb: 3
+              }}
             />
+            
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
               disabled={isLoading}
+              sx={{
+                mt: 1,
+                mb: 2,
+                py: 1.5,
+                borderRadius: 1,
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 500,
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: 2,
+                },
+                '&:active': {
+                  transform: 'translateY(0)',
+                }
+              }}
             >
-              {isLoading ? <CircularProgress size={24} /> : 'Sign In'}
+              {isLoading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Sign In'
+              )}
             </Button>
+
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Link 
+                href="#" 
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                    color: 'primary.main'
+                  }
+                }}
+              >
+                Forgot password?
+              </Link>
+            </Box>
           </Box>
         </Paper>
       </Box>
