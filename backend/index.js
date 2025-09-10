@@ -46,9 +46,6 @@ async function connectDB() {
   }
 }
 
-// Initialize database connection
-connectDB();
-
 // Create or update test user
 async function createTestUser() {
   try {
@@ -94,7 +91,9 @@ const corsOptions = {
     'http://localhost:3001',
     'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app',
     'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app',
-    /\.vercel\.app$/
+    'https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app',
+    /\.vercel\.app$/,
+    /hytrade.*\.vercel\.app$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -143,6 +142,92 @@ setInterval(() => {
     }
   }
 }, 60 * 60 * 1000); // Clean up every hour
+
+// New Signup/Register Endpoint
+app.post("/auth/signup", async (req, res) => {
+  try {
+    const { firstName, lastName, email, password } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "All fields are required",
+        error: "Missing required fields: firstName, lastName, email, password"
+      });
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Password must be at least 8 characters long",
+        error: "Password must be at least 8 characters long"
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid email format",
+        error: "Invalid email format"
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await CustomUserModel.findOne({ email: email.trim().toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email already registered",
+        error: "Email already registered. Please use a different email or try logging in."
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const newUser = new CustomUserModel({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim().toLowerCase(),
+      password: hashedPassword,
+      tradingExperience: 'Beginner',
+      riskTolerance: 'Low',
+      accountBalance: 100000, // Starting balance
+      totalInvestment: 0,
+      totalPnL: 0,
+      watchlist: [],
+      createdAt: new Date()
+    });
+
+    await newUser.save();
+
+    console.log(`New user registered: ${email} at ${new Date().toISOString()}`);
+
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: {
+        id: newUser._id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        accountBalance: newUser.accountBalance
+      }
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error during registration",
+      error: error.message 
+    });
+  }
+});
 
 // New Login Endpoint - Replace existing /auth/login
 app.post("/auth/login", loginLimiter, async (req, res) => {

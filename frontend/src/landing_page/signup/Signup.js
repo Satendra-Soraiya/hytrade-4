@@ -73,7 +73,7 @@ function Signup() {
     try {
       setBackendResponse('🔄 Sending signup request to backend...');
       
-      const response = await fetch('http://localhost:3002/auth/signup', {
+      const response = await fetch('https://hytrade-backend.onrender.com/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ function Signup() {
       }
     } catch (error) {
       setError('❌ Network Error: Could not connect to backend server');
-      setBackendResponse(`🚫 NETWORK ERROR: ${error.message}\n\nPlease check:\n- Backend server is running on localhost:3002\n- Internet connection is stable`);
+      setBackendResponse(`🚫 NETWORK ERROR: ${error.message}\n\nPlease check:\n- Backend server is running on https://hytrade-backend.onrender.com\n- Internet connection is stable`);
       console.error('Signup error:', error);
     } finally {
       setLoading(false);

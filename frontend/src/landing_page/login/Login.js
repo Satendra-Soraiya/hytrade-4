@@ -33,8 +33,8 @@ function Login() {
     try {
       console.log('Attempting login with credentials:', { email: formData.email });
       
-      // Use direct backend URL with /api prefix
-      const API_URL = 'https://hytrade-backend.onrender.com/api';
+      // Use direct backend URL without /api prefix (consistent with signup)
+      const API_URL = 'https://hytrade-backend.onrender.com';
       
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',

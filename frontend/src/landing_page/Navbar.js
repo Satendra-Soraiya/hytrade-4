@@ -21,7 +21,7 @@ function Navbar() {
       if (urlParams.get('logout') === 'true') {
         // Logout user by calling backend logout endpoint
         try {
-          await fetch('http://localhost:3002/auth/logout', {
+          await fetch('https://hytrade-backend.onrender.com/auth/logout', {
             method: 'POST',
             credentials: 'include'
           });
@@ -46,7 +46,7 @@ function Navbar() {
 
       // Check session-based authentication with backend
       try {
-        const response = await fetch('http://localhost:3002/auth/verify-session', {
+        const response = await fetch('https://hytrade-backend.onrender.com/auth/verify-session', {
           method: 'GET',
           credentials: 'include'
         });
@@ -98,7 +98,7 @@ function Navbar() {
   const handleLogout = async () => {
     try {
       // Call backend logout endpoint to destroy session
-      await fetch('http://localhost:3002/auth/logout', {
+      await fetch('https://hytrade-backend.onrender.com/auth/logout', {
         method: 'POST',
         credentials: 'include'
       });
