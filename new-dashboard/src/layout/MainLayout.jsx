@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Box, CssBaseline, useMediaQuery, useTheme, styled } from '@mui/material';
+import { Box, CssBaseline, useMediaQuery, useTheme, styled, Alert, Typography } from '@mui/material';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 
@@ -126,6 +126,28 @@ const MainLayout = ({ toggleDarkMode, darkMode }) => {
             },
           }}
         >
+               {/* System Status */}
+               <Alert
+                 severity="success"
+                 variant="outlined"
+                 sx={{
+                   mb: 2,
+                   borderRadius: 2,
+                   '& .MuiAlert-message': {
+                     width: '100%'
+                   }
+                 }}
+               >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                🟢 System Status: All services operational
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Backend • Database • Real-time data
+              </Typography>
+            </Box>
+          </Alert>
+          
           <Outlet />
         </Box>
       </Main>

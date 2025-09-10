@@ -9,7 +9,10 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const API_URL = import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com';
+  // Auto-detect development environment
+  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const API_URL = import.meta.env.VITE_API_URL || 
+    (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
 
   // Check for token in URL on initial load
   useEffect(() => {
@@ -39,9 +42,10 @@ export const AuthProvider = ({ children }) => {
   const validateToken = async (authToken) => {
     try {
       console.log('Validating token...');
-      const response = await fetch(`${API_URL}/auth/user/${authToken}`, {
+      const response = await fetch(`${API_URL}/api/auth/verify`, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
         },
       });
 

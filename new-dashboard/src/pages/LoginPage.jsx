@@ -24,27 +24,56 @@ export const LoginPage = () => {
 
   const from = location.state?.from?.pathname || '/';
 
+  // Auto-detect development environment
+  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const API_URL = import.meta.env.VITE_API_URL || 
+    (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      console.log('Login attempt to:', `${API_URL}/api/auth/login`);
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+      // Check if response has content before parsing JSON
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
+      if (!responseText) {
+        throw new Error('Empty response from server');
       }
 
-      if (data.authToken) {
-        await login(data.authToken);
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Invalid response format from server');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || `Server error: ${response.status}`);
+      }
+
+      if (data.token) {
+        console.log('Token received, calling login function...');
+        const loginResult = await login(data.token);
+        console.log('Login result:', loginResult);
+        console.log('Navigating to:', from);
         navigate(from, { replace: true });
+      } else {
+        console.error('No token in response:', data);
+        throw new Error('No authentication token received');
       }
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');

@@ -143,12 +143,12 @@ const AppContent = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <DashboardPage />
-              </MainLayout>
+              <MainLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<DashboardPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </ThemeProvider>

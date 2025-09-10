@@ -80,20 +80,17 @@ const Sidebar = ({ open, onClose, isMobile }) => {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: isMobile ? 'space-between' : 'center',
           p: 2,
           height: 64,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <img 
             src="/media/Images/logo.png" 
             alt="Hytrade" 
-            style={{ height: 32, marginRight: 8 }} 
+            style={{ height: 40 }} 
           />
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
-            Hytrade
-          </Typography>
         </Box>
         {isMobile && (
           <IconButton onClick={onClose}>
@@ -102,36 +99,6 @@ const Sidebar = ({ open, onClose, isMobile }) => {
         )}
       </Box>
 
-      {/* User Profile */}
-      <Box
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <Avatar 
-          sx={{ 
-            width: 40, 
-            height: 40,
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText',
-            mr: 2
-          }}
-        >
-          {user?.name?.[0]?.toUpperCase() || 'U'}
-        </Avatar>
-        <Box>
-          <Typography variant="subtitle2" noWrap>
-            {user?.name || 'User Name'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {user?.email || 'user@example.com'}
-          </Typography>
-        </Box>
-      </Box>
 
       {/* Navigation Items */}
       <List sx={{ flex: 1, overflowY: 'auto' }}>

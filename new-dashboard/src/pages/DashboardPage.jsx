@@ -20,6 +20,7 @@ import {
   useMediaQuery,
   ListItemButton
 } from '@mui/material';
+import BackendStatus from '../components/BackendStatus';
 import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
@@ -297,18 +298,38 @@ const DashboardPage = () => {
     }).format(value);
   };
 
+
   return (
-    <Box sx={{ pb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Dashboard
-        </Typography>
+    <Box sx={{ pb: 4, minHeight: '100vh' }}>
+      
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 2, sm: 0 },
+        mb: 4 
+      }}>
         <Box>
+          <Typography variant="h3" component="h1" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
+            Dashboard
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Welcome back! Here's your portfolio overview
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Button 
             variant="contained" 
             color="primary" 
             startIcon={<MoneyIcon />}
-            sx={{ mr: 1 }}
+            sx={{ 
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              py: 1
+            }}
           >
             Add Funds
           </Button>
@@ -316,6 +337,13 @@ const DashboardPage = () => {
             variant="outlined" 
             color="primary" 
             startIcon={<TradeIcon />}
+            sx={{ 
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              py: 1
+            }}
           >
             New Trade
           </Button>
@@ -336,22 +364,29 @@ const DashboardPage = () => {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
                   boxShadow: theme.shadows[4],
+                  transform: 'translateY(-2px)',
                 },
               }}
             >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" color="text.secondary">
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
                   {stat.title}
                 </Typography>
-                <Box sx={{ color: stat.color }}>
+                <Box sx={{ color: stat.color, display: 'flex', alignItems: 'center' }}>
                   {stat.icon}
                 </Box>
               </Box>
-              <Typography variant="h5" sx={{ fontWeight: 'medium' }}>
+              <Typography variant="h4" sx={{ fontWeight: 600, color: 'text.primary' }}>
                 {stat.value}
               </Typography>
+              {stat.title === 'Today\'s Change' && (
+                <Typography variant="caption" sx={{ color: stat.color, mt: 0.5, fontWeight: 500 }}>
+                  {portfolioData.dayChangePercent >= 0 ? '+' : ''}{portfolioData.dayChangePercent}%
+                </Typography>
+              )}
             </Paper>
           </Grid>
         ))}
@@ -379,11 +414,11 @@ const DashboardPage = () => {
             </Box>
             
             <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+              <Typography variant="subtitle1" color="text.primary" gutterBottom sx={{ fontWeight: 600 }}>
                 Asset Allocation
               </Typography>
               <Box sx={{ width: '100%', mb: 2 }}>
-                <Box sx={{ display: 'flex', width: '100%', height: 8, borderRadius: 4, overflow: 'hidden' }}>
+                <Box sx={{ display: 'flex', width: '100%', height: 12, borderRadius: 6, overflow: 'hidden', bgcolor: 'action.hover' }}>
                   {portfolioData.assets.map((asset, index) => (
                     <Box 
                       key={index}
@@ -391,18 +426,29 @@ const DashboardPage = () => {
                         width: `${(asset.value / portfolioData.totalValue) * 100}%`,
                         bgcolor: asset.change >= 0 ? theme.palette.success.main : theme.palette.error.main,
                         height: '100%',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          opacity: 0.8,
+                        },
                         '&:not(:last-child)': {
-                          mr: '2px'
+                          mr: '1px'
                         }
                       }}
                     />
                   ))}
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
                   {portfolioData.assets.map((asset, index) => (
-                    <Typography key={index} variant="caption" color="text.secondary">
-                      {asset.name} {(asset.value / portfolioData.totalValue * 100).toFixed(2)}%
-                    </Typography>
+                    <Chip
+                      key={index}
+                      label={`${asset.symbol} ${(asset.value / portfolioData.totalValue * 100).toFixed(1)}%`}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        borderColor: asset.change >= 0 ? theme.palette.success.main : theme.palette.error.main,
+                        color: asset.change >= 0 ? theme.palette.success.main : theme.palette.error.main,
+                      }}
+                    />
                   ))}
                 </Box>
               </Box>
@@ -759,14 +805,16 @@ const DashboardPage = () => {
                         </Box>
                       }
                       secondary={
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="caption" color="text.secondary">
-                            {transaction.amount} shares @ {formatCurrency(transaction.price)}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {transaction.time}
-                          </Typography>
-                        </Box>
+                        <Typography variant="caption" color="text.secondary" component="div">
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>
+                              {transaction.amount} shares @ {formatCurrency(transaction.price)}
+                            </span>
+                            <span>
+                              {transaction.time}
+                            </span>
+                          </Box>
+                        </Typography>
                       }
                     />
                     <Chip 

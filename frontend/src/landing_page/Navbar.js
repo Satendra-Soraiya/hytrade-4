@@ -32,7 +32,7 @@ function Navbar() {
       if (urlParams.get('logout') === 'true') {
         // Logout user by calling backend logout endpoint
         try {
-          await fetch('https://hytrade-backend.onrender.com/auth/logout', {
+          await fetch('https://hytrade-backend.onrender.com/api/auth/logout', {
             method: 'POST',
             credentials: 'include'
           });
@@ -58,7 +58,7 @@ function Navbar() {
 
       // Check session-based authentication with backend
       try {
-        const response = await fetch('https://hytrade-backend.onrender.com/auth/verify-session', {
+        const response = await fetch('https://hytrade-backend.onrender.com/api/auth/verify', {
           method: 'GET',
           credentials: 'include'
         });
@@ -110,7 +110,7 @@ function Navbar() {
   const handleLogout = async () => {
     try {
       // Call backend logout endpoint to destroy session
-      await fetch('https://hytrade-backend.onrender.com/auth/logout', {
+      await fetch('https://hytrade-backend.onrender.com/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
       });

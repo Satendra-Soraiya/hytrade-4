@@ -73,7 +73,7 @@ function Signup() {
     try {
       setBackendResponse('🔄 Sending signup request to backend...');
       
-      const response = await fetch('https://hytrade-backend.onrender.com/auth/signup', {
+      const response = await fetch('https://hytrade-backend.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

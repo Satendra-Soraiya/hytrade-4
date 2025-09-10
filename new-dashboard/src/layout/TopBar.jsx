@@ -89,32 +89,65 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
 
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
             <Tooltip title="Account settings">
-              <IconButton
+              <Box
                 onClick={handleProfileMenuOpen}
-                size="small"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  p: 1,
+                  borderRadius: 2,
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  }
+                }}
                 aria-controls={open ? 'account-menu' : undefined}
                 aria-haspopup="true"
                 aria-expanded={open ? 'true' : undefined}
               >
                 <Avatar 
                   sx={{ 
-                    width: 32, 
-                    height: 32,
+                    width: 36, 
+                    height: 36,
                     bgcolor: 'primary.main',
-                    color: 'primary.contrastText'
+                    color: 'primary.contrastText',
+                    mr: 1.5,
+                    border: '2px solid',
+                    borderColor: 'background.paper',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                   }}
                 >
-                  {user?.name?.[0]?.toUpperCase() || 'U'}
+                  {user?.firstName?.[0]?.toUpperCase() || 'U'}
                 </Avatar>
-                <Box sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
-                  <Typography variant="body2" color="text.primary">
-                    {user?.name || 'User'}
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                  <Typography 
+                    variant="body2" 
+                    color="text.primary"
+                    sx={{ 
+                      fontWeight: 500,
+                      lineHeight: 1.2
+                    }}
+                  >
+                    {user?.firstName ? `${user.firstName} ${user.lastName}` : 'User'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {user?.role || 'User'}
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary"
+                    sx={{ 
+                      lineHeight: 1.2,
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    {user?.email || 'user@example.com'}
                   </Typography>
                 </Box>
-              </IconButton>
+              </Box>
             </Tooltip>
           </Box>
         </Box>
@@ -129,14 +162,28 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
             elevation: 0,
             sx: {
               overflow: 'visible',
-              filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.15))',
+              filter: 'drop-shadow(0px 4px 20px rgba(0,0,0,0.15))',
               mt: 1.5,
+              minWidth: 200,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
               '& .MuiAvatar-root': {
-                width: 32,
-                height: 32,
+                width: 40,
+                height: 40,
                 ml: -0.5,
-                mr: 1,
+                mr: 1.5,
+                border: '2px solid',
+                borderColor: 'background.paper',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               },
+              '& .MuiMenuItem-root': {
+                px: 2,
+                py: 1.5,
+                '&:hover': {
+                  backgroundColor: 'action.hover',
+                }
+              }
             },
           }}
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
@@ -144,7 +191,10 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
         >
           <MenuItem onClick={handleMenuClose}>
             <Avatar />
-            <ListItemText primary={user?.name || 'User'} secondary={user?.email} />
+            <ListItemText 
+              primary={user?.firstName ? `${user.firstName} ${user.lastName}` : 'User'} 
+              secondary={user?.email || 'user@example.com'} 
+            />
           </MenuItem>
           <Divider />
           <MenuItem onClick={handleMenuClose}>

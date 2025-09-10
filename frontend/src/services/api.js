@@ -25,16 +25,17 @@ api.interceptors.request.use(
 );
 
 export const authAPI = {
-  login: (email, password) => api.post('/login', { email, password }),
-  register: (userData) => api.post('/register', userData),
-  getProfile: () => api.get('/profile'),
+  login: (email, password) => api.post('/api/auth/login', { email, password }),
+  register: (userData) => api.post('/api/auth/register', userData),
+  getProfile: () => api.get('/api/auth/profile'),
 };
 
 export const portfolioAPI = {
-  getHoldings: () => api.get('/allHoldings'),
-  getPositions: () => api.get('/allPositions'),
-  getOrders: () => api.get('/allOrders'),
-  getFunds: () => api.get('/funds'),
+  getHoldings: () => api.get('/api/trading/holdings'),
+  getPositions: () => api.get('/api/trading/positions'),
+  getOrders: () => api.get('/api/trading/orders'),
+  getPortfolioSummary: () => api.get('/api/trading/portfolio/summary'),
+  placeOrder: (orderData) => api.post('/api/trading/order', orderData),
 };
 
 export const marketAPI = {

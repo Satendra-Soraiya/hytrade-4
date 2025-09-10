@@ -48,7 +48,7 @@ function Login() {
       // Use direct backend URL without /api prefix (consistent with signup)
       const API_URL = 'https://hytrade-backend.onrender.com';
       
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -28,29 +28,29 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// Rate limiting - DISABLED FOR TESTING
-// const generalLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // Limit each IP to 100 requests per windowMs
-//   message: {
-//     success: false,
-//     message: 'Too many requests from this IP. Please try again later.',
-//     code: 'RATE_LIMIT_EXCEEDED'
-//   }
-// });
+// Rate limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: 'Too many requests from this IP. Please try again later.',
+    code: 'RATE_LIMIT_EXCEEDED'
+  }
+});
 
-// app.use(generalLimiter); // Disabled for testing
+app.use(generalLimiter);
 
 // CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
-    'http://localhost:3000', 
-    'http://localhost:3001',
+      'http://localhost:3000',
+      'http://localhost:3001', 
       'http://localhost:5173',
       'http://localhost:5174',
-    'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app',
-    'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app',
+      'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app',
+      'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app',
       'https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app'
     ];
     
@@ -84,8 +84,8 @@ app.use((req, res, next) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.status(200).json({
-      success: true,
+  res.status(200).json({
+    success: true,
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
@@ -97,7 +97,7 @@ app.get('/health', (req, res) => {
 // API status endpoint
 app.get('/api/status', (req, res) => {
   res.status(200).json({
-      success: true,
+    success: true,
     status: 'connected',
     message: 'Hytrade API v2.0 is running successfully!',
     server: 'Hytrade Backend API v2.0',
