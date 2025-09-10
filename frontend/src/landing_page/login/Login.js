@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Login() {
@@ -11,7 +11,19 @@ function Login() {
   const [success, setSuccess] = useState('');
   const [backendResponse, setBackendResponse] = useState('');
   const [validationMessages, setValidationMessages] = useState([]);
+  const [infoMessage, setInfoMessage] = useState('');
   const navigate = useNavigate();
+
+  // Check for URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get('message');
+    if (message) {
+      setInfoMessage(decodeURIComponent(message));
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -51,6 +63,10 @@ function Login() {
       console.log('Login response:', data);
 
       if (data.success && data.authToken) {
+        // Store token and user info in localStorage for frontend navigation
+        localStorage.setItem('authToken', data.authToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
         // Redirect to dashboard with token in URL
         window.location.href = `https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app?token=${data.authToken}`;
       } else {
@@ -68,6 +84,20 @@ function Login() {
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit}>
         <h2>Login to Hytrade</h2>
+        
+        {/* Info Message */}
+        {infoMessage && (
+          <div className="info-message" style={{
+            backgroundColor: '#cce7ff',
+            border: '1px solid #99d6ff',
+            borderRadius: '4px',
+            padding: '10px',
+            marginBottom: '15px',
+            color: '#0066cc'
+          }}>
+            ℹ️ {infoMessage}
+          </div>
+        )}
         
         {/* Validation Messages */}
         {validationMessages.length > 0 && (

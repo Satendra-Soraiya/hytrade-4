@@ -323,6 +323,22 @@ app.get("/auth/user/:token", async (req, res) => {
   }
 });
 
+// Session Verification Endpoint
+app.get("/auth/verify-session", (req, res) => {
+  try {
+    // This is a simple session check - in a real app, you'd check session cookies
+    // For now, we'll return false since we're using token-based auth
+    res.json({ 
+      success: false, 
+      authenticated: false, 
+      message: "Session-based auth not implemented. Use token-based auth." 
+    });
+  } catch (error) {
+    console.error('Session verification error:', error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 // Logout Endpoint
 app.post("/auth/logout", (req, res) => {
   try {

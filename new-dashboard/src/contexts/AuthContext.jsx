@@ -82,7 +82,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken('');
     localStorage.removeItem('token');
-    navigate('/login');
+    
+    // Redirect to frontend with logout message
+    window.location.href = 'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app?message=' + 
+      encodeURIComponent('You have been logged out successfully');
   };
 
   return (

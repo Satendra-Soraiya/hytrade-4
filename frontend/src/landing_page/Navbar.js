@@ -6,11 +6,22 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle dashboard button click - Direct access
-  const handleDashboardClick = (e) => {
+  // Handle dashboard button click - Check authentication first
+  const handleDashboardClick = async (e) => {
     e.preventDefault();
-    // Directly navigate to dashboard without authentication
-    window.location.href = 'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app';
+    
+    // Check if user has a stored token (from successful login)
+    const storedToken = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedToken && storedUser) {
+      // User has token, redirect to dashboard with token
+      window.location.href = `https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app?token=${storedToken}`;
+      return;
+    }
+    
+    // User is not authenticated, redirect to login
+    navigate('/login?message=' + encodeURIComponent('Please login to access your dashboard'));
   };
 
   // Function to check and update auth state - Session-based authentication
@@ -30,6 +41,7 @@ function Navbar() {
         }
         localStorage.removeItem('user');
         localStorage.removeItem('authenticated');
+        localStorage.removeItem('authToken');
         setUser(null);
         // Clean up URL
         navigate(location.pathname, { replace: true });
@@ -109,6 +121,7 @@ function Navbar() {
     // Clear local state and storage
     localStorage.removeItem('user');
     localStorage.removeItem('authenticated');
+    localStorage.removeItem('authToken');
     setUser(null);
     navigate('/');
   };
