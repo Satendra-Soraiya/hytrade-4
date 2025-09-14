@@ -316,7 +316,8 @@ function Navbar() {
     
     if (storedToken && storedUser) {
       // User has token, redirect to dashboard with token
-      window.location.href = `http://localhost:5173?token=${storedToken}`;
+      const DASHBOARD_URL = process.env.REACT_APP_DASHBOARD_URL || 'https://hytrade-dashboard.vercel.app';
+      window.location.href = `${DASHBOARD_URL}?token=${storedToken}`;
       return;
     }
     
