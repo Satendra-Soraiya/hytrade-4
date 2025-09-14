@@ -51,10 +51,10 @@ const corsOptions = {
     'http://localhost:3001',
     'http://localhost:5173',
     'http://localhost:5174',
-    // Production URLs
-    'https://hytrade-frontend.onrender.com',
-    'https://hytrade-dashboard.onrender.com',
-    // Allow any Render subdomain for flexibility
+    // Production URLs - Vercel
+    /^https:\/\/.*\.vercel\.app$/,
+    /^https:\/\/.*\.vercel\.com$/,
+    // Production URLs - Render (if needed)
     /^https:\/\/.*\.onrender\.com$/
     ];
     

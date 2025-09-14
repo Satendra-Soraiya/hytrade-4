@@ -15,27 +15,3 @@ services:
         generateValue: true
     plan: free
     autoDeploy: true
-
-  - type: web
-    name: hytrade-frontend
-    env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/build
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://hytrade-backend.onrender.com
-      - key: REACT_APP_DASHBOARD_URL
-        value: https://hytrade-dashboard.onrender.com
-    plan: free
-    autoDeploy: true
-
-  - type: web
-    name: hytrade-dashboard
-    env: static
-    buildCommand: cd new-dashboard && npm install && npm run build
-    staticPublishPath: ./new-dashboard/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://hytrade-backend.onrender.com
-    plan: free
-    autoDeploy: true
