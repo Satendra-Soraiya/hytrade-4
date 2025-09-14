@@ -115,7 +115,7 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
               >
                 <Avatar 
                   src={user?.profilePicture && user?.profilePictureType === 'custom' 
-                    ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}${user.profilePicture}`
+                    ? user.profilePicture
                     : user?.profilePicture && user?.profilePictureType === 'default'
                     ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`
                     : null
@@ -201,7 +201,7 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Avatar 
                 src={user?.profilePicture && user?.profilePictureType === 'custom' 
-                  ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}${user.profilePicture}`
+                  ? user.profilePicture
                   : user?.profilePicture && user?.profilePictureType === 'default'
                   ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`
                   : null

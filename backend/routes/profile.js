@@ -137,7 +137,8 @@ router.post('/profile/upload', authenticateToken, upload.single('profilePicture'
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const fileUrl = `/uploads/profiles/${req.file.filename}`;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const fileUrl = `${baseUrl}/uploads/profiles/${req.file.filename}`;
     
     const user = await UserModel.findByIdAndUpdate(
       req.user.userId,
@@ -172,6 +173,32 @@ router.post('/profile/upload', authenticateToken, upload.single('profilePicture'
   } catch (error) {
     console.error('Error uploading profile picture:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Test endpoint to check if uploads are working
+router.get('/profile/test-upload', (req, res) => {
+  const fs = require('fs');
+  const uploadsDir = path.join(__dirname, '../uploads/profiles');
+  
+  try {
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    const files = fs.readdirSync(uploadsDir);
+    res.json({
+      success: true,
+      uploadsDir: uploadsDir,
+      files: files,
+      message: 'Uploads directory is accessible'
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+      message: 'Error accessing uploads directory'
+    });
   }
 });
 

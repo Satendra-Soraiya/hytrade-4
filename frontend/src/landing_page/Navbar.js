@@ -49,7 +49,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
         }}>
           {user.profilePicture && user.profilePictureType === 'custom' ? (
             <img 
-              src={`${process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com'}${user.profilePicture}`}
+              src={user.profilePicture}
               alt="Profile"
               style={{
                 width: '100%',
@@ -154,7 +154,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
               }}>
                 {user.profilePicture && user.profilePictureType === 'custom' ? (
                   <img 
-                    src={`${process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com'}${user.profilePicture}`}
+                    src={user.profilePicture}
                     alt="Profile"
                     style={{
                       width: '100%',

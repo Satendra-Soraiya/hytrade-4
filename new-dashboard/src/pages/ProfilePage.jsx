@@ -191,7 +191,7 @@ const ProfilePage = () => {
 
   const getProfilePictureUrl = () => {
     if (profile.profilePictureType === 'custom') {
-      return `${API_URL}${profile.profilePicture}`;
+      return profile.profilePicture;
     } else {
       const avatar = defaultAvatars.find(av => av.id === profile.profilePicture);
       return avatar ? avatar.url : `${API_URL}/images/default-avatars/avatar-1.svg`;
