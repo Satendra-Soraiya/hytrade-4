@@ -359,6 +359,18 @@ function Navbar() {
         return;
       }
 
+      // Check for token from dashboard redirect
+      const token = urlParams.get('token');
+      if (token) {
+        console.log('Token received from dashboard, validating...');
+        // Store the token and validate it
+        localStorage.setItem('authToken', token);
+        // Clean up URL
+        navigate(location.pathname, { replace: true });
+        // The token validation will happen in the next part of the function
+        return;
+      }
+
       // Check for success message after login redirect
       const message = urlParams.get('message');
       if (message) {
@@ -647,7 +659,7 @@ function Navbar() {
                 e.target.style.boxShadow = 'none';
               }}
             >
-              {user ? '🚀 Dashboard' : '📊 Dashboard'}
+              Dashboard
             </button>
             
             {user ? (
