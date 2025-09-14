@@ -40,16 +40,55 @@ const ProfileDropdown = ({ user, onLogout }) => {
         <div style={{
           width: '32px',
           height: '32px',
-          backgroundColor: '#007bff',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white',
-          fontWeight: '600',
-          fontSize: '0.875rem'
+          overflow: 'hidden',
+          backgroundColor: '#007bff'
         }}>
-          {user.firstName?.[0]?.toUpperCase() || 'U'}
+          {user.profilePicture && user.profilePictureType === 'custom' ? (
+            <img 
+              src={`${process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com'}${user.profilePicture}`}
+              alt="Profile"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : user.profilePicture && user.profilePictureType === 'default' ? (
+            <img 
+              src={`${process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`}
+              alt="Profile"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#007bff',
+            color: 'white',
+            fontWeight: '600',
+            fontSize: '0.875rem',
+            display: user.profilePicture ? 'none' : 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            {user.firstName?.[0]?.toUpperCase() || 'U'}
+          </div>
         </div>
         <div>
           <div style={{
@@ -106,16 +145,55 @@ const ProfileDropdown = ({ user, onLogout }) => {
               <div style={{
                 width: '48px',
                 height: '48px',
-                backgroundColor: '#007bff',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'white',
-                fontWeight: '600',
-                fontSize: '1.125rem'
+                overflow: 'hidden',
+                backgroundColor: '#007bff'
               }}>
-                {user.firstName?.[0]?.toUpperCase() || 'U'}
+                {user.profilePicture && user.profilePictureType === 'custom' ? (
+                  <img 
+                    src={`${process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com'}${user.profilePicture}`}
+                    alt="Profile"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : user.profilePicture && user.profilePictureType === 'default' ? (
+                  <img 
+                    src={`${process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`}
+                    alt="Profile"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '1.125rem',
+                  display: user.profilePicture ? 'none' : 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {user.firstName?.[0]?.toUpperCase() || 'U'}
+                </div>
               </div>
               <div>
                 <div style={{

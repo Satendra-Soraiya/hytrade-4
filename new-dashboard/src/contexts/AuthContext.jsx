@@ -117,6 +117,10 @@ export const AuthProvider = ({ children }) => {
       encodeURIComponent('You have been logged out successfully');
   };
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -124,7 +128,8 @@ export const AuthProvider = ({ children }) => {
       isLoading, 
       isAuthenticated: !!user,
       login, 
-      logout 
+      logout,
+      updateUser
     }}>
       {!isLoading && children}
     </AuthContext.Provider>

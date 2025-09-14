@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   AppBar, 
   Toolbar, 
@@ -29,6 +30,7 @@ import { useAuth } from '../contexts/AuthContext';
 const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, darkMode }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const open = Boolean(anchorEl);
 
   const handleProfileMenuOpen = (event) => {
@@ -112,6 +114,12 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
                 aria-expanded={open ? 'true' : undefined}
               >
                 <Avatar 
+                  src={user?.profilePicture && user?.profilePictureType === 'custom' 
+                    ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}${user.profilePicture}`
+                    : user?.profilePicture && user?.profilePictureType === 'default'
+                    ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`
+                    : null
+                  }
                   sx={{ 
                     width: 36, 
                     height: 36,
@@ -192,6 +200,12 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
           <Box sx={{ px: 2, py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Avatar 
+                src={user?.profilePicture && user?.profilePictureType === 'custom' 
+                  ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}${user.profilePicture}`
+                  : user?.profilePicture && user?.profilePictureType === 'default'
+                  ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`
+                  : null
+                }
                 sx={{ 
                   width: 48, 
                   height: 48, 
@@ -245,7 +259,10 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
           </Box>
 
           {/* Menu Items */}
-          <MenuItem onClick={handleMenuClose}>
+          <MenuItem onClick={() => {
+            handleMenuClose();
+            navigate('/profile');
+          }}>
             <ListItemIcon>
               <PersonIcon fontSize="small" />
             </ListItemIcon>
