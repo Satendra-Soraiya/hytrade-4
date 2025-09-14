@@ -106,7 +106,7 @@ const Sidebar = ({ open, onClose, isMobile }) => {
       >
         <Box 
           component="a"
-          href="http://localhost:3000"
+          href={import.meta.env.VITE_FRONTEND_URL || 'https://hytrade-frontend.vercel.app'}
           target="_blank"
           rel="noopener noreferrer"
           sx={{ 
