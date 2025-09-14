@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
+const { SessionService } = require('./services/sessionService');
 require('dotenv').config();
 
 // Import routes
@@ -49,9 +50,9 @@ const corsOptions = {
     'http://localhost:3001',
       'http://localhost:5173',
       'http://localhost:5174',
-    'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app',
-    'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app',
-      'https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app'
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173'
     ];
     
     // Allow requests with no origin (mobile apps, etc.)
@@ -182,6 +183,14 @@ const connectDB = async () => {
     });
 
     console.log('✅ MongoDB connected successfully');
+    
+    // Clean up expired sessions on startup
+    try {
+      const cleanedCount = await SessionService.cleanExpiredSessions();
+      console.log(`🧹 Cleaned ${cleanedCount} expired sessions on startup`);
+    } catch (error) {
+      console.error('⚠️ Error cleaning expired sessions:', error);
+    }
     
     // Test database connection
     const db = mongoose.connection;

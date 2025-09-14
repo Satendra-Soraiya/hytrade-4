@@ -55,7 +55,11 @@ const Sidebar = ({ open, onClose, isMobile }) => {
   ];
 
   const handleNavigation = (path) => {
-    navigate(`/${path}`);
+    if (path === 'dashboard') {
+      navigate('/');
+    } else {
+      navigate(`/${path}`);
+    }
     if (isMobile) {
       onClose();
     }
@@ -81,19 +85,66 @@ const Sidebar = ({ open, onClose, isMobile }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: isMobile ? 'space-between' : 'center',
-          p: 2,
-          height: 64,
+          p: 2.5,
+          height: 80,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          backgroundColor: 'background.paper',
+          position: 'relative',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '60%',
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent 0%, primary.main 50%, transparent 100%)',
+            opacity: 0.3
+          }
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box 
+          component="a"
+          href="http://localhost:3000"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            position: 'relative',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            '&:hover': {
+              transform: 'scale(1.05)',
+              transition: 'transform 0.2s ease-in-out'
+            }
+          }}
+        >
           <img 
             src="/media/Images/logo.png" 
             alt="Hytrade" 
-            style={{ height: 40 }} 
+            style={{ 
+              height: 56,
+              width: 'auto',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.1))'
+            }} 
           />
         </Box>
         {isMobile && (
-          <IconButton onClick={onClose}>
+          <IconButton 
+            onClick={onClose}
+            sx={{
+              '&:hover': {
+                backgroundColor: 'action.hover',
+                transform: 'scale(1.1)'
+              },
+              transition: 'all 0.2s ease-in-out'
+            }}
+          >
             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         )}

@@ -796,25 +796,23 @@ const DashboardPage = () => {
                     <ListItemText 
                       primary={
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2" fontWeight="medium">
+                          <Typography variant="body2" fontWeight="medium" component="span">
                             {transaction.type} {transaction.symbol}
                           </Typography>
-                          <Typography variant="body2" fontWeight="medium">
+                          <Typography variant="body2" fontWeight="medium" component="span">
                             {formatCurrency(transaction.price * transaction.amount)}
                           </Typography>
                         </Box>
                       }
                       secondary={
-                        <Typography variant="caption" color="text.secondary" component="div">
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>
-                              {transaction.amount} shares @ {formatCurrency(transaction.price)}
-                            </span>
-                            <span>
-                              {transaction.time}
-                            </span>
-                          </Box>
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>
+                            {transaction.amount} shares @ {formatCurrency(transaction.price)}
+                          </span>
+                          <span>
+                            {transaction.time}
+                          </span>
+                        </Box>
                       }
                     />
                     <Chip 

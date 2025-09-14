@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 // Place a new order (BUY or SELL)
-router.post('/order', verifiedUserMiddleware, validateOrder, async (req, res) => {
+router.post('/order', authMiddleware, validateOrder, async (req, res) => {
   try {
     const { stockSymbol, stockName, orderType, quantity, price, orderMode } = req.body;
     
@@ -253,6 +253,226 @@ router.get('/portfolio/summary', async (req, res) => {
       success: false,
       message: 'Failed to fetch portfolio summary',
       code: 'PORTFOLIO_SUMMARY_ERROR'
+    });
+  }
+});
+
+// Get detailed portfolio data
+router.get('/portfolio/detailed', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get portfolio summary
+    const summary = await TradingService.calculatePortfolioSummary(userId);
+    
+    // Get holdings
+    const holdings = await CustomHoldingsModel.find({ userId }).lean();
+    
+    // Get portfolio timeline (mock data for now - will be replaced with real historical data)
+    const timeline = [
+      { date: '2024-01-01', value: summary.totalValue * 0.8 },
+      { date: '2024-02-01', value: summary.totalValue * 0.85 },
+      { date: '2024-03-01', value: summary.totalValue * 0.9 },
+      { date: '2024-04-01', value: summary.totalValue * 0.95 },
+      { date: '2024-05-01', value: summary.totalValue * 0.98 },
+      { date: '2024-06-01', value: summary.totalValue * 1.02 },
+      { date: '2024-07-01', value: summary.totalValue * 1.05 },
+      { date: '2024-08-01', value: summary.totalValue * 1.08 },
+      { date: '2024-09-01', value: summary.totalValue * 1.1 },
+      { date: '2024-10-01', value: summary.totalValue * 1.12 },
+      { date: '2024-11-01', value: summary.totalValue * 1.15 },
+      { date: '2024-12-01', value: summary.totalValue }
+    ];
+    
+    // Calculate sector allocation (mock data for now - will be calculated from real holdings)
+    const sectorAllocation = [
+      { name: 'Technology', value: 45.2, color: '#8884d8' },
+      { name: 'Finance', value: 25.8, color: '#82ca9d' },
+      { name: 'Healthcare', value: 15.3, color: '#ffc658' },
+      { name: 'Energy', value: 8.7, color: '#ff7300' },
+      { name: 'Others', value: 5.0, color: '#0088fe' }
+    ];
+    
+    const portfolioData = {
+      ...summary,
+      timeline,
+      holdings,
+      sectorAllocation
+    };
+    
+    res.status(200).json({
+      success: true,
+      data: portfolioData
+    });
+
+  } catch (error) {
+    console.error('Portfolio detailed error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch detailed portfolio data',
+      code: 'PORTFOLIO_DETAILED_ERROR'
+    });
+  }
+});
+
+// Get market data
+router.get('/markets', async (req, res) => {
+  try {
+    // Mock market data - will be replaced with real API integration
+    const marketData = {
+      globalIndices: [
+        {
+          name: 'NIFTY 50',
+          symbol: 'NIFTY',
+          value: 19850.25,
+          change: 125.50,
+          changePercent: 0.64,
+          country: 'India',
+          flag: '🇮🇳'
+        },
+        {
+          name: 'SENSEX',
+          symbol: 'SENSEX',
+          value: 66123.45,
+          change: -89.25,
+          changePercent: -0.13,
+          country: 'India',
+          flag: '🇮🇳'
+        },
+        {
+          name: 'NASDAQ',
+          symbol: 'NASDAQ',
+          value: 14567.89,
+          change: 234.12,
+          changePercent: 1.63,
+          country: 'USA',
+          flag: '🇺🇸'
+        },
+        {
+          name: 'S&P 500',
+          symbol: 'SPX',
+          value: 4567.23,
+          change: 45.67,
+          changePercent: 1.01,
+          country: 'USA',
+          flag: '🇺🇸'
+        },
+        {
+          name: 'DOW JONES',
+          symbol: 'DJI',
+          value: 34567.89,
+          change: -123.45,
+          changePercent: -0.36,
+          country: 'USA',
+          flag: '🇺🇸'
+        },
+        {
+          name: 'FTSE 100',
+          symbol: 'FTSE',
+          value: 7890.12,
+          change: 67.89,
+          changePercent: 0.87,
+          country: 'UK',
+          flag: '🇬🇧'
+        }
+      ],
+      topGainers: [
+        {
+          symbol: 'AAPL',
+          name: 'Apple Inc.',
+          price: 175.50,
+          change: 12.45,
+          changePercent: 7.63,
+          volume: '45.2M',
+          marketCap: '2.8T',
+          sector: 'Technology'
+        },
+        {
+          symbol: 'TSLA',
+          name: 'Tesla Inc.',
+          price: 245.80,
+          change: 18.90,
+          changePercent: 8.33,
+          volume: '78.5M',
+          marketCap: '780B',
+          sector: 'Automotive'
+        },
+        {
+          symbol: 'NVDA',
+          name: 'NVIDIA Corp.',
+          price: 485.20,
+          change: 32.15,
+          changePercent: 7.10,
+          volume: '52.1M',
+          marketCap: '1.2T',
+          sector: 'Technology'
+        }
+      ],
+      topLosers: [
+        {
+          symbol: 'META',
+          name: 'Meta Platforms Inc.',
+          price: 298.45,
+          change: -15.20,
+          changePercent: -4.85,
+          volume: '32.4M',
+          marketCap: '760B',
+          sector: 'Technology'
+        },
+        {
+          symbol: 'NFLX',
+          name: 'Netflix Inc.',
+          price: 445.60,
+          change: -18.90,
+          changePercent: -4.07,
+          volume: '12.8M',
+          marketCap: '195B',
+          sector: 'Entertainment'
+        }
+      ],
+      volumeLeaders: [
+        {
+          symbol: 'AAPL',
+          name: 'Apple Inc.',
+          price: 175.50,
+          volume: '78.5M',
+          avgVolume: '45.2M',
+          volumeRatio: 1.74,
+          sector: 'Technology'
+        },
+        {
+          symbol: 'TSLA',
+          name: 'Tesla Inc.',
+          price: 245.80,
+          volume: '65.2M',
+          avgVolume: '38.7M',
+          volumeRatio: 1.68,
+          sector: 'Automotive'
+        }
+      ],
+      sectorPerformance: [
+        { name: 'Technology', value: 2.45, color: '#8884d8' },
+        { name: 'Healthcare', value: 1.89, color: '#82ca9d' },
+        { name: 'Finance', value: 1.23, color: '#ffc658' },
+        { name: 'Energy', value: -0.45, color: '#ff7300' },
+        { name: 'Consumer', value: 0.78, color: '#0088fe' },
+        { name: 'Industrial', value: 1.12, color: '#00ff00' },
+        { name: 'Utilities', value: -0.23, color: '#ff00ff' },
+        { name: 'Materials', value: 0.56, color: '#ffff00' }
+      ]
+    };
+
+    res.status(200).json({
+      success: true,
+      data: marketData
+    });
+
+  } catch (error) {
+    console.error('Market data error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch market data',
+      code: 'MARKET_DATA_ERROR'
     });
   }
 });

@@ -45,8 +45,8 @@ function Login() {
     try {
       console.log('Attempting login with credentials:', { email: formData.email });
       
-      // Use direct backend URL without /api prefix (consistent with signup)
-      const API_URL = 'https://hytrade-backend.onrender.com';
+      // Use local backend URL for development
+      const API_URL = 'http://localhost:3002';
       
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
@@ -62,13 +62,16 @@ function Login() {
       const data = await response.json();
       console.log('Login response:', data);
 
-      if (data.success && data.authToken) {
-        // Store token and user info in localStorage for frontend navigation
-        localStorage.setItem('authToken', data.authToken);
+      if (data.success && data.token) {
+        // Store token, session, and user info in localStorage for frontend navigation
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('sessionId', data.sessionId);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('session', JSON.stringify(data.session));
+        localStorage.setItem('isLoggedIn', 'true');
         
-        // Redirect to dashboard with token in URL
-        window.location.href = `https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app?token=${data.authToken}`;
+        // Redirect to local dashboard with token in URL
+        window.location.href = `http://localhost:5173?token=${data.token}`;
       } else {
         setError(data.message || 'Login failed. Please check your credentials.');
       }
@@ -81,121 +84,328 @@ function Login() {
   };
 
   return (
-    <div className="auth-container">
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <h2>Login to Hytrade</h2>
-        
+    <div className="login-container" style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Animated Background Elements */}
+      <div style={{
+        position: 'absolute',
+        top: '10%',
+        left: '10%',
+        width: '200px',
+        height: '200px',
+        background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+        borderRadius: '50%',
+        animation: 'float 6s ease-in-out infinite',
+        filter: 'blur(1px)'
+      }}></div>
+      <div style={{
+        position: 'absolute',
+        bottom: '20%',
+        right: '15%',
+        width: '150px',
+        height: '150px',
+        background: 'linear-gradient(45deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+        borderRadius: '50%',
+        animation: 'float 8s ease-in-out infinite reverse',
+        filter: 'blur(1px)'
+      }}></div>
+      <div style={{
+        position: 'absolute',
+        top: '60%',
+        left: '5%',
+        width: '100px',
+        height: '100px',
+        background: 'linear-gradient(45deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+        borderRadius: '50%',
+        animation: 'float 10s ease-in-out infinite',
+        filter: 'blur(1px)'
+      }}></div>
+
+      <div className="login-card" style={{
+        background: 'white',
+        borderRadius: '24px',
+        padding: '40px',
+        width: '100%',
+        maxWidth: '450px',
+        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        {/* Header with Logo */}
+        <div className="login-header" style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <Link to="/" style={{ textDecoration: 'none' }}>
+              <img 
+                src="media/Images/logo.png" 
+                style={{
+                  width: '150px',
+                  height: '150px',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1))',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease'
+                }} 
+                alt="Hytrade Logo"
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              />
+            </Link>
+          </div>
+        </div>
+
         {/* Info Message */}
         {infoMessage && (
-          <div className="info-message" style={{
-            backgroundColor: '#cce7ff',
-            border: '1px solid #99d6ff',
-            borderRadius: '4px',
-            padding: '10px',
-            marginBottom: '15px',
-            color: '#0066cc'
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1))',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+            color: '#1e40af',
+            fontSize: '14px',
+            fontWeight: '500',
+            backdropFilter: 'blur(10px)'
           }}>
-            ℹ️ {infoMessage}
+            <span style={{ marginRight: '8px' }}>ℹ️</span>
+            {infoMessage}
           </div>
         )}
-        
-        {/* Validation Messages */}
-        {validationMessages.length > 0 && (
-          <div className="validation-messages" style={{
-            backgroundColor: '#fff3cd',
-            border: '1px solid #ffeaa7',
-            borderRadius: '4px',
-            padding: '10px',
-            marginBottom: '15px'
-          }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#856404' }}>⚠️ Validation Errors:</h4>
-            <ul style={{ margin: 0, paddingLeft: '20px' }}>
-              {validationMessages.map((msg, index) => (
-                <li key={index} style={{ color: '#856404', marginBottom: '5px' }}>{msg}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
+
         {/* Success Message */}
         {success && (
-          <div className="success-message" style={{
-            backgroundColor: '#d4edda',
-            border: '1px solid #c3e6cb',
-            borderRadius: '4px',
-            padding: '10px',
-            marginBottom: '15px',
-            color: '#155724'
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(134, 239, 172, 0.1))',
+            border: '1px solid rgba(34, 197, 94, 0.3)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+            color: '#15803d',
+            fontSize: '14px',
+            fontWeight: '500',
+            backdropFilter: 'blur(10px)'
           }}>
+            <span style={{ marginRight: '8px' }}>✅</span>
             {success}
           </div>
         )}
-        
+
         {/* Error Message */}
         {error && (
-          <div className="error-message" style={{
-            backgroundColor: '#f8d7da',
-            border: '1px solid #f5c6cb',
-            borderRadius: '4px',
-            padding: '10px',
-            marginBottom: '15px',
-            color: '#721c24'
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(252, 165, 165, 0.1))',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+            color: '#dc2626',
+            fontSize: '14px',
+            fontWeight: '500',
+            backdropFilter: 'blur(10px)'
           }}>
+            <span style={{ marginRight: '8px' }}>❌</span>
             {error}
           </div>
         )}
-        
-        {/* Backend Response Details */}
+
+        {/* Backend Response */}
         {backendResponse && (
-          <div className="backend-response" style={{
-            backgroundColor: '#e2e3e5',
-            border: '1px solid #d6d8db',
-            borderRadius: '4px',
-            padding: '10px',
-            marginBottom: '15px',
-            fontFamily: 'monospace',
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+            fontFamily: 'Monaco, Consolas, monospace',
             fontSize: '12px',
-            whiteSpace: 'pre-wrap',
+            color: '#374151',
             maxHeight: '200px',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            backdropFilter: 'blur(10px)'
           }}>
-            <h4 style={{ margin: '0 0 10px 0', fontFamily: 'sans-serif' }}>🔍 Backend Details:</h4>
+            <div style={{ marginBottom: '8px', fontWeight: '600', color: '#1f2937' }}>🔍 Backend Details:</div>
             {backendResponse}
           </div>
         )}
-        
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '8px',
+              color: '#374151',
+              fontSize: '14px',
+              fontWeight: '700'
+            }}>
+              Email Address
+            </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  background: '#f9fafb',
+                  color: '#1f2937',
+                  fontSize: '16px',
+                  transition: 'all 0.3s ease',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  fontWeight: '500'
+                }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#667eea';
+                e.target.style.background = 'white';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.background = '#f9fafb';
+              }}
+              placeholder="Enter your email"
+            />
+          </div>
 
-        <button type="submit" className="auth-button" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
+          <div style={{ marginBottom: '32px' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '8px',
+              color: '#374151',
+              fontSize: '14px',
+              fontWeight: '700'
+            }}>
+              Password
+            </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  background: '#f9fafb',
+                  color: '#1f2937',
+                  fontSize: '16px',
+                  transition: 'all 0.3s ease',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  fontWeight: '500'
+                }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#667eea';
+                e.target.style.background = 'white';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.background = '#f9fafb';
+              }}
+              placeholder="Enter your password"
+            />
+          </div>
 
-        <div className="auth-link">
-          <p>Don't have an account? <Link to="/signup">Sign up here</Link></p>
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: loading 
+                ? 'linear-gradient(135deg, #9ca3af, #6b7280)' 
+                : 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 12px 35px rgba(102, 126, 234, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.3)';
+              }
+            }}
+          >
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTop: '2px solid white',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  marginRight: '8px'
+                }}></span>
+                Logging in...
+              </span>
+            ) : (
+              'Log In'
+            )}
+          </button>
+        </form>
+
+        <div style={{ textAlign: 'center' }}>
+            <p style={{
+              color: '#6b7280',
+              fontSize: '14px',
+              margin: '0'
+            }}>
+            Don't have an account?{' '}
+            <Link 
+              to="/signup" 
+              style={{ 
+                color: '#667eea', 
+                textDecoration: 'none', 
+                fontWeight: '700', 
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#5a67d8'}
+              onMouseLeave={(e) => e.target.style.color = '#667eea'}
+            >
+              Create one here
+            </Link>
+          </p>
         </div>
-      </form>
+      </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

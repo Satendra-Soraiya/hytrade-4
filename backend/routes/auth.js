@@ -5,6 +5,7 @@ const { CustomUserModel } = require('../model/CustomUserModel');
 const { generateJWT, validatePasswordStrength, SECURITY_CONFIG } = require('../config/security');
 const { validateRegistration, validateLogin } = require('../middleware/validation');
 const { authMiddleware } = require('../middleware/auth');
+const { SessionService } = require('../services/sessionService');
 
 const router = express.Router();
 
@@ -54,13 +55,17 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
       role: newUser.role || 'user'
     });
 
+    // Create session for new user
+    const session = await SessionService.createSession(newUser._id, token, req);
+
     // Log successful registration
-    console.log(`New user registered: ${email}`);
+    console.log(`New user registered: ${email} | Session: ${session.sessionId}`);
 
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
       token: token,
+      sessionId: session.sessionId,
       user: {
         id: newUser._id,
         firstName: newUser.firstName,
@@ -71,6 +76,11 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
         accountBalance: newUser.accountBalance,
         isVerified: newUser.isVerified,
         createdAt: newUser.createdAt
+      },
+      session: {
+        id: session.sessionId,
+        deviceInfo: session.deviceInfo,
+        expiresAt: session.expiresAt
       }
     });
 
@@ -138,13 +148,17 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
       role: user.role || 'user'
     });
 
+    // Create session
+    const session = await SessionService.createSession(user._id, token, req);
+
     // Log successful login
-    console.log(`User logged in: ${email}`);
+    console.log(`User logged in: ${email} | Session: ${session.sessionId}`);
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
       token: token,
+      sessionId: session.sessionId,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -157,6 +171,11 @@ router.post('/login', loginLimiter, validateLogin, async (req, res) => {
         totalPnL: user.totalPnL,
         isVerified: user.isVerified,
         lastLoginAt: user.lastLoginAt
+      },
+      session: {
+        id: session.sessionId,
+        deviceInfo: session.deviceInfo,
+        expiresAt: session.expiresAt
       }
     });
 
@@ -188,17 +207,20 @@ router.get('/verify', authMiddleware, async (req, res) => {
   }
 });
 
-// Logout (optional - for token blacklisting if implemented)
+// Logout with session management
 router.post('/logout', authMiddleware, async (req, res) => {
   try {
-    // In a production app, you might want to blacklist the token
-    // For now, we'll just return success
+    const token = req.headers.authorization.split(' ')[1];
     
-    console.log(`User logged out: ${req.user.email}`);
+    // Deactivate the session
+    const sessionDeactivated = await SessionService.deactivateSession(token);
+    
+    console.log(`User logged out: ${req.user.email} | Session deactivated: ${sessionDeactivated}`);
     
     res.status(200).json({
       success: true,
-      message: 'Logged out successfully'
+      message: 'Logged out successfully',
+      sessionDeactivated: sessionDeactivated
     });
   } catch (error) {
     console.error('Logout error:', error);
@@ -206,6 +228,32 @@ router.post('/logout', authMiddleware, async (req, res) => {
       success: false,
       message: 'Logout failed',
       code: 'LOGOUT_ERROR'
+    });
+  }
+});
+
+// Get user's active sessions
+router.get('/sessions', authMiddleware, async (req, res) => {
+  try {
+    const sessions = await SessionService.getUserActiveSessions(req.user.id);
+    
+    res.status(200).json({
+      success: true,
+      sessions: sessions.map(session => ({
+        id: session.sessionId,
+        deviceInfo: session.deviceInfo,
+        lastActivity: session.lastActivity,
+        createdAt: session.createdAt,
+        expiresAt: session.expiresAt,
+        isCurrent: session.sessionId === req.session.id
+      }))
+    });
+  } catch (error) {
+    console.error('Error getting user sessions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get sessions',
+      code: 'SESSIONS_ERROR'
     });
   }
 });

@@ -1,7 +1,8 @@
 const { verifyJWT } = require('../config/security');
 const { CustomUserModel } = require('../model/CustomUserModel');
+const { SessionService } = require('../services/sessionService');
 
-// Enhanced authentication middleware
+// Enhanced authentication middleware with session management
 const authMiddleware = async (req, res, next) => {
   try {
     // Extract token from Authorization header
@@ -16,11 +17,21 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
 
-    // Verify JWT token
+    // First verify JWT token
     const decoded = verifyJWT(token);
     
-    // Fetch user from database to ensure they still exist and are active
-    const user = await CustomUserModel.findById(decoded.userId).select('-password');
+    // Then validate session
+    const session = await SessionService.validateSession(token);
+    if (!session) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Session expired or invalid. Please login again.",
+        code: 'SESSION_EXPIRED'
+      });
+    }
+
+    // Get user from session (already populated)
+    const user = session.userId;
     if (!user) {
       return res.status(401).json({ 
         success: false, 
@@ -37,7 +48,7 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Attach user information to request object
+    // Attach user and session information to request object
     req.user = {
       id: user._id,
       email: user.email,
@@ -47,12 +58,16 @@ const authMiddleware = async (req, res, next) => {
       accountBalance: user.accountBalance,
       isVerified: user.isVerified,
       tradingExperience: user.tradingExperience,
-      riskTolerance: user.riskTolerance
+      riskTolerance: user.riskTolerance,
+      lastLoginAt: user.lastLoginAt
     };
 
-    // Update last activity timestamp
-    user.lastLoginAt = new Date();
-    await user.save();
+    req.session = {
+      id: session.sessionId,
+      deviceInfo: session.deviceInfo,
+      lastActivity: session.lastActivity,
+      createdAt: session.createdAt
+    };
 
     next();
   } catch (error) {

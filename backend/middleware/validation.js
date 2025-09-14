@@ -24,15 +24,15 @@ const validateRegistration = [
     .trim()
     .isLength({ min: 2, max: 50 })
     .withMessage('First name must be between 2-50 characters')
-    .matches(/^[a-zA-Z\s]+$/)
-    .withMessage('First name can only contain letters and spaces'),
+    .matches(/^[a-zA-Z0-9\s]+$/)
+    .withMessage('First name can only contain letters, numbers, and spaces'),
   
   body('lastName')
     .trim()
     .isLength({ min: 2, max: 50 })
     .withMessage('Last name must be between 2-50 characters')
-    .matches(/^[a-zA-Z\s]+$/)
-    .withMessage('Last name can only contain letters and spaces'),
+    .matches(/^[a-zA-Z0-9\s]+$/)
+    .withMessage('Last name can only contain letters, numbers, and spaces'),
   
   body('email')
     .trim()
@@ -43,13 +43,8 @@ const validateRegistration = [
     .withMessage('Email must be less than 100 characters'),
   
   body('password')
-    .custom((value) => {
-      const validation = validatePasswordStrength(value);
-      if (!validation.isValid) {
-        throw new Error(validation.errors.join(', '));
-      }
-      return true;
-    }),
+    .isLength({ min: 1 })
+    .withMessage('Password is required'),
   
   body('tradingExperience')
     .optional()

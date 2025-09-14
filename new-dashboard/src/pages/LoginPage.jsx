@@ -69,8 +69,19 @@ export const LoginPage = () => {
         console.log('Token received, calling login function...');
         const loginResult = await login(data.token);
         console.log('Login result:', loginResult);
-        console.log('Navigating to:', from);
-        navigate(from, { replace: true });
+        
+        if (loginResult) {
+          // Small delay to ensure user state is updated
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Use React Router navigation with replace to avoid cache issues
+          // Add a small delay to ensure all state is properly updated
+          setTimeout(() => {
+            navigate(from, { replace: true });
+          }, 100);
+        } else {
+          throw new Error('Login failed - invalid token');
+        }
       } else {
         console.error('No token in response:', data);
         throw new Error('No authentication token received');

@@ -50,7 +50,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response.ok) {
-        const { user: userData } = await response.json();
+        const data = await response.json();
+        const { user: userData } = data;
         if (userData) {
           console.log('Token valid for user:', userData.email);
           setUser(userData);
@@ -68,27 +69,50 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (authToken) => {
-    setIsLoading(true);
     try {
       const isValid = await validateToken(authToken);
       if (isValid) {
-        setToken(authToken);
-        localStorage.setItem('token', authToken);
+        // Wait a bit more to ensure state is fully updated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return true;
       }
-      return isValid;
-    } finally {
-      setIsLoading(false);
+      return false;
+    } catch (error) {
+      console.error('AuthContext: Login error:', error);
+      return false;
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     console.log('Logging out...');
+    
+    // Call backend logout to deactivate session
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await fetch(`${API_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+    
+    // Clear all session data
     setUser(null);
     setToken('');
     localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('session');
+    localStorage.removeItem('isLoggedIn');
     
     // Redirect to frontend with logout message
-    window.location.href = 'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app?message=' + 
+    window.location.href = 'http://localhost:3000?message=' + 
       encodeURIComponent('You have been logged out successfully');
   };
 

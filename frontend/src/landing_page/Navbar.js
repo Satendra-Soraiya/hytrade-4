@@ -1,5 +1,305 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+
+// Profile Dropdown Component
+const ProfileDropdown = ({ user, onLogout }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleLogout = () => {
+    setIsOpen(false);
+    onLogout();
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* Profile Button */}
+      <div
+        onClick={toggleDropdown}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          padding: '0.5rem 1rem',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '6px',
+          border: '1px solid #dee2e6',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.backgroundColor = '#e9ecef';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.backgroundColor = '#f8f9fa';
+        }}
+      >
+        <div style={{
+          width: '32px',
+          height: '32px',
+          backgroundColor: '#007bff',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: '600',
+          fontSize: '0.875rem'
+        }}>
+          {user.firstName?.[0]?.toUpperCase() || 'U'}
+        </div>
+        <div>
+          <div style={{
+            color: '#212529',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            lineHeight: '1.2'
+          }}>
+            {user.firstName || 'User'}
+          </div>
+          <div style={{
+            color: '#6c757d',
+            fontSize: '0.75rem',
+            lineHeight: '1.2'
+          }}>
+            {user.email || 'user@example.com'}
+          </div>
+        </div>
+        <div style={{
+          color: '#6c757d',
+          fontSize: '0.75rem',
+          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s ease'
+        }}>
+          ▼
+        </div>
+      </div>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          right: '0',
+          marginTop: '0.5rem',
+          backgroundColor: 'white',
+          border: '1px solid #dee2e6',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          minWidth: '280px',
+          zIndex: 1000
+        }}>
+          {/* Profile Header */}
+          <div style={{
+            padding: '1rem',
+            borderBottom: '1px solid #e9ecef'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              marginBottom: '0.75rem'
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                backgroundColor: '#007bff',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '1.125rem'
+              }}>
+                {user.firstName?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div>
+                <div style={{
+                  color: '#212529',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  lineHeight: '1.2'
+                }}>
+                  {user.firstName ? `${user.firstName} ${user.lastName}` : 'User'}
+                </div>
+                <div style={{
+                  color: '#6c757d',
+                  fontSize: '0.875rem',
+                  lineHeight: '1.2'
+                }}>
+                  {user.email || 'user@example.com'}
+                </div>
+              </div>
+            </div>
+            
+            {/* User Stats */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '600',
+                  color: '#007bff'
+                }}>
+                  ${user.accountBalance?.toLocaleString() || '100,000'}
+                </div>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: '#6c757d'
+                }}>
+                  Balance
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '600',
+                  color: '#28a745'
+                }}>
+                  {user.riskTolerance || 'Medium'}
+                </div>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: '#6c757d'
+                }}>
+                  Risk Level
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '600',
+                  color: '#17a2b8'
+                }}>
+                  {user.tradingExperience || 'Beginner'}
+                </div>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: '#6c757d'
+                }}>
+                  Experience
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Menu Items */}
+          <div style={{ padding: '0.5rem 0' }}>
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              onClick={() => setIsOpen(false)}
+            >
+              <span style={{ fontSize: '1rem' }}>👤</span>
+              <span style={{ color: '#495057', fontSize: '0.875rem' }}>View Profile</span>
+            </div>
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              onClick={() => setIsOpen(false)}
+            >
+              <span style={{ fontSize: '1rem' }}>⚙️</span>
+              <span style={{ color: '#495057', fontSize: '0.875rem' }}>Account Settings</span>
+            </div>
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              onClick={() => setIsOpen(false)}
+            >
+              <span style={{ fontSize: '1rem' }}>📊</span>
+              <span style={{ color: '#495057', fontSize: '0.875rem' }}>Trading History</span>
+            </div>
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              onClick={() => setIsOpen(false)}
+            >
+              <span style={{ fontSize: '1rem' }}>💳</span>
+              <span style={{ color: '#495057', fontSize: '0.875rem' }}>Payment Methods</span>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{
+            borderTop: '1px solid #e9ecef',
+            margin: '0.5rem 0'
+          }}></div>
+
+          {/* Logout Button */}
+          <div
+            style={{
+              padding: '0.75rem 1rem',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#f8d7da'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            onClick={handleLogout}
+          >
+            <span style={{ fontSize: '1rem' }}>🚪</span>
+            <span style={{ color: '#dc3545', fontSize: '0.875rem', fontWeight: '500' }}>Logout</span>
+          </div>
+        </div>
+      )}
+
+      {/* Backdrop to close dropdown when clicking outside */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999
+          }}
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
 
 function Navbar() {
   const [user, setUser] = useState(null);
@@ -16,7 +316,7 @@ function Navbar() {
     
     if (storedToken && storedUser) {
       // User has token, redirect to dashboard with token
-      window.location.href = `https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app?token=${storedToken}`;
+      window.location.href = `http://localhost:5173?token=${storedToken}`;
       return;
     }
     
@@ -25,23 +325,32 @@ function Navbar() {
   };
 
   // Function to check and update auth state - Session-based authentication
-  const checkAuthState = async () => {
+  const checkAuthState = useCallback(async () => {
     try {
       // Check for logout parameter in URL first
       const urlParams = new URLSearchParams(location.search);
       if (urlParams.get('logout') === 'true') {
         // Logout user by calling backend logout endpoint
         try {
-          await fetch('https://hytrade-backend.onrender.com/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include'
-          });
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            await fetch('http://localhost:3002/api/auth/logout', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+          }
         } catch (error) {
           console.error('Error during logout:', error);
         }
         localStorage.removeItem('user');
         localStorage.removeItem('authenticated');
         localStorage.removeItem('authToken');
+        localStorage.removeItem('sessionId');
+        localStorage.removeItem('session');
+        localStorage.removeItem('isLoggedIn');
         setUser(null);
         // Clean up URL
         navigate(location.pathname, { replace: true });
@@ -56,11 +365,45 @@ function Navbar() {
         navigate(location.pathname, { replace: true });
       }
 
-      // Check session-based authentication with backend
+      // Check JWT token-based authentication with backend
+      const storedToken = localStorage.getItem('authToken');
+      const storedSessionId = localStorage.getItem('sessionId');
+      const storedUser = localStorage.getItem('user');
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      
+      // Quick check: if we have all required data, set user immediately
+      if (storedToken && storedSessionId && storedUser && isLoggedIn) {
+        try {
+          const userData = JSON.parse(storedUser);
+          console.log('Navbar: Setting user from localStorage:', userData.firstName);
+          setUser(userData);
+          return; // Don't make API call if we have valid local data
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+        }
+      } else {
+        console.log('Navbar: Missing session data:', {
+          hasToken: !!storedToken,
+          hasSessionId: !!storedSessionId,
+          hasUser: !!storedUser,
+          isLoggedIn: isLoggedIn
+        });
+        setUser(null);
+        return;
+      }
+      
+      if (!storedToken || !storedSessionId) {
+        setUser(null);
+        return;
+      }
+
       try {
-        const response = await fetch('https://hytrade-backend.onrender.com/api/auth/verify', {
+        const response = await fetch('http://localhost:3002/api/auth/verify', {
           method: 'GET',
-          credentials: 'include'
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json'
+          }
         });
         
         const data = await response.json();
@@ -70,18 +413,27 @@ function Navbar() {
           setUser(data.user);
           localStorage.setItem('user', JSON.stringify(data.user));
           localStorage.setItem('authenticated', 'true');
+          localStorage.setItem('isLoggedIn', 'true');
         } else {
-          // User is not authenticated, clear state
+          // User is not authenticated, clear all session data
           setUser(null);
           localStorage.removeItem('user');
           localStorage.removeItem('authenticated');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('sessionId');
+          localStorage.removeItem('session');
+          localStorage.removeItem('isLoggedIn');
         }
       } catch (error) {
         console.error('Error checking session:', error);
-        // On error, assume not authenticated
+        // On error, clear all session data
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('authenticated');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('sessionId');
+        localStorage.removeItem('session');
+        localStorage.removeItem('isLoggedIn');
       }
     } catch (error) {
       console.error('Error in checkAuthState:', error);
@@ -89,7 +441,7 @@ function Navbar() {
       localStorage.removeItem('user');
       localStorage.removeItem('authenticated');
     }
-  };
+  }, [location, navigate]);
 
   // Check auth state on component mount and when location changes
   useEffect(() => {
@@ -97,23 +449,32 @@ function Navbar() {
     
     // Also set up storage event listener to sync across tabs
     const handleStorageChange = (e) => {
-      if (e.key === 'user' || e.key === 'token' || e.key === null) {
+      if (e.key === 'user' || e.key === 'authToken' || e.key === 'sessionId' || e.key === 'isLoggedIn' || e.key === null) {
         checkAuthState();
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [location, navigate]);
+  }, [checkAuthState]);
 
   // Handle logout - Session-based authentication
   const handleLogout = async () => {
     try {
-      // Call backend logout endpoint to destroy session
-      await fetch('https://hytrade-backend.onrender.com/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
+      // Get the JWT token for backend session deactivation
+      const token = localStorage.getItem('authToken');
+      
+      if (token) {
+        // Call backend logout endpoint to destroy session server-side
+        await fetch('http://localhost:3002/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log('✅ Session deactivated on server');
+      }
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -122,98 +483,207 @@ function Navbar() {
     localStorage.removeItem('user');
     localStorage.removeItem('authenticated');
     localStorage.removeItem('authToken');
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('session');
+    localStorage.removeItem('isLoggedIn');
     setUser(null);
-    navigate('/');
+    
+    // Redirect to home page with logout message
+    navigate('/?message=' + encodeURIComponent('You have been logged out successfully'));
   };
 
   return (
-    <div className="container">
-      <nav className="navbar navbar-expand-lg bg-body-tertiary">
-        <div className="container p-2">
-          {/* Logo - Always visible */}
-          <Link className="navbar-brand" to="/">
-            <img 
-              src="media/Images/logo.png"
-              style={{
-                maxWidth: '200px',
-                width: 'auto',
-                height: '50px',
-                objectFit: 'contain'
-              }}
-              alt="Logo"
-            />
-          </Link>
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link className="nav-link" to="/about">
-                  About
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/pricing">
-                  Pricing
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/support">
-                  Support
-                </Link>
-              </li>
-            </ul>
-            
-            <div className="d-flex align-items-center">
-              {/* Dashboard Button - Always visible */}
-              <button 
-                onClick={handleDashboardClick}
-                className="btn btn-primary me-2"
-                title="Go to trading dashboard"
+    <nav className="navbar navbar-expand-lg" style={{
+      backgroundColor: '#ffffff',
+      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+      borderBottom: '1px solid #e9ecef',
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000
+    }}>
+      <div className="container">
+        {/* Logo - Clean and professional */}
+        <Link className="navbar-brand" to="/" style={{textDecoration: 'none'}}>
+          <img 
+            src="media/Images/logo.png"
+            style={{
+              maxWidth: '180px',
+              width: 'auto',
+              height: '45px',
+              objectFit: 'contain'
+            }}
+            alt="Hytrade Logo"
+          />
+        </Link>
+
+        {/* Mobile Toggle Button */}
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          style={{
+            border: '1px solid #dee2e6',
+            borderRadius: '4px'
+          }}
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          {/* Navigation Links - Clean and simple */}
+          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+            <li className="nav-item">
+              <Link 
+                className="nav-link" 
+                to="/about"
+                style={{
+                  color: '#495057',
+                  fontWeight: '500',
+                  padding: '0.75rem 1rem',
+                  transition: 'color 0.2s ease',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#007bff'}
+                onMouseLeave={(e) => e.target.style.color = '#495057'}
               >
-                Dashboard
-              </button>
-              
-              {user ? (
-                // Logged in state
-                <div className="d-flex align-items-center gap-3">
-                  <span className="text-muted me-2">
-                    Welcome, {user.firstName || user.name || 'User'}
-                  </span>
-                  
-                  {/* Logout Button */}
-                  <button 
-                    onClick={handleLogout}
-                    className="btn btn-outline-secondary"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                // Not logged in state
-                <div className="d-flex">
-                  <Link to="/login" className="btn btn-outline-primary me-2">
-                    Login
-                  </Link>
-                  <Link to="/signup" className="btn btn-success">
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-            </div>
+                About
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link 
+                className="nav-link" 
+                to="/products"
+                style={{
+                  color: '#495057',
+                  fontWeight: '500',
+                  padding: '0.75rem 1rem',
+                  transition: 'color 0.2s ease',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#007bff'}
+                onMouseLeave={(e) => e.target.style.color = '#495057'}
+              >
+                Products
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link 
+                className="nav-link" 
+                to="/pricing"
+                style={{
+                  color: '#495057',
+                  fontWeight: '500',
+                  padding: '0.75rem 1rem',
+                  transition: 'color 0.2s ease',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#007bff'}
+                onMouseLeave={(e) => e.target.style.color = '#495057'}
+              >
+                Pricing
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link 
+                className="nav-link" 
+                to="/support"
+                style={{
+                  color: '#495057',
+                  fontWeight: '500',
+                  padding: '0.75rem 1rem',
+                  transition: 'color 0.2s ease',
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#007bff'}
+                onMouseLeave={(e) => e.target.style.color = '#495057'}
+              >
+                Support
+              </Link>
+            </li>
+          </ul>
+          
+          {/* Right Side Actions */}
+          <div className="d-flex align-items-center gap-3">
+            {/* Dashboard Button - Professional styling */}
+            <button 
+              onClick={handleDashboardClick}
+              className={`btn ${user ? 'btn-success' : 'btn-primary'}`}
+              style={{
+                padding: '0.75rem 1.5rem',
+                fontWeight: '600',
+                fontSize: '0.9rem',
+                borderRadius: '6px',
+                border: 'none',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = 'none';
+              }}
+            >
+              {user ? '🚀 Dashboard' : '📊 Dashboard'}
+            </button>
+            
+            {user ? (
+              // Logged in state - Profile Dropdown Component
+              <ProfileDropdown user={user} onLogout={handleLogout} />
+            ) : (
+              // Not logged in state - Clean design
+              <div className="d-flex gap-2">
+                <Link 
+                  to="/login" 
+                  className="btn btn-outline-primary"
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontWeight: '500',
+                    fontSize: '0.9rem',
+                    borderRadius: '6px',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/signup" 
+                  className="btn btn-success"
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    borderRadius: '6px',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                  }}
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
-      </nav>
-    </div>
+      </div>
+    </nav>
   );
 }
 

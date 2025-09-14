@@ -5,6 +5,9 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import MainLayout from './layout/MainLayout';
 import DashboardPage from './pages/DashboardPage';
+import PortfolioPage from './pages/PortfolioPage';
+import MarketsPage from './pages/MarketsPage';
+import TradePage from './pages/TradePage';
 import { LoginPage } from './pages/LoginPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -148,6 +151,9 @@ const AppContent = () => {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="portfolio" element={<PortfolioPage />} />
+          <Route path="markets" element={<MarketsPage />} />
+          <Route path="trade" element={<TradePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

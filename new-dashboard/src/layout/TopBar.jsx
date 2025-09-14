@@ -157,14 +157,13 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
           id="account-menu"
           open={open}
           onClose={handleMenuClose}
-          onClick={handleMenuClose}
           PaperProps={{
             elevation: 0,
             sx: {
               overflow: 'visible',
               filter: 'drop-shadow(0px 4px 20px rgba(0,0,0,0.15))',
               mt: 1.5,
-              minWidth: 200,
+              minWidth: 280,
               borderRadius: 2,
               border: '1px solid',
               borderColor: 'divider',
@@ -189,31 +188,81 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
-          <MenuItem onClick={handleMenuClose}>
-            <Avatar />
-            <ListItemText 
-              primary={user?.firstName ? `${user.firstName} ${user.lastName}` : 'User'} 
-              secondary={user?.email || 'user@example.com'} 
-            />
-          </MenuItem>
-          <Divider />
+          {/* User Profile Header */}
+          <Box sx={{ px: 2, py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Avatar 
+                sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  mr: 2,
+                  border: '2px solid',
+                  borderColor: 'background.paper',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                {user?.firstName?.[0]?.toUpperCase() || 'U'}
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                  {user?.firstName ? `${user.firstName} ${user.lastName}` : 'User'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.2 }}>
+                  {user?.email || 'user@example.com'}
+                </Typography>
+              </Box>
+            </Box>
+            
+            {/* User Stats */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                  ${user?.accountBalance?.toLocaleString() || '100,000'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Balance
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
+                  {user?.riskTolerance || 'Medium'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Risk Level
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: 'info.main' }}>
+                  {user?.tradingExperience || 'Beginner'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Experience
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Menu Items */}
           <MenuItem onClick={handleMenuClose}>
             <ListItemIcon>
               <PersonIcon fontSize="small" />
             </ListItemIcon>
-            Profile
+            <ListItemText primary="View Profile" />
           </MenuItem>
           <MenuItem onClick={handleMenuClose}>
             <ListItemIcon>
               <SettingsIcon fontSize="small" />
             </ListItemIcon>
-            Settings
+            <ListItemText primary="Account Settings" />
           </MenuItem>
+          <Divider />
           <MenuItem onClick={handleLogout}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" />
             </ListItemIcon>
-            Logout
+            <ListItemText primary="Logout" />
           </MenuItem>
         </Menu>
       </Toolbar>
