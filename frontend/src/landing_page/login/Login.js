@@ -71,7 +71,7 @@ function Login() {
         localStorage.setItem('isLoggedIn', 'true');
         
         // Redirect to dashboard with token in URL
-        const DASHBOARD_URL = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:5173';
+        const DASHBOARD_URL = process.env.REACT_APP_DASHBOARD_URL || 'https://hytrade-dashboard.vercel.app';
         window.location.href = `${DASHBOARD_URL}?token=${data.token}`;
       } else {
         setError(data.message || 'Login failed. Please check your credentials.');
