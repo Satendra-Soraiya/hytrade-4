@@ -11,7 +11,21 @@ function Hero() {
         const urlParams = new URLSearchParams(window.location.search);
         const urlMessage = urlParams.get('message');
         if (urlMessage) {
-            setMessage(decodeURIComponent(urlMessage));
+            const decodedMessage = decodeURIComponent(urlMessage);
+            setMessage(decodedMessage);
+            
+            // Check if it's a logout message and clear user state
+            if (decodedMessage.includes('logged out successfully')) {
+                console.log('Logout detected in Hero, clearing user state');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('sessionId');
+                localStorage.removeItem('user');
+                localStorage.removeItem('session');
+                localStorage.removeItem('isLoggedIn');
+                setUser(null);
+                setIsLoggedIn(false);
+            }
+            
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
         }

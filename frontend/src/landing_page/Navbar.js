@@ -361,7 +361,21 @@ function Navbar() {
       // Check for success message after login redirect
       const message = urlParams.get('message');
       if (message) {
-        console.log('Login message:', decodeURIComponent(message));
+        const decodedMessage = decodeURIComponent(message);
+        console.log('URL message:', decodedMessage);
+        
+        // Check if it's a logout message
+        if (decodedMessage.includes('logged out successfully')) {
+          console.log('Logout detected from URL, clearing user state');
+          // Clear all user data
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('sessionId');
+          localStorage.removeItem('user');
+          localStorage.removeItem('session');
+          localStorage.removeItem('isLoggedIn');
+          setUser(null);
+        }
+        
         // Clean up URL
         navigate(location.pathname, { replace: true });
       }
