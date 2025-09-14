@@ -334,7 +334,8 @@ function Navbar() {
         try {
           const token = localStorage.getItem('authToken');
           if (token) {
-            await fetch('http://localhost:3002/api/auth/logout', {
+            const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+            await fetch(`${API_URL}/api/auth/logout`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -398,7 +399,8 @@ function Navbar() {
       }
 
       try {
-        const response = await fetch('http://localhost:3002/api/auth/verify', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+        const response = await fetch(`${API_URL}/api/auth/verify`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${storedToken}`,
@@ -466,7 +468,8 @@ function Navbar() {
       
       if (token) {
         // Call backend logout endpoint to destroy session server-side
-        await fetch('http://localhost:3002/api/auth/logout', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+        await fetch(`${API_URL}/api/auth/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

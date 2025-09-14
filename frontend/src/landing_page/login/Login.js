@@ -45,8 +45,8 @@ function Login() {
     try {
       console.log('Attempting login with credentials:', { email: formData.email });
       
-      // Use local backend URL for development
-      const API_URL = 'http://localhost:3002';
+      // Use environment variable for API URL (production/development)
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
       
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
@@ -70,8 +70,9 @@ function Login() {
         localStorage.setItem('session', JSON.stringify(data.session));
         localStorage.setItem('isLoggedIn', 'true');
         
-        // Redirect to local dashboard with token in URL
-        window.location.href = `http://localhost:5173?token=${data.token}`;
+        // Redirect to dashboard with token in URL
+        const DASHBOARD_URL = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:5173';
+        window.location.href = `${DASHBOARD_URL}?token=${data.token}`;
       } else {
         setError(data.message || 'Login failed. Please check your credentials.');
       }

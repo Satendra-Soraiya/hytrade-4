@@ -46,19 +46,32 @@ app.use(helmet({
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
+    // Development URLs
     'http://localhost:3000', 
     'http://localhost:3001',
-      'http://localhost:5173',
-      'http://localhost:5174',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'http://localhost:5174',
+    // Production URLs
+    'https://hytrade-frontend.onrender.com',
+    'https://hytrade-dashboard.onrender.com',
+    // Allow any Render subdomain for flexibility
+    /^https:\/\/.*\.onrender\.com$/
     ];
     
     // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Check if origin matches any allowed origin (string or regex)
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return allowedOrigin === origin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

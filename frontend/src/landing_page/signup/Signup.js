@@ -72,7 +72,8 @@ function Signup() {
     try {
       setBackendStatus('🔄 Connecting to server...');
       
-      const response = await fetch('http://localhost:3002/api/auth/register', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
