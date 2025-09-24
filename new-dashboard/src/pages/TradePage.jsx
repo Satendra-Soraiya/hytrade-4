@@ -56,7 +56,8 @@ import {
   Favorite as FavoriteIcon,
   FavoriteBorder as FavoriteBorderIcon,
   Share as ShareIcon,
-  MoreVert as MoreVertIcon
+  MoreVert as MoreVertIcon,
+  Psychology as PsychologyIcon
 } from '@mui/icons-material';
 import {
   LineChart,
@@ -526,6 +527,35 @@ const TradePage = () => {
   const [showMiniChart, setShowMiniChart] = useState(null);
   const [notification, setNotification] = useState(null);
   const [logoAttempts, setLogoAttempts] = useState({});
+  const [algorithmRecommendations, setAlgorithmRecommendations] = useState([
+    {
+      algorithm: 'Moving Average Crossover',
+      signal: 'BUY',
+      confidence: 0.85,
+      reasoning: 'Short MA (10) crossed above Long MA (30) with strong momentum',
+      targetPrice: 185.50,
+      stopLoss: 170.20,
+      timeHorizon: '2-5 days'
+    },
+    {
+      algorithm: 'RSI Mean Reversion',
+      signal: 'HOLD',
+      confidence: 0.45,
+      reasoning: 'RSI at 52 - neutral zone, waiting for oversold/overbought conditions',
+      targetPrice: null,
+      stopLoss: null,
+      timeHorizon: '1-3 days'
+    },
+    {
+      algorithm: 'Bollinger Bands Strategy',
+      signal: 'BUY',
+      confidence: 0.78,
+      reasoning: 'Price touching lower band - potential bounce opportunity',
+      targetPrice: 182.30,
+      stopLoss: 168.50,
+      timeHorizon: '1-2 days'
+    }
+  ]);
 
   // Format currency
   const formatCurrency = (amount) => {
@@ -1009,6 +1039,103 @@ const TradePage = () => {
       </Box>
 
       <Grid container spacing={3}>
+        {/* Algorithm Recommendations */}
+        <Grid size={{ xs: 12 }}>
+          <Card sx={{ mb: 3 }}>
+            <CardHeader
+              title="Algorithm Recommendations"
+              subheader="AI-powered trading signals for your selected stock"
+              action={
+                <Button 
+                  variant="outlined" 
+                  size="small"
+                  startIcon={<PsychologyIcon />}
+                >
+                  View All Algorithms
+                </Button>
+              }
+            />
+            <CardContent>
+              <Grid container spacing={2}>
+                {algorithmRecommendations.map((rec, index) => (
+                  <Grid item xs={12} md={4} key={index}>
+                    <Paper 
+                      sx={{ 
+                        p: 2, 
+                        border: '1px solid',
+                        borderColor: rec.signal === 'BUY' ? 'success.main' : 
+                                     rec.signal === 'SELL' ? 'error.main' : 'warning.main',
+                        backgroundColor: rec.signal === 'BUY' ? 'success.light' : 
+                                         rec.signal === 'SELL' ? 'error.light' : 'warning.light',
+                        '&:hover': {
+                          boxShadow: 2,
+                          transform: 'translateY(-2px)',
+                          transition: 'all 0.2s ease-in-out'
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {rec.algorithm}
+                        </Typography>
+                        <Chip 
+                          label={rec.signal}
+                          size="small"
+                          color={rec.signal === 'BUY' ? 'success' : 
+                                 rec.signal === 'SELL' ? 'error' : 'warning'}
+                          variant="filled"
+                        />
+                      </Box>
+                      
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {rec.reasoning}
+                      </Typography>
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Confidence
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {(rec.confidence * 100).toFixed(0)}%
+                        </Typography>
+                      </Box>
+                      
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={rec.confidence * 100}
+                        sx={{
+                          height: 6,
+                          borderRadius: 3,
+                          mb: 1,
+                          '& .MuiLinearProgress-bar': {
+                            backgroundColor: rec.signal === 'BUY' ? 'success.main' : 
+                                             rec.signal === 'SELL' ? 'error.main' : 'warning.main',
+                          },
+                        }}
+                      />
+                      
+                      {rec.targetPrice && (
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Target: {formatCurrency(rec.targetPrice)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Stop: {formatCurrency(rec.stopLoss)}
+                          </Typography>
+                        </Box>
+                      )}
+                      
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                        Time Horizon: {rec.timeHorizon}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+
         {/* Main Content - Stock List with Trading */}
         <Grid size={{ xs: 12, lg: 8 }}>
           {/* Popular Stocks List */}

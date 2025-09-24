@@ -21,6 +21,7 @@ import {
   ListItemButton
 } from '@mui/material';
 import BackendStatus from '../components/BackendStatus';
+import AlgorithmStatus from '../components/AlgorithmStatus';
 import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
@@ -33,7 +34,8 @@ import {
   SwapHoriz as TradeIcon,
   NotificationsActive as AlertIcon,
   StarBorder as WatchlistIcon,
-  Receipt as ReceiptIcon
+  Receipt as ReceiptIcon,
+  Psychology as AlgorithmIcon
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { Business as CompanyIcon } from '@mui/icons-material';
@@ -849,7 +851,7 @@ const DashboardPage = () => {
           <TopCompanies />
         </Grid>
 
-        {/* Price Alerts */}
+        {/* Algorithm Status Section */}
         <Grid size={{ xs: 12 }}>
           <Paper 
             elevation={0} 
@@ -870,25 +872,30 @@ const DashboardPage = () => {
           >
             <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'center', md: 'flex-start' }, mb: 1 }}>
-                <AlertIcon sx={{ mr: 1, color: 'warning.main' }} />
+                <AlgorithmIcon sx={{ mr: 1, color: 'primary.main' }} />
                 <Typography variant="h6" component="h2">
-                  Price Alerts
+                  Trading Algorithms
                 </Typography>
               </Box>
               <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 600 }}>
-                Stay updated with real-time price alerts for your favorite assets. Get notified when prices hit your target levels.
+                Monitor your automated trading algorithms in real-time. View performance metrics, adjust parameters, and control algorithm execution.
               </Typography>
             </Box>
             <Button 
               variant="contained" 
-              color="warning"
+              color="primary"
               size="large"
-              startIcon={<AlertIcon />}
+              startIcon={<AlgorithmIcon />}
               sx={{ flexShrink: 0 }}
             >
-              Set Up Alerts
+              View Algorithms
             </Button>
           </Paper>
+        </Grid>
+
+        {/* Algorithm Status Component */}
+        <Grid size={{ xs: 12 }}>
+          <AlgorithmStatus />
         </Grid>
       </Grid>
     </Box>

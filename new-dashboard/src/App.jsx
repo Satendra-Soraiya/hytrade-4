@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import PortfolioPage from './pages/PortfolioPage';
 import MarketsPage from './pages/MarketsPage';
 import TradePage from './pages/TradePage';
+import AlgorithmsPage from './pages/AlgorithmsPage';
 import ProfilePage from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -155,6 +156,7 @@ const AppContent = () => {
           <Route path="portfolio" element={<PortfolioPage />} />
           <Route path="markets" element={<MarketsPage />} />
           <Route path="trade" element={<TradePage />} />
+          <Route path="algorithms" element={<AlgorithmsPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />

@@ -31,7 +31,15 @@ import {
   Assessment as AssessmentIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
-  FilterList as FilterIcon
+  FilterList as FilterIcon,
+  Psychology as PsychologyIcon,
+  Code as CodeIcon,
+  Speed as SpeedIcon,
+  Security as SecurityIcon,
+  Timeline as TimelineIcon,
+  CompareArrows as CompareIcon,
+  ShowChart as ChartIcon,
+  BugReport as BugReportIcon
 } from '@mui/icons-material';
 import {
   LineChart,
@@ -151,6 +159,148 @@ const PortfolioPage = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+
+  // Algorithm performance data
+  const algorithmTrades = [
+    {
+      id: 1,
+      algorithm: 'Moving Average Crossover',
+      symbol: 'AAPL',
+      action: 'BUY',
+      quantity: 50,
+      entryPrice: 150.25,
+      exitPrice: 175.50,
+      entryDate: '2024-01-15',
+      exitDate: '2024-01-20',
+      pnl: 1262.50,
+      pnlPercent: 16.8,
+      confidence: 0.85,
+      reasoning: 'Short MA crossed above Long MA with strong momentum',
+      status: 'COMPLETED'
+    },
+    {
+      id: 2,
+      algorithm: 'RSI Mean Reversion',
+      symbol: 'TSLA',
+      action: 'BUY',
+      quantity: 30,
+      entryPrice: 200.00,
+      exitPrice: 245.80,
+      entryDate: '2024-01-18',
+      exitDate: '2024-01-25',
+      pnl: 1374.00,
+      pnlPercent: 22.9,
+      confidence: 0.78,
+      reasoning: 'RSI oversold at 28, mean reversion opportunity',
+      status: 'COMPLETED'
+    },
+    {
+      id: 3,
+      algorithm: 'Bollinger Bands Strategy',
+      symbol: 'MSFT',
+      action: 'BUY',
+      quantity: 25,
+      entryPrice: 300.00,
+      exitPrice: 385.20,
+      entryDate: '2024-02-01',
+      exitDate: '2024-02-10',
+      pnl: 2130.00,
+      pnlPercent: 28.4,
+      confidence: 0.82,
+      reasoning: 'Price touched lower band, volatility breakout expected',
+      status: 'COMPLETED'
+    },
+    {
+      id: 4,
+      algorithm: 'Moving Average Crossover',
+      symbol: 'GOOGL',
+      action: 'SELL',
+      quantity: 20,
+      entryPrice: 120.00,
+      exitPrice: 142.30,
+      entryDate: '2024-02-05',
+      exitDate: '2024-02-12',
+      pnl: 446.00,
+      pnlPercent: 18.6,
+      confidence: 0.75,
+      reasoning: 'Short MA crossed below Long MA, trend reversal',
+      status: 'COMPLETED'
+    },
+    {
+      id: 5,
+      algorithm: 'RSI Mean Reversion',
+      symbol: 'AMZN',
+      action: 'BUY',
+      quantity: 10,
+      entryPrice: 3200.00,
+      exitPrice: 3450.75,
+      entryDate: '2024-02-15',
+      exitDate: '2024-02-22',
+      pnl: 2507.50,
+      pnlPercent: 7.8,
+      confidence: 0.68,
+      reasoning: 'RSI at 32, oversold condition with potential bounce',
+      status: 'COMPLETED'
+    }
+  ];
+
+  const algorithmPerformance = {
+    totalTrades: algorithmTrades.length,
+    winningTrades: algorithmTrades.filter(trade => trade.pnl > 0).length,
+    totalPnL: algorithmTrades.reduce((sum, trade) => sum + trade.pnl, 0),
+    winRate: (algorithmTrades.filter(trade => trade.pnl > 0).length / algorithmTrades.length) * 100,
+    avgConfidence: algorithmTrades.reduce((sum, trade) => sum + trade.confidence, 0) / algorithmTrades.length,
+    bestTrade: Math.max(...algorithmTrades.map(trade => trade.pnl)),
+    worstTrade: Math.min(...algorithmTrades.map(trade => trade.pnl)),
+    avgTradeDuration: '5.2 days',
+    sharpeRatio: 1.45,
+    maxDrawdown: -8.2,
+    var95: 1250.00,
+    beta: 0.85,
+    volatility: 18.5
+  };
+
+  const manualTrades = [
+    {
+      id: 1,
+      symbol: 'NVDA',
+      action: 'BUY',
+      quantity: 15,
+      entryPrice: 450.00,
+      exitPrice: 485.20,
+      entryDate: '2024-01-10',
+      exitDate: '2024-01-18',
+      pnl: 528.00,
+      pnlPercent: 7.8,
+      status: 'COMPLETED'
+    },
+    {
+      id: 2,
+      symbol: 'META',
+      action: 'SELL',
+      quantity: 20,
+      entryPrice: 350.00,
+      exitPrice: 385.50,
+      entryDate: '2024-01-22',
+      exitDate: '2024-01-30',
+      pnl: -710.00,
+      pnlPercent: -10.1,
+      status: 'COMPLETED'
+    }
+  ];
+
+  const manualPerformance = {
+    totalTrades: manualTrades.length,
+    winningTrades: manualTrades.filter(trade => trade.pnl > 0).length,
+    totalPnL: manualTrades.reduce((sum, trade) => sum + trade.pnl, 0),
+    winRate: (manualTrades.filter(trade => trade.pnl > 0).length / manualTrades.length) * 100,
+    avgTradeDuration: '8.5 days',
+    sharpeRatio: 0.85,
+    maxDrawdown: -15.2,
+    var95: 2100.00,
+    beta: 1.15,
+    volatility: 25.8
+  };
 
   // Format currency
   const formatCurrency = (amount) => {
@@ -430,6 +580,7 @@ const PortfolioPage = () => {
           <Tab label="Overview" />
           <Tab label="Holdings" />
           <Tab label="Performance" />
+          <Tab label="Algorithm Performance" />
           <Tab label="Analysis" />
         </Tabs>
       </Box>
@@ -633,6 +784,412 @@ const PortfolioPage = () => {
       )}
 
       {activeTab === 3 && (
+        <Box>
+          {/* Algorithm Performance Header */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box>
+              <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 600 }}>
+                Algorithm Performance Analysis
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Compare algorithm-generated trades with manual trading performance
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button variant="outlined" startIcon={<CodeIcon />}>
+                View Algorithm Code
+              </Button>
+              <Button variant="outlined" startIcon={<BugReportIcon />}>
+                Backtest Results
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Performance Comparison Cards */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardHeader
+                  title="Algorithm Trading"
+                  subheader="Automated strategy performance"
+                  avatar={<PsychologyIcon color="primary" />}
+                />
+                <CardContent>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Trades
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {algorithmPerformance.totalTrades}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Win Rate
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
+                        {algorithmPerformance.winRate.toFixed(1)}%
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Total P&L
+                      </Typography>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: algorithmPerformance.totalPnL >= 0 ? 'success.main' : 'error.main'
+                        }}
+                      >
+                        {formatCurrency(algorithmPerformance.totalPnL)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Avg Confidence
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {(algorithmPerformance.avgConfidence * 100).toFixed(0)}%
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Sharpe Ratio
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {algorithmPerformance.sharpeRatio}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Max Drawdown
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600, color: 'error.main' }}>
+                        {algorithmPerformance.maxDrawdown}%
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardHeader
+                  title="Manual Trading"
+                  subheader="Human decision performance"
+                  avatar={<AssessmentIcon color="secondary" />}
+                />
+                <CardContent>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Trades
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {manualPerformance.totalTrades}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Win Rate
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
+                        {manualPerformance.winRate.toFixed(1)}%
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Total P&L
+                      </Typography>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: manualPerformance.totalPnL >= 0 ? 'success.main' : 'error.main'
+                        }}
+                      >
+                        {formatCurrency(manualPerformance.totalPnL)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Avg Duration
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {manualPerformance.avgTradeDuration}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Sharpe Ratio
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {manualPerformance.sharpeRatio}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        Max Drawdown
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600, color: 'error.main' }}>
+                        {manualPerformance.maxDrawdown}%
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          {/* Algorithm Trades Table */}
+          <Card sx={{ mb: 3 }}>
+            <CardHeader
+              title="Algorithm-Generated Trades"
+              subheader="Detailed breakdown of automated trading decisions"
+              action={
+                <Button variant="outlined" size="small" startIcon={<DownloadIcon />}>
+                  Export Trades
+                </Button>
+              }
+            />
+            <CardContent>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Algorithm</TableCell>
+                      <TableCell>Symbol</TableCell>
+                      <TableCell>Action</TableCell>
+                      <TableCell align="right">Quantity</TableCell>
+                      <TableCell align="right">Entry Price</TableCell>
+                      <TableCell align="right">Exit Price</TableCell>
+                      <TableCell align="right">P&L</TableCell>
+                      <TableCell align="right">Confidence</TableCell>
+                      <TableCell>Reasoning</TableCell>
+                      <TableCell>Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {algorithmTrades.map((trade) => (
+                      <TableRow key={trade.id} hover>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <PsychologyIcon sx={{ mr: 1, fontSize: 20, color: 'primary.main' }} />
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {trade.algorithm}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {trade.symbol}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={trade.action}
+                            size="small"
+                            color={trade.action === 'BUY' ? 'success' : 'error'}
+                            variant="filled"
+                          />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2">
+                            {trade.quantity}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2">
+                            {formatCurrency(trade.entryPrice)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {formatCurrency(trade.exitPrice)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                            {trade.pnl >= 0 ? (
+                              <TrendingUpIcon color="success" sx={{ mr: 0.5, fontSize: 16 }} />
+                            ) : (
+                              <TrendingDownIcon color="error" sx={{ mr: 0.5, fontSize: 16 }} />
+                            )}
+                            <Box>
+                              <Typography
+                                variant="body2"
+                                color={trade.pnl >= 0 ? 'success.main' : 'error.main'}
+                                sx={{ fontWeight: 500 }}
+                              >
+                                {formatCurrency(trade.pnl)}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color={trade.pnl >= 0 ? 'success.main' : 'error.main'}
+                              >
+                                {formatPercentage(trade.pnlPercent)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                            <Box sx={{ width: 60, mr: 1 }}>
+                              <LinearProgress
+                                variant="determinate"
+                                value={trade.confidence * 100}
+                                sx={{
+                                  height: 6,
+                                  borderRadius: 3,
+                                  backgroundColor: 'grey.200',
+                                  '& .MuiLinearProgress-bar': {
+                                    backgroundColor: 'primary.main',
+                                  },
+                                }}
+                              />
+                            </Box>
+                            <Typography variant="body2">
+                              {(trade.confidence * 100).toFixed(0)}%
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip title={trade.reasoning}>
+                            <Typography variant="body2" sx={{ 
+                              maxWidth: 200, 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {trade.reasoning}
+                            </Typography>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={trade.status}
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+
+          {/* Risk Metrics Comparison */}
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardHeader
+                  title="Algorithm Risk Metrics"
+                  subheader="Automated risk management"
+                  avatar={<SecurityIcon color="primary" />}
+                />
+                <CardContent>
+                  <List>
+                    <ListItem>
+                      <ListItemIcon>
+                        <SecurityIcon />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Value at Risk (95%)" 
+                        secondary={formatCurrency(algorithmPerformance.var95)}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <TrendingUpIcon />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Beta" 
+                        secondary={algorithmPerformance.beta}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <SpeedIcon />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Volatility" 
+                        secondary={`${algorithmPerformance.volatility}%`}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <TimelineIcon />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Avg Trade Duration" 
+                        secondary={algorithmPerformance.avgTradeDuration}
+                      />
+                    </ListItem>
+                  </List>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardHeader
+                  title="Manual Risk Metrics"
+                  subheader="Human risk management"
+                  avatar={<AssessmentIcon color="secondary" />}
+                />
+                <CardContent>
+                  <List>
+                    <ListItem>
+                      <ListItemIcon>
+                        <SecurityIcon />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Value at Risk (95%)" 
+                        secondary={formatCurrency(manualPerformance.var95)}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <TrendingUpIcon />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Beta" 
+                        secondary={manualPerformance.beta}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <SpeedIcon />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Volatility" 
+                        secondary={`${manualPerformance.volatility}%`}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <TimelineIcon />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Avg Trade Duration" 
+                        secondary={manualPerformance.avgTradeDuration}
+                      />
+                    </ListItem>
+                  </List>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      )}
+
+      {activeTab === 4 && (
         <Alert severity="info">
           Risk analysis and advanced portfolio metrics will be implemented here.
         </Alert>

@@ -50,6 +50,7 @@ const Sidebar = ({ open, onClose, isMobile }) => {
     { text: 'Portfolio', icon: <WalletIcon />, path: 'portfolio' },
     { text: 'Markets', icon: <ChartIcon />, path: 'markets' },
     { text: 'Trade', icon: <TradeIcon />, path: 'trade' },
+    { text: 'Algorithms', icon: <ChartIcon />, path: 'algorithms' },
     { text: 'Profile', icon: <ProfileIcon />, path: 'profile' },
     { text: 'Watchlist', icon: <WatchlistIcon />, path: 'watchlist' },
     { text: 'History', icon: <HistoryIcon />, path: 'history' },
