@@ -1040,8 +1040,8 @@ const TradePage = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {/* Algorithm Recommendations */}
-        <Grid xs={12}>
+        {/* Algorithm Recommendations - HIDDEN FOR NOW */}
+        {/* <Grid xs={12}>
           <Card sx={{ mb: 3 }}>
             <CardHeader
               title="Algorithm Recommendations"
@@ -1135,7 +1135,7 @@ const TradePage = () => {
               </Grid>
             </CardContent>
           </Card>
-        </Grid>
+        </Grid> */}
 
         {/* Main Content - Stock List with Trading */}
         <Grid xs={12} lg={8}>
