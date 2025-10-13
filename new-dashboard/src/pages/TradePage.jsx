@@ -16,6 +16,7 @@ import {
   Chip,
   Alert,
   CircularProgress,
+  LinearProgress,
   useTheme,
   useMediaQuery,
   Dialog,
@@ -1040,7 +1041,7 @@ const TradePage = () => {
 
       <Grid container spacing={3}>
         {/* Algorithm Recommendations */}
-        <Grid size={{ xs: 12 }}>
+        <Grid xs={12}>
           <Card sx={{ mb: 3 }}>
             <CardHeader
               title="Algorithm Recommendations"
@@ -1137,7 +1138,7 @@ const TradePage = () => {
         </Grid>
 
         {/* Main Content - Stock List with Trading */}
-        <Grid size={{ xs: 12, lg: 8 }}>
+        <Grid xs={12} lg={8}>
           {/* Popular Stocks List */}
           <Card>
             <CardHeader
@@ -1184,7 +1185,7 @@ const TradePage = () => {
                 >
                   <Grid container spacing={2} alignItems="center">
                     {/* Stock Info */}
-                    <Grid size={{ xs: 12, md: 8 }}>
+                    <Grid xs={12} md={8}>
                       <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
                         <Avatar 
                           sx={{ 
@@ -1352,7 +1353,7 @@ const TradePage = () => {
                       </Box>
 
                       <Grid container spacing={2}>
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid xs={6} sm={3}>
                           <Typography variant="body2" color="text.secondary">
                             High
                           </Typography>
@@ -1360,7 +1361,7 @@ const TradePage = () => {
                             {formatCurrency(stock.high)}
                           </Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid xs={6} sm={3}>
                           <Typography variant="body2" color="text.secondary">
                             Low
                           </Typography>
@@ -1368,7 +1369,7 @@ const TradePage = () => {
                             {formatCurrency(stock.low)}
                           </Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid xs={6} sm={3}>
                           <Typography variant="body2" color="text.secondary">
                             Open
                           </Typography>
@@ -1376,7 +1377,7 @@ const TradePage = () => {
                             {formatCurrency(stock.open)}
                           </Typography>
                         </Grid>
-                        <Grid size={{ xs: 6, sm: 3 }}>
+                        <Grid xs={6} sm={3}>
                           <Typography variant="body2" color="text.secondary">
                             Prev Close
                           </Typography>
@@ -1388,7 +1389,7 @@ const TradePage = () => {
                     </Grid>
 
                     {/* Price & Trading */}
-                    <Grid size={{ xs: 12, md: 4 }}>
+                    <Grid xs={12} md={4}>
                       <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
                         <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
                           {formatCurrency(stock.price)}
@@ -1475,7 +1476,7 @@ const TradePage = () => {
         </Grid>
 
         {/* Right Column - Portfolio & Recent Trades */}
-        <Grid size={{ xs: 12, lg: 4 }}>
+        <Grid xs={12} lg={4}>
           {/* Portfolio Balance */}
           <Card sx={{ 
             mb: 3,
@@ -1645,7 +1646,7 @@ const TradePage = () => {
 
           {/* Order Configuration */}
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12 }}>
+            <Grid xs={12}>
               <TextField
                 fullWidth
                 label="Quantity"
@@ -1659,7 +1660,7 @@ const TradePage = () => {
               />
             </Grid>
             
-            <Grid size={{ xs: 12 }}>
+            <Grid xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Price Type</InputLabel>
                 <Select
@@ -1674,7 +1675,7 @@ const TradePage = () => {
             </Grid>
 
             {orderPriceType === 'LIMIT' && (
-              <Grid size={{ xs: 12 }}>
+              <Grid xs={12}>
                 <TextField
                   fullWidth
                   label="Limit Price"
@@ -1688,14 +1689,14 @@ const TradePage = () => {
               </Grid>
             )}
 
-            <Grid size={{ xs: 12 }}>
+            <Grid xs={12}>
               <Divider sx={{ my: 1 }} />
               <Paper sx={{ p: 2, backgroundColor: 'background.default' }}>
                 <Typography variant="h6" gutterBottom>
                   Order Summary
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid size={{ xs: 6 }}>
+                  <Grid xs={6}>
                     <Typography variant="body2" color="text.secondary">
                       Order Type:
                     </Typography>
@@ -1703,7 +1704,7 @@ const TradePage = () => {
                       {orderType}
                     </Typography>
                   </Grid>
-                  <Grid size={{ xs: 6 }}>
+                  <Grid xs={6}>
                     <Typography variant="body2" color="text.secondary">
                       Quantity:
                     </Typography>
@@ -1711,7 +1712,7 @@ const TradePage = () => {
                       {orderQuantity || '0'} shares
                     </Typography>
                   </Grid>
-                  <Grid size={{ xs: 6 }}>
+                  <Grid xs={6}>
                     <Typography variant="body2" color="text.secondary">
                       Price:
                     </Typography>
@@ -1722,7 +1723,7 @@ const TradePage = () => {
                       }
                     </Typography>
                   </Grid>
-                  <Grid size={{ xs: 6 }}>
+                  <Grid xs={6}>
                     <Typography variant="body2" color="text.secondary">
                       Total:
                     </Typography>
