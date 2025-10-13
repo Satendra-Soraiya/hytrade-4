@@ -576,7 +576,7 @@ const TradePage = () => {
   // Calculate order total
   const calculateOrderTotal = () => {
     const quantity = parseFloat(orderQuantity) || 0;
-    const price = parseFloat(orderPrice) || selectedStock.price;
+    const price = orderPriceType === 'MARKET' ? selectedStock.price : (parseFloat(orderPrice) || selectedStock.price);
     return quantity * price;
   };
 
@@ -592,7 +592,7 @@ const TradePage = () => {
         stockName: selectedStock.name,
         orderType: orderType,
         quantity: parseFloat(orderQuantity),
-        price: orderPriceType === 'MARKET' ? selectedStock.price : parseFloat(orderPrice),
+        price: orderPriceType === 'MARKET' ? selectedStock.price : (parseFloat(orderPrice) || selectedStock.price),
         orderMode: orderPriceType
       };
 
@@ -628,7 +628,7 @@ const TradePage = () => {
           name: selectedStock.name,
           type: orderType,
           quantity: parseFloat(orderQuantity),
-          price: orderPriceType === 'MARKET' ? selectedStock.price : parseFloat(orderPrice),
+          price: orderPriceType === 'MARKET' ? selectedStock.price : (parseFloat(orderPrice) || selectedStock.price),
           total: calculateOrderTotal(),
           time: formattedTime,
           status: result.order?.orderStatus || 'COMPLETED'
@@ -1719,7 +1719,7 @@ const TradePage = () => {
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                       {orderPriceType === 'MARKET' 
                         ? formatCurrency(selectedStock.price) 
-                        : formatCurrency(parseFloat(orderPrice) || 0)
+                        : formatCurrency(parseFloat(orderPrice) || selectedStock.price)
                       }
                     </Typography>
                   </Grid>
