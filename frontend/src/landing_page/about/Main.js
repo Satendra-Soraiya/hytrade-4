@@ -6,7 +6,7 @@ function Main (){
             <div className='row '>
                 <div className='col-6 p-5 text-center text-muted' >
                     <img src='media/Images/' style={{borderRadius:"200%",width:"60%"}}/>
-                    <h4>Satendra soraiya</h4>
+                    <h4>Shalini Gupta</h4>
                    
 
                 </div>

@@ -32,7 +32,7 @@ function Hero(){
             </div>
             <div className='row text-center' >
                 
-                 <h3>Open a Zerodha account</h3>
+                 <h3>Open a HYtrade account</h3>
                <p>Modern platforms and apps, ₹0 investments, and flat ₹20 intraday and F&O trades.</p>
                <button className='p-2 btn btn-primary fs-5 mb-5' style={{width:"20%",margin:"0 auto"}}>Sign up Now</button>
 

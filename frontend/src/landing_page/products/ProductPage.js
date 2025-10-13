@@ -23,7 +23,7 @@ function ProductPage() {
          <RightSection 
         imageURL="media/Images/console.png"
         productName="Console"
-        productDescription="The central dashboard for your Zerodha account. Gain insights into your trades and investments with in-depth reports and visualisations."
+        productDescription="The central dashboard for your HYtrade account. Gain insights into your trades and investments with in-depth reports and visualisations."
         
         LearnMore=""
         

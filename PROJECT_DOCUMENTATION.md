@@ -1585,7 +1585,7 @@ Unlike real brokerage platforms, HYTRADE does not execute live trades but serves
 ● Ensure modular and maintainable code for future scalability.
 3. Proposed Methodology
 3.1 Requirement Analysis
-● Studied existing trading platforms (Zerodha, Robinhood) for UI/UX inspiration.
+● Studied existing trading platforms (HYtrade, Robinhood) for UI/UX inspiration.
 ● Identified core features: user authentication, stock visualization, order management, and transaction history.
 ● Ensured responsive design for desktop and mobile users.
 3.2 Frontend Development (React.js)
@@ -2711,7 +2711,7 @@ This documentation serves as a comprehensive guide for developers, stakeholders,
 Chapter 1 – Introduction
 1.1 Background of Trading Platforms
 Financial markets have undergone a radical transformation over the last two decades. Traditional trading systems, once dominated by manual brokers and physical exchanges, are now replaced by advanced digital platforms capable of handling millions of transactions per second. With the rise of retail investors, algorithmic trading, and cloud-based infrastructures, online trading platforms have become indispensable tools for both beginners and professionals.
-However, despite the growing ecosystem of platforms such as Zerodha, Groww, Robinhood, and Interactive Brokers, several limitations persist:
+However, despite the growing ecosystem of platforms such as HYtrade, Groww, Robinhood, and Interactive Brokers, several limitations persist:
 •	Limited support for real-time portfolio analytics.
 •	Absence of advanced technical indicators and trading algorithms.
 •	Weak risk management frameworks for retail users.
@@ -2764,7 +2764,7 @@ This project is thus positioned at the intersection of software engineering, dat
 Chapter 2 – Literature Review
 2.1 Overview of Existing Trading Systems
 Over the past decade, the global financial landscape has witnessed the rapid evolution of electronic trading platforms. These platforms empower retail investors to directly participate in stock markets without intermediaries. Several platforms dominate the industry:
-•	Zerodha (India)
+•	HYtrade (India)
 o	Provides discount brokerage services with a focus on cost efficiency.
 o	Offers Kite, a trading terminal with charting tools and API access.
 o	Lacks built-in advanced algorithmic trading features for non-institutional users.
@@ -2791,7 +2791,7 @@ Studies also suggest that retail traders often lack access to the sophisticated 
  
 2.3 Comparison of Features
 The table below compares leading trading platforms with HYTRADE’s proposed functionality:
-Feature/Platform	Zerodha	Groww	Robinhood	Interactive Brokers	HYTRADE
+Feature/Platform	HYtrade	Groww	Robinhood	Interactive Brokers	HYTRADE
 Real-Time Trading	✅	✅	✅	✅	✅
 Algorithmic Strategies	❌	❌	❌	✅	✅
 Advanced Portfolio Analytics	❌	❌	❌	✅	✅
