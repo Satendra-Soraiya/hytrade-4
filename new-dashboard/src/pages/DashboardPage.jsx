@@ -851,8 +851,8 @@ const DashboardPage = () => {
           <TopCompanies />
         </Grid>
 
-        {/* Algorithm Status Section */}
-        <Grid size={{ xs: 12 }}>
+        {/* Algorithm Status Section - HIDDEN TEMPORARILY */}
+        {/* <Grid size={{ xs: 12 }}>
           <Paper 
             elevation={0} 
             sx={{ 
@@ -891,12 +891,12 @@ const DashboardPage = () => {
               View Algorithms
             </Button>
           </Paper>
-        </Grid>
+        </Grid> */}
 
-        {/* Algorithm Status Component */}
-        <Grid size={{ xs: 12 }}>
+        {/* Algorithm Status Component - HIDDEN TEMPORARILY */}
+        {/* <Grid size={{ xs: 12 }}>
           <AlgorithmStatus />
-        </Grid>
+        </Grid> */}
       </Grid>
     </Box>
   );
