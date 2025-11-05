@@ -14,7 +14,8 @@ const ProfileDropdown = ({ user, onLogout }) => {
     setAvatarExt('svg');
   }, [user?.profilePicture, user?.profilePictureType]);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const API_URL = process.env.REACT_APP_API_URL || (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
   // Fetch and cache default avatar options to resolve ids like "default-5" to exact filenames
   useEffect(() => {
     const needsDefaultMap = user?.profilePictureType === 'default' && !defaultAvatarMap;
@@ -109,7 +110,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
             <img 
               src={(user.profilePicture || '').startsWith('http') 
                 ? user.profilePicture 
-                : `${process.env.REACT_APP_API_URL || 'http://localhost:3002'}${user.profilePicture}`}
+                : `${API_URL}${user.profilePicture}`}
               alt="Profile"
               style={{
                 width: '100%',
@@ -222,7 +223,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
                   <img 
                     src={(user.profilePicture || '').startsWith('http') 
                       ? user.profilePicture 
-                      : `${process.env.REACT_APP_API_URL || 'http://localhost:3002'}${user.profilePicture}`}
+                      : `${API_URL}${user.profilePicture}`}
                     alt="Profile"
                     style={{
                       width: '100%',
@@ -486,7 +487,8 @@ function Navbar() {
         try {
           const token = localStorage.getItem('authToken');
           if (token) {
-            const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+            const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const API_URL = process.env.REACT_APP_API_URL || (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
             await fetch(`${API_URL}/api/auth/logout`, {
               method: 'POST',
               headers: {
@@ -579,7 +581,8 @@ function Navbar() {
       }
 
       try {
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_URL = process.env.REACT_APP_API_URL || (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
         const response = await fetch(`${API_URL}/api/auth/verify`, {
           method: 'GET',
           headers: {
@@ -654,7 +657,8 @@ function Navbar() {
       
       if (token) {
         // Call backend logout endpoint to destroy session server-side
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_URL = process.env.REACT_APP_API_URL || (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
         await fetch(`${API_URL}/api/auth/logout`, {
           method: 'POST',
           headers: {
