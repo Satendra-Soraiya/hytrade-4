@@ -4,6 +4,64 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 // Profile Dropdown Component
 const ProfileDropdown = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
+  // Fallback for default avatar extensions if exact file type is unknown
+  const [avatarExt, setAvatarExt] = useState('jpeg');
+  const avatarFallbackOrder = ['jpeg', 'jpg', 'png', 'svg'];
+  const [defaultAvatarMap, setDefaultAvatarMap] = useState(null);
+
+  useEffect(() => {
+    // Reset on user or avatar change
+    setAvatarExt('svg');
+  }, [user?.profilePicture, user?.profilePictureType]);
+
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+  // Fetch and cache default avatar options to resolve ids like "default-5" to exact filenames
+  useEffect(() => {
+    const needsDefaultMap = user?.profilePictureType === 'default' && !defaultAvatarMap;
+    if (!needsDefaultMap) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/profile/default-options`);
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.options)) {
+          const map = {};
+          for (const opt of data.options) {
+            if (opt?.id && opt?.url) map[opt.id] = opt.url;
+          }
+          setDefaultAvatarMap(map);
+        }
+      } catch (err) {
+        console.error('Failed to load default avatar options:', err);
+      }
+    })();
+  }, [API_URL, user?.profilePictureType, defaultAvatarMap]);
+
+  const getDefaultAvatarSrc = () => {
+    const pic = user?.profilePicture || '';
+    const isAbsolute = /^https?:\/\//.test(pic);
+    if (isAbsolute) return pic; // Use provided URL directly
+
+    // If a relative path with extension or known directory, prefix API_URL
+    if (/^\//.test(pic) && /\.[a-zA-Z]+$/.test(pic)) {
+      return `${API_URL}${pic}`;
+    }
+    if (pic.includes('/images/default-avatars/')) {
+      return `${API_URL}${pic.startsWith('/') ? pic : `/${pic}`}`;
+    }
+
+    // If stored as an id like "default-5", resolve via backend options
+    const match = pic.match(/^default-(\d+)$/);
+    const idx = match ? match[1] : ((pic || 'default-1').split('-')[1] || '1');
+
+    const id = `default-${idx}`;
+    if (defaultAvatarMap && defaultAvatarMap[id]) {
+      return defaultAvatarMap[id];
+    }
+
+    // Fallback to conventional filename pattern if options not available
+    // Match backend filenames (e.g., AVATAR4.jpeg)
+    return `${API_URL}/images/default-avatars/AVATAR${idx}.${avatarExt}`;
+  };
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -47,9 +105,11 @@ const ProfileDropdown = ({ user, onLogout }) => {
           overflow: 'hidden',
           backgroundColor: '#007bff'
         }}>
-          {user.profilePicture && user.profilePictureType === 'custom' ? (
+          {user?.profilePicture && user?.profilePictureType === 'custom' ? (
             <img 
-              src={user.profilePicture}
+              src={(user.profilePicture || '').startsWith('http') 
+                ? user.profilePicture 
+                : `${process.env.REACT_APP_API_URL || 'http://localhost:3002'}${user.profilePicture}`}
               alt="Profile"
               style={{
                 width: '100%',
@@ -61,9 +121,9 @@ const ProfileDropdown = ({ user, onLogout }) => {
                 e.target.nextSibling.style.display = 'flex';
               }}
             />
-          ) : user.profilePicture && user.profilePictureType === 'default' ? (
+          ) : user?.profilePicture && user?.profilePictureType === 'default' ? (
             <img 
-              src={`${process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`}
+              src={getDefaultAvatarSrc()}
               alt="Profile"
               style={{
                 width: '100%',
@@ -71,8 +131,14 @@ const ProfileDropdown = ({ user, onLogout }) => {
                 objectFit: 'cover'
               }}
               onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
+                // Try next extension; if exhausted, fallback to initials
+                const nextIdx = avatarFallbackOrder.indexOf(avatarExt) + 1;
+                if (nextIdx < avatarFallbackOrder.length) {
+                  setAvatarExt(avatarFallbackOrder[nextIdx]);
+                } else {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }
               }}
             />
           ) : null}
@@ -152,9 +218,11 @@ const ProfileDropdown = ({ user, onLogout }) => {
                 overflow: 'hidden',
                 backgroundColor: '#007bff'
               }}>
-                {user.profilePicture && user.profilePictureType === 'custom' ? (
+                {user?.profilePicture && user?.profilePictureType === 'custom' ? (
                   <img 
-                    src={user.profilePicture}
+                    src={(user.profilePicture || '').startsWith('http') 
+                      ? user.profilePicture 
+                      : `${process.env.REACT_APP_API_URL || 'http://localhost:3002'}${user.profilePicture}`}
                     alt="Profile"
                     style={{
                       width: '100%',
@@ -166,9 +234,9 @@ const ProfileDropdown = ({ user, onLogout }) => {
                       e.target.nextSibling.style.display = 'flex';
                     }}
                   />
-                ) : user.profilePicture && user.profilePictureType === 'default' ? (
+                ) : user?.profilePicture && user?.profilePictureType === 'default' ? (
                   <img 
-                    src={`${process.env.REACT_APP_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`}
+                    src={getDefaultAvatarSrc()}
                     alt="Profile"
                     style={{
                       width: '100%',
@@ -176,8 +244,13 @@ const ProfileDropdown = ({ user, onLogout }) => {
                       objectFit: 'cover'
                     }}
                     onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
+                      const nextIdx = avatarFallbackOrder.indexOf(avatarExt) + 1;
+                      if (nextIdx < avatarFallbackOrder.length) {
+                        setAvatarExt(avatarFallbackOrder[nextIdx]);
+                      } else {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }
                     }}
                   />
                 ) : null}
@@ -477,13 +550,12 @@ function Navbar() {
       const storedUser = localStorage.getItem('user');
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
       
-      // Quick check: if we have all required data, set user immediately
+      // Quick check: if we have all required data, set user immediately (and still refresh from backend below)
       if (storedToken && storedSessionId && storedUser && isLoggedIn) {
         try {
           const userData = JSON.parse(storedUser);
           console.log('Navbar: Setting user from localStorage:', userData.firstName);
           setUser(userData);
-          return; // Don't make API call if we have valid local data
         } catch (error) {
           console.error('Error parsing stored user data:', error);
         }
@@ -495,10 +567,13 @@ function Navbar() {
           isLoggedIn: isLoggedIn
         });
         setUser(null);
-        return;
+        // Attempt backend verification if we at least have a token
+        if (!storedToken) {
+          return;
+        }
       }
       
-      if (!storedToken || !storedSessionId) {
+      if (!storedToken) {
         setUser(null);
         return;
       }
@@ -515,12 +590,18 @@ function Navbar() {
         
         const data = await response.json();
         
-        if (data.authenticated && data.user) {
+        // Backend verify returns { success: true, user: {...} }
+        // Accept either "success" or legacy "authenticated" flags.
+        if ((data.success || data.authenticated) && data.user) {
           // User is authenticated, update state and localStorage
           setUser(data.user);
           localStorage.setItem('user', JSON.stringify(data.user));
           localStorage.setItem('authenticated', 'true');
           localStorage.setItem('isLoggedIn', 'true');
+          // Prefer sessionId if present in response (not required by /verify)
+          if (data.sessionId || (data.session && data.session.id)) {
+            localStorage.setItem('sessionId', data.sessionId || data.session.id);
+          }
         } else {
           // User is not authenticated, clear all session data
           setUser(null);

@@ -109,7 +109,12 @@ const Sidebar = ({ open, onClose, isMobile }) => {
       >
         <Box 
           component="a"
-          href={`${import.meta.env.VITE_FRONTEND_URL || 'https://hytrade-frontend.vercel.app'}?token=${localStorage.getItem('token') || ''}`}
+          href={`${(() => {
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const envUrl = import.meta.env.VITE_FRONTEND_URL;
+            const fallback = isLocal ? 'http://localhost:3000' : 'https://hytrade-frontend.vercel.app';
+            return (envUrl || fallback);
+          })()}?token=${localStorage.getItem('token') || ''}`}
           target="_self"
           rel="noopener noreferrer"
           sx={{ 
