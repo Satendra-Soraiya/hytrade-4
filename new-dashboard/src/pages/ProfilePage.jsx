@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Grid, Card, CardHeader, CardContent, Typography, TextField, Button, Avatar, Chip, Divider, ImageList, ImageListItem, ImageListItemBar, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useAuth } from '../contexts/AuthContext';
+import resolveAvatarSrc from '../utils/avatar';
 
 const ProfilePage = () => {
   const theme = useTheme();
@@ -130,7 +131,7 @@ const ProfilePage = () => {
                   }}
                 >
                   <Avatar
-                    src={profile.profilePicture || null}
+                    src={resolveAvatarSrc(profile) || null}
                     imgProps={{ crossOrigin: 'anonymous' }}
                     sx={{
                       width: { xs: 128, md: 192 },

@@ -38,37 +38,77 @@ const ProfileDropdown = ({ user, onLogout }) => {
     })();
   }, [API_URL, user?.profilePictureType, defaultAvatarMap]);
 
-  // Normalize path and build image srcs reliably across environments
-  const normalizePath = (p) => {
+  // Normalize avatar paths from various sources (absolute URL, filename-only, relative)
+  const normalizeAvatarPath = (p) => {
     if (!p) return '';
-    if (!/^https?:\/\//.test(p) && !p.startsWith('/')) return `/${p}`;
-    return p;
+    const pic = p.trim();
+    // Absolute URL: use as-is
+    if (/^https?:\/\//.test(pic)) return pic;
+    // Ensure leading slash for relative paths
+    let path = pic.startsWith('/') ? pic : `/${pic}`;
+
+    // If only a filename like "profile-12345-67890.jpg", prefix uploads directory
+    const isFilenameOnly = /^(\/)?profile-[^/]+\.(jpg|jpeg|png|gif)$/i.test(path) && !path.includes('/uploads/profiles/');
+    if (isFilenameOnly) {
+      // Strip any leading slash on filename before prefixing
+      const filename = path.replace(/^\//, '');
+      path = `/uploads/profiles/${filename}`;
+    }
+
+    // Normalize common directories without leading slash
+    if (/^\/uploads\//.test(path) || /^\/images\//.test(path)) {
+      return path;
+    }
+    if (/^uploads\//.test(pic)) return `/${pic}`;
+    if (/^images\//.test(pic)) return `/${pic}`;
+
+    return path;
   };
 
   const getCustomAvatarSrc = () => {
     const pic = user?.profilePicture || '';
     if (!pic) return '';
-    if (/^https?:\/\//.test(pic)) return pic;
-    const normalized = normalizePath(pic);
+    const normalized = normalizeAvatarPath(pic);
+    // If normalized is absolute and from a different host, route via proxy to avoid CORP
+    if (/^https?:\/\//.test(normalized)) {
+      try {
+        const u = new URL(normalized);
+        const apiHost = new URL(API_URL).host;
+        if (u.host !== apiHost && (u.pathname.includes('/uploads/profiles/') || u.pathname.includes('/images/default-avatars/'))) {
+          return `${API_URL}/api/proxy/image?url=${encodeURIComponent(normalized)}`;
+        }
+      } catch (_) {}
+      return normalized;
+    }
     return `${API_URL}${normalized}`;
   };
 
   const getDefaultAvatarSrc = () => {
     const pic = user?.profilePicture || '';
-    const isAbsolute = /^https?:\/\//.test(pic);
-    if (isAbsolute) return pic; // Use provided URL directly
+    const normalized = normalizeAvatarPath(pic);
+    const isAbsolute = /^https?:\/\//.test(normalized);
+    if (isAbsolute) {
+      // If absolute and points to default avatars on a different host, re-host to current API_URL
+      try {
+        const u = new URL(normalized);
+        if (u.pathname.includes('/images/default-avatars/')) {
+          return `${API_URL}${u.pathname}`;
+        }
+      } catch (_) {}
+      return normalized; // Use provided URL directly for other cases
+    }
 
     // If a relative path with extension or known directory, prefix API_URL
-    if (/^\//.test(pic) && /\.[a-zA-Z]+$/.test(pic)) {
-      return `${API_URL}${pic}`;
+    if (/^\//.test(normalized) && /\.[a-zA-Z]+$/.test(normalized)) {
+      return `${API_URL}${normalized}`;
     }
-    if (pic.includes('/images/default-avatars/')) {
-      return `${API_URL}${pic.startsWith('/') ? pic : `/${pic}`}`;
+    if (normalized.includes('/images/default-avatars/')) {
+      return `${API_URL}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
     }
 
     // If stored as an id like "default-5", resolve via backend options
-    const match = pic.match(/^default-(\d+)$/);
-    const idx = match ? match[1] : ((pic || 'default-1').split('-')[1] || '1');
+    const match = normalized.match(/^default-(\d+)$/);
+    const idx = match ? match[1] : ((normalized || 'default-1').split('-')[1] || '1');
 
     const id = `default-${idx}`;
     if (defaultAvatarMap && defaultAvatarMap[id]) {
@@ -676,6 +716,17 @@ function Navbar() {
     };
     
     window.addEventListener('storage', handleStorageChange);
+
+    // Refresh auth/profile when window gains focus or becomes visible (returning from dashboard)
+    const handleFocus = () => checkAuthState();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkAuthState();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [checkAuthState]);
 

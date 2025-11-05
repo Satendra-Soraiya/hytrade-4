@@ -5,6 +5,9 @@ const { authMiddleware } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const https = require('https');
+const { URL } = require('url');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -212,6 +215,57 @@ router.get('/profile/default-options', (req, res) => {
   } catch (error) {
     console.error('Default options error:', error);
     res.status(500).json({ success: false, message: 'Failed to list default avatars' });
+  }
+});
+
+// Proxy remote images to avoid cross-origin resource policy blocks in dev
+router.get('/proxy/image', async (req, res) => {
+  try {
+    const target = req.query.url;
+    if (!target) {
+      return res.status(400).json({ success: false, message: 'Missing url parameter' });
+    }
+
+    let parsed;
+    try {
+      parsed = new URL(target);
+    } catch (e) {
+      return res.status(400).json({ success: false, message: 'Invalid URL' });
+    }
+
+    // Allowlist remote hosts and paths we expect
+    const allowedHosts = [
+      'hytrade-backend.onrender.com',
+      'www.hytrade-backend.onrender.com'
+    ];
+    const allowedPathPrefixes = ['/uploads/profiles/', '/images/default-avatars/'];
+    const isHostAllowed = allowedHosts.includes(parsed.host);
+    const isPathAllowed = allowedPathPrefixes.some(prefix => parsed.pathname.startsWith(prefix));
+    if (!isHostAllowed || !isPathAllowed) {
+      return res.status(403).json({ success: false, message: 'Remote image not allowed' });
+    }
+
+    const client = parsed.protocol === 'https:' ? https : http;
+
+    client.get(parsed, (upstream) => {
+      if (upstream.statusCode && upstream.statusCode >= 400) {
+        res.status(upstream.statusCode).json({ success: false, message: `Upstream error ${upstream.statusCode}` });
+        upstream.resume();
+        return;
+      }
+      const contentType = upstream.headers['content-type'] || 'image/jpeg';
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      // Allow cross-origin embedding
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      upstream.pipe(res);
+    }).on('error', (err) => {
+      console.error('Image proxy error:', err);
+      res.status(500).json({ success: false, message: 'Failed to proxy image' });
+    });
+  } catch (error) {
+    console.error('Proxy image handler error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

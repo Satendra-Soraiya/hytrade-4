@@ -27,6 +27,7 @@ import {
   Settings as SettingsIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import resolveAvatarSrc from '../utils/avatar';
 
 const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, darkMode }) => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -131,7 +132,7 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
                 aria-expanded={open ? 'true' : undefined}
               >
                 <Avatar 
-                  src={user?.profilePicture || null}
+                  src={resolveAvatarSrc(user) || null}
                   imgProps={{ crossOrigin: 'anonymous' }}
                   sx={{ 
                     width: 36, 
@@ -213,7 +214,7 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
           <Box sx={{ px: 2, py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Avatar 
-                src={user?.profilePicture || null}
+                src={resolveAvatarSrc(user) || null}
                 imgProps={{ crossOrigin: 'anonymous' }}
                 sx={{ 
                   width: 48, 
