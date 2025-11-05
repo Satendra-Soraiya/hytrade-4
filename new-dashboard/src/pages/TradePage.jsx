@@ -36,6 +36,7 @@ import {
   Avatar,
   Badge
 } from '@mui/material';
+// Using MUI Grid from '@mui/material' which supports 'size' prop with the current version
 import {
   Search as SearchIcon,
   TrendingUp as TrendingUpIcon,
@@ -70,8 +71,9 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
+import { useRefresh } from '../contexts/RefreshContext';
 
-// Mock data for development - will be replaced with real API calls
+// Mock data for development - will be replaced with real API calls for lists; order placement uses backend
 const mockStocks = [
   {
     symbol: 'AAPL',
@@ -507,7 +509,7 @@ const mockRecentTrades = [
 const TradePage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { user, token } = useAuth();
+  const { user, token, updateUser } = useAuth();
   
   // State management
   const [selectedStock, setSelectedStock] = useState(mockStockData);
@@ -641,15 +643,14 @@ const TradePage = () => {
         setOrderQuantity('');
         setOrderPrice('');
         
-        // Update portfolio balance
-        if (orderType === 'BUY') {
-          setPortfolioBalance(prev => prev - calculateOrderTotal());
-        } else {
-          setPortfolioBalance(prev => prev + calculateOrderTotal());
-        }
+        // Refresh portfolio summary from server to keep balance authoritative
+        try {
+          await fetchPortfolioData();
+        } catch {}
         
-        // Show success message
+        // Show success message and trigger global refresh for holdings/orders
         showNotification(`✅ ${orderType} order for ${selectedStock.symbol} executed successfully!`, 'success');
+        try { triggerRefresh(); } catch {}
       } else {
         throw new Error(result.message || 'Failed to place order');
       }
@@ -690,7 +691,12 @@ const TradePage = () => {
       if (portfolioResponse.ok) {
         const portfolioResult = await portfolioResponse.json();
         if (portfolioResult.success) {
-          setPortfolioBalance(portfolioResult.data.accountBalance || 100000);
+          const latestBalance = portfolioResult.data.accountBalance || 100000;
+          setPortfolioBalance(latestBalance);
+          // Keep global user state in sync for consistent display across pages
+          if (updateUser) {
+            updateUser({ ...user, accountBalance: latestBalance });
+          }
         }
       }
 
@@ -1039,7 +1045,7 @@ const TradePage = () => {
         </Box>
       </Box>
 
-      <Grid container spacing={3}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, alignItems: 'flex-start' }}>
         {/* Algorithm Recommendations - HIDDEN FOR NOW */}
         {/* <Grid xs={12}>
           <Card sx={{ mb: 3 }}>
@@ -1137,15 +1143,24 @@ const TradePage = () => {
           </Card>
         </Grid> */}
 
-        {/* Main Content - Stock List with Trading */}
-        <Grid xs={12} lg={8}>
+        {/* Right: Stock List (scrolling) */}
+        <Box sx={{ order: { xs: 2, md: 2 }, flexGrow: 1, minWidth: 0, minHeight: '100vh' }}>
           {/* Popular Stocks List */}
           <Card>
             <CardHeader
               title="Popular Stocks"
               subheader="Trade directly from the list below"
+              sx={{
+                position: 'sticky',
+                top: { xs: 12, md: 80 },
+                zIndex: 2,
+                backgroundColor: 'background.paper',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                boxShadow: 1
+              }}
             />
-            <CardContent>
+            <CardContent sx={{ pt: 5 }}>
               {mockStocks.map((stock, index) => (
                 <Paper
                   key={stock.symbol}
@@ -1153,6 +1168,7 @@ const TradePage = () => {
                   onMouseEnter={() => setHoveredStock(stock.symbol)}
                   onMouseLeave={() => setHoveredStock(null)}
                   sx={{
+                    mt: index === 0 ? 5 : 0,
                     p: 2.5,
                     mb: 2,
                     border: '1px solid',
@@ -1205,7 +1221,7 @@ const TradePage = () => {
                             }
                           }}
                           src={getLogoUrl(stock.symbol)[0]}
-                          alt={`${stock.symbol} logo`}
+                          alt={`${stock.name} logo`}
                           onError={(e) => {
                             const symbol = stock.symbol;
                             const currentAttempt = logoAttempts[symbol] || 0;
@@ -1240,14 +1256,15 @@ const TradePage = () => {
                               justifyContent: 'center'
                             }}
                           >
-                            {stock.symbol.charAt(0)}
+                            {(stock.name?.charAt(0) || stock.symbol.charAt(0))}
                           </Box>
                         </Avatar>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                            <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '1.4rem' }}>
-                              {stock.symbol}
+                            <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '1.4rem', textTransform: 'uppercase' }}>
+                              {stock.name}
                             </Typography>
+                            <Chip label={stock.symbol} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
                             {favorites.has(stock.symbol) && (
                               <FavoriteIcon color="error" sx={{ fontSize: 20 }} />
                             )}
@@ -1388,9 +1405,9 @@ const TradePage = () => {
                       </Grid>
                     </Grid>
 
-                    {/* Price & Trading */}
+                    {/* Price & Summary */}
                     <Grid xs={12} md={4}>
-                      <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
+                      <Box sx={{ textAlign: { xs: 'left', md: 'right' }, width: '100%' }}>
                         <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
                           {formatCurrency(stock.price)}
                         </Typography>
@@ -1409,63 +1426,65 @@ const TradePage = () => {
                           </Typography>
                         </Box>
 
-                        {/* Quick Trading Buttons */}
-                        <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'row', md: 'column' } }}>
-                          <Button
-                            variant="contained"
-                            color="success"
-                            startIcon={<TrendingUpIcon />}
-                            onClick={() => {
-                              setSelectedStock(stock);
-                              setOrderType('BUY');
-                              setShowPreview(true);
-                            }}
-                            sx={{ 
-                              flex: 1,
-                              py: 1.5,
-                              fontWeight: 700,
-                              fontSize: '1rem',
-                              borderRadius: 2,
-                              background: 'linear-gradient(45deg, #4caf50 30%, #66bb6a 90%)',
-                              boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
-                              '&:hover': {
-                                background: 'linear-gradient(45deg, #388e3c 30%, #4caf50 90%)',
-                                boxShadow: '0 6px 16px rgba(76, 175, 80, 0.4)',
-                                transform: 'translateY(-1px)'
-                              },
-                              transition: 'all 0.2s ease'
-                            }}
-                          >
-                            Buy
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="error"
-                            startIcon={<TrendingDownIcon />}
-                            onClick={() => {
-                              setSelectedStock(stock);
-                              setOrderType('SELL');
-                              setShowPreview(true);
-                            }}
-                            sx={{ 
-                              flex: 1,
-                              py: 1.5,
-                              fontWeight: 700,
-                              fontSize: '1rem',
-                              borderRadius: 2,
-                              background: 'linear-gradient(45deg, #f44336 30%, #ef5350 90%)',
-                              boxShadow: '0 4px 12px rgba(244, 67, 54, 0.3)',
-                              '&:hover': {
-                                background: 'linear-gradient(45deg, #d32f2f 30%, #f44336 90%)',
-                                boxShadow: '0 6px 16px rgba(244, 67, 54, 0.4)',
-                                transform: 'translateY(-1px)'
-                              },
-                              transition: 'all 0.2s ease'
-                            }}
-                          >
-                            Sell
-                          </Button>
-                        </Box>
+                      </Box>
+                    </Grid>
+                    {/* Full-width Quick Trading Buttons spanning card */}
+                    <Grid xs={12}>
+                      <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          startIcon={<TrendingUpIcon />}
+                          onClick={() => {
+                            setSelectedStock(stock);
+                            setOrderType('BUY');
+                            setShowPreview(true);
+                          }}
+                          sx={{ 
+                            flexGrow: 1,
+                            py: 1.5,
+                            fontWeight: 700,
+                            fontSize: '1rem',
+                            borderRadius: 2,
+                            background: 'linear-gradient(45deg, #4caf50 30%, #66bb6a 90%)',
+                            boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #388e3c 30%, #4caf50 90%)',
+                              boxShadow: '0 6px 16px rgba(76, 175, 80, 0.4)',
+                              transform: 'translateY(-1px)'
+                            },
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          Buy
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="error"
+                          startIcon={<TrendingDownIcon />}
+                          onClick={() => {
+                            setSelectedStock(stock);
+                            setOrderType('SELL');
+                            setShowPreview(true);
+                          }}
+                          sx={{ 
+                            flexGrow: 1,
+                            py: 1.5,
+                            fontWeight: 700,
+                            fontSize: '1rem',
+                            borderRadius: 2,
+                            background: 'linear-gradient(45deg, #f44336 30%, #ef5350 90%)',
+                            boxShadow: '0 4px 12px rgba(244, 67, 54, 0.3)',
+                            '&:hover': {
+                              background: 'linear-gradient(45deg, #d32f2f 30%, #f44336 90%)',
+                              boxShadow: '0 6px 16px rgba(244, 67, 54, 0.4)',
+                              transform: 'translateY(-1px)'
+                            },
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          Sell
+                        </Button>
                       </Box>
                     </Grid>
                   </Grid>
@@ -1473,10 +1492,11 @@ const TradePage = () => {
               ))}
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
-        {/* Right Column - Portfolio & Recent Trades */}
-        <Grid xs={12} lg={4}>
+        {/* Left: Portfolio Balance + Recent Trades (sticky) */}
+        <Box sx={{ order: { xs: 1, md: 1 }, width: { xs: '100%', md: 360 }, flexShrink: 0 }}>
+          <Box sx={{ position: 'sticky', top: { xs: 12, md: 80 }, height: 'fit-content' }}>
           {/* Portfolio Balance */}
           <Card sx={{ 
             mb: 3,
@@ -1508,7 +1528,7 @@ const TradePage = () => {
             <CardContent>
               <Box sx={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
                 <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-                  {formatCurrency(portfolioBalance)}
+                  {formatCurrency(user?.accountBalance ?? portfolioBalance)}
                 </Typography>
                 <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
                   Available for trading
@@ -1600,8 +1620,9 @@ const TradePage = () => {
               </List>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+          </Box>
+        </Box>
+      </Box>
 
       {/* Order Preview Dialog */}
       <Dialog open={showPreview} onClose={() => setShowPreview(false)} maxWidth="sm" fullWidth>

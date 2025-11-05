@@ -2,6 +2,7 @@ const express = require('express');
 const TradingService = require('../services/tradingService');
 const { CustomHoldingsModel, CustomOrdersModel } = require('../model/CustomTradingModels');
 const { authMiddleware, verifiedUserMiddleware } = require('../middleware/auth');
+const { CustomUserModel } = require('../model/CustomUserModel');
 const { validateOrder, validatePagination, validateObjectId } = require('../middleware/validation');
 
 const router = express.Router();
@@ -284,14 +285,13 @@ router.get('/portfolio/detailed', async (req, res) => {
       { date: '2024-12-01', value: summary.totalValue }
     ];
     
-    // Calculate sector allocation (mock data for now - will be calculated from real holdings)
-    const sectorAllocation = [
-      { name: 'Technology', value: 45.2, color: '#8884d8' },
-      { name: 'Finance', value: 25.8, color: '#82ca9d' },
-      { name: 'Healthcare', value: 15.3, color: '#ffc658' },
-      { name: 'Energy', value: 8.7, color: '#ff7300' },
-      { name: 'Others', value: 5.0, color: '#0088fe' }
-    ];
+    // Calculate allocation by holding (real data based on current values)
+    const totalCurrent = holdings.reduce((sum, h) => sum + (h.currentValue || 0), 0);
+    const sectorAllocation = holdings.map(h => ({
+      name: h.stockSymbol,
+      value: Number(h.currentValue || 0),
+      color: undefined
+    })).sort((a, b) => b.value - a.value);
     
     const portfolioData = {
       ...summary,
@@ -542,3 +542,27 @@ router.get('/stats', async (req, res) => {
 });
 
 module.exports = router;
+// Deposit funds to account balance
+router.post('/portfolio/deposit', async (req, res) => {
+  try {
+    const amount = parseFloat(req.body.amount);
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid deposit amount', code: 'INVALID_AMOUNT' });
+    }
+
+    const user = await CustomUserModel.findByIdAndUpdate(
+      req.user.id,
+      { $inc: { accountBalance: amount }, updatedAt: new Date() },
+      { new: true, select: '-password' }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Deposit successful', data: { accountBalance: user.accountBalance } });
+  } catch (error) {
+    console.error('Deposit error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to deposit funds', code: 'DEPOSIT_ERROR' });
+  }
+});

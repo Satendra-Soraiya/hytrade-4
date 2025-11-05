@@ -59,7 +59,9 @@ const authMiddleware = async (req, res, next) => {
       isVerified: user.isVerified,
       tradingExperience: user.tradingExperience,
       riskTolerance: user.riskTolerance,
-      lastLoginAt: user.lastLoginAt
+      lastLoginAt: user.lastLoginAt,
+      profilePicture: user.profilePicture || '',
+      profilePictureType: user.profilePictureType || ''
     };
 
     req.session = {

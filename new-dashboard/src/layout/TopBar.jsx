@@ -13,7 +13,8 @@ import {
   ListItemText,
   Tooltip,
   Box,
-  Divider
+  Divider,
+  Chip
 } from '@mui/material';
 import { 
   Menu as MenuIcon, 
@@ -32,6 +33,8 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
+
+  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -71,6 +74,20 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
             <MenuIcon />
           </IconButton>
         )}
+
+        {/* App title and environment chip */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Hytrade Dashboard
+          </Typography>
+          {isDevelopment && (
+            <Chip 
+              label="LOCAL DEV"
+              size="small"
+              sx={{ bgcolor: 'success.main', color: 'success.contrastText' }}
+            />
+          )}
+        </Box>
 
         <Box sx={{ flexGrow: 1 }} />
 
@@ -114,12 +131,8 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
                 aria-expanded={open ? 'true' : undefined}
               >
                 <Avatar 
-                  src={user?.profilePicture && user?.profilePictureType === 'custom' 
-                    ? user.profilePicture
-                    : user?.profilePicture && user?.profilePictureType === 'default'
-                    ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`
-                    : null
-                  }
+                  src={user?.profilePicture || null}
+                  imgProps={{ crossOrigin: 'anonymous' }}
                   sx={{ 
                     width: 36, 
                     height: 36,
@@ -200,12 +213,8 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
           <Box sx={{ px: 2, py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Avatar 
-                src={user?.profilePicture && user?.profilePictureType === 'custom' 
-                  ? user.profilePicture
-                  : user?.profilePicture && user?.profilePictureType === 'default'
-                  ? `${import.meta.env.VITE_API_URL || 'https://hytrade-backend.onrender.com'}/images/default-avatars/avatar-${user.profilePicture.split('-')[1] || '1'}.svg`
-                  : null
-                }
+                src={user?.profilePicture || null}
+                imgProps={{ crossOrigin: 'anonymous' }}
                 sx={{ 
                   width: 48, 
                   height: 48, 

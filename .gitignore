@@ -47,6 +47,7 @@ coverage/
 # Backend specific
 /backend/.env
 /backend/logs/
+/backend/uploads/
 
 # Frontend specific
 /frontend/.env
@@ -55,6 +56,7 @@ coverage/
 # Dashboard specific
 /dashboard/build/
 /dashboard/.env
+/**/dashboard_backup_*/
 
 # New dashboard specific
 /new-dashboard/node_modules/
