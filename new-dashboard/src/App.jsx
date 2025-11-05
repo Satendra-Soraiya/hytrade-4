@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { RefreshProvider } from './contexts/RefreshContext';
 import MainLayout from './layout/MainLayout';
 import DashboardPage from './pages/DashboardPage';
 import PortfolioPage from './pages/PortfolioPage';
@@ -14,6 +15,16 @@ import { LoginPage } from './pages/LoginPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 const getDesignTokens = (mode) => ({
+  // Adaptive breakpoints tuned for typical laptop widths
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 560,
+      md: 768,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
   palette: {
     mode,
     ...(mode === 'light'
@@ -168,7 +179,9 @@ const AppContent = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <RefreshProvider>
+        <AppContent />
+      </RefreshProvider>
     </AuthProvider>
   );
 };

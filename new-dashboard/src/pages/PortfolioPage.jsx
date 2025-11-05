@@ -24,6 +24,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
@@ -55,6 +56,7 @@ import {
   Legend
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
+import HoldingsTable from '../components/HoldingsTable';
 
 // Mock data for development - will be replaced with real API calls
 const mockPortfolioData = {
@@ -154,6 +156,9 @@ const PortfolioPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user, token } = useAuth();
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositLoading, setDepositLoading] = useState(false);
   const [portfolioData, setPortfolioData] = useState(mockPortfolioData);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
@@ -377,6 +382,33 @@ const PortfolioPage = () => {
     setRefreshing(false);
   };
 
+  const handleDeposit = async () => {
+    const amountNum = parseFloat(depositAmount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setError('Please enter a valid amount greater than 0');
+      return;
+    }
+    try {
+      setDepositLoading(true);
+      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const API_URL = isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com';
+      const res = await fetch(`${API_URL}/api/trading/portfolio/deposit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount: amountNum })
+      });
+      const js = await res.json();
+      if (!res.ok || !js.success) throw new Error(js.message || 'Deposit failed');
+      setDepositOpen(false);
+      setDepositAmount('');
+      await fetchPortfolioData();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setDepositLoading(false);
+    }
+  };
+
   // Load data on component mount
   useEffect(() => {
     if (token) {
@@ -462,6 +494,7 @@ const PortfolioPage = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="contained" color="primary" onClick={() => setDepositOpen(true)}>Add Funds</Button>
           <Tooltip title="Refresh Data">
             <IconButton onClick={handleRefresh} disabled={refreshing}>
               <RefreshIcon />
@@ -479,6 +512,26 @@ const PortfolioPage = () => {
           </Tooltip>
         </Box>
       </Box>
+
+      <Dialog open={depositOpen} onClose={() => setDepositOpen(false)}>
+        <DialogTitle>Add Funds</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Amount"
+            type="number"
+            fullWidth
+            value={depositAmount}
+            onChange={(e) => setDepositAmount(e.target.value)}
+            inputProps={{ min: 0, step: '0.01' }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDepositOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeposit} disabled={depositLoading} variant="contained">Deposit</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Portfolio Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -661,6 +714,13 @@ const PortfolioPage = () => {
       )}
 
       {activeTab === 1 && (
+        <>
+        <Card sx={{ mb: 2 }}>
+          <CardHeader title="Holdings (Live)" subheader="Fetched from backend in real time" />
+          <CardContent>
+            <HoldingsTable />
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader
             title="Holdings"
@@ -775,6 +835,7 @@ const PortfolioPage = () => {
             </TableContainer>
           </CardContent>
         </Card>
+        </>
       )}
 
       {activeTab === 2 && (

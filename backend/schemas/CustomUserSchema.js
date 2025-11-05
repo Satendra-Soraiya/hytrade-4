@@ -37,6 +37,17 @@ const CustomUserSchema = new Schema({
     default: 'Medium'
   },
   
+  // Profile avatar
+  profilePicture: {
+    type: String,
+    default: ''
+  },
+  profilePictureType: {
+    type: String,
+    enum: ['default', 'custom', ''],
+    default: ''
+  },
+  
   // Account Information
   accountBalance: {
     type: Number,
