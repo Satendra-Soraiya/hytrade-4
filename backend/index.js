@@ -28,7 +28,10 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "https:", "http:"],
     },
   },
-  crossOriginEmbedderPolicy: false
+  // We serve images to a different origin in dev (frontend on :3000),
+  // so allow cross-origin resource loads for images/static content.
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
 // Rate limiting - DISABLED FOR TESTING

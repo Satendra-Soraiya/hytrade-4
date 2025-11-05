@@ -120,10 +120,29 @@ const ProfilePage = () => {
           <Card>
             <CardHeader title="Your Avatar" subheader="Pick a default or upload your own" />
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Avatar src={profile.profilePicture || null} imgProps={{ crossOrigin: 'anonymous' }} sx={{ width: 96, height: 96 }}>
-                  {(profile.firstName || 'U')[0]}
-                </Avatar>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
+                <Box
+                  sx={{
+                    borderRadius: '50%',
+                    p: { xs: 1.5, md: 2 },
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #22c55e 100%)',
+                    boxShadow: '0 12px 28px rgba(0,0,0,0.12)',
+                  }}
+                >
+                  <Avatar
+                    src={profile.profilePicture || null}
+                    imgProps={{ crossOrigin: 'anonymous' }}
+                    sx={{
+                      width: { xs: 128, md: 192 },
+                      height: { xs: 128, md: 192 },
+                      border: '4px solid',
+                      borderColor: 'background.paper',
+                      boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
+                    }}
+                  >
+                    {(profile.firstName || 'U')[0]}
+                  </Avatar>
+                </Box>
               </Box>
               <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                 <Button variant="outlined" component="label" disabled={uploading}>
