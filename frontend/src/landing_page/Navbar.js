@@ -11,7 +11,8 @@ const ProfileDropdown = ({ user, onLogout }) => {
 
   useEffect(() => {
     // Reset on user or avatar change
-    setAvatarExt('svg');
+    // Start with 'jpeg' which matches our default avatar filenames
+    setAvatarExt('jpeg');
   }, [user?.profilePicture, user?.profilePictureType]);
 
   const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -36,6 +37,21 @@ const ProfileDropdown = ({ user, onLogout }) => {
       }
     })();
   }, [API_URL, user?.profilePictureType, defaultAvatarMap]);
+
+  // Normalize path and build image srcs reliably across environments
+  const normalizePath = (p) => {
+    if (!p) return '';
+    if (!/^https?:\/\//.test(p) && !p.startsWith('/')) return `/${p}`;
+    return p;
+  };
+
+  const getCustomAvatarSrc = () => {
+    const pic = user?.profilePicture || '';
+    if (!pic) return '';
+    if (/^https?:\/\//.test(pic)) return pic;
+    const normalized = normalizePath(pic);
+    return `${API_URL}${normalized}`;
+  };
 
   const getDefaultAvatarSrc = () => {
     const pic = user?.profilePicture || '';
@@ -106,11 +122,9 @@ const ProfileDropdown = ({ user, onLogout }) => {
           overflow: 'hidden',
           backgroundColor: '#007bff'
         }}>
-          {user?.profilePicture && user?.profilePictureType === 'custom' ? (
+          {(user?.profilePictureType === 'custom' || (user?.profilePicture && user.profilePicture.includes('/uploads/'))) ? (
             <img 
-              src={(user.profilePicture || '').startsWith('http') 
-                ? user.profilePicture 
-                : `${API_URL}${user.profilePicture}`}
+              src={getCustomAvatarSrc()}
               alt="Profile"
               style={{
                 width: '100%',
@@ -219,11 +233,9 @@ const ProfileDropdown = ({ user, onLogout }) => {
                 overflow: 'hidden',
                 backgroundColor: '#007bff'
               }}>
-                {user?.profilePicture && user?.profilePictureType === 'custom' ? (
+                {(user?.profilePictureType === 'custom' || (user?.profilePicture && user.profilePicture.includes('/uploads/'))) ? (
                   <img 
-                    src={(user.profilePicture || '').startsWith('http') 
-                      ? user.profilePicture 
-                      : `${API_URL}${user.profilePicture}`}
+                    src={getCustomAvatarSrc()}
                     alt="Profile"
                     style={{
                       width: '100%',
@@ -604,6 +616,24 @@ function Navbar() {
           // Prefer sessionId if present in response (not required by /verify)
           if (data.sessionId || (data.session && data.session.id)) {
             localStorage.setItem('sessionId', data.sessionId || data.session.id);
+          }
+
+          // Immediately fetch fresh profile from DB to ensure latest avatar fields
+          try {
+            const profileRes = await fetch(`${API_URL}/api/profile`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${storedToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            const profileData = await profileRes.json();
+            if (profileData && profileData.success && profileData.user) {
+              setUser(profileData.user);
+              localStorage.setItem('user', JSON.stringify(profileData.user));
+            }
+          } catch (profileErr) {
+            console.warn('Profile fetch after verify failed, using verify user:', profileErr);
           }
         } else {
           // User is not authenticated, clear all session data
