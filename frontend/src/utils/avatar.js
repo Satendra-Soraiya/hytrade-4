@@ -61,6 +61,40 @@ export const resolveAvatarSrc = (userLike, options = {}) => {
 
   const normalized = normalizePath(pic);
 
+  // Helper to build an initials placeholder data URL
+  const getInitials = () => {
+    const fn = (userLike?.firstName || '').trim();
+    const ln = (userLike?.lastName || '').trim();
+    const email = (userLike?.email || '').trim();
+    let initials = '';
+    if (fn || ln) {
+      initials = `${fn ? fn[0] : ''}${ln ? ln[0] : ''}`.toUpperCase();
+    } else if (email) {
+      const parts = email.split('@')[0];
+      initials = (parts.slice(0, 2) || 'U').toUpperCase();
+    } else {
+      initials = 'U';
+    }
+    return initials;
+  };
+
+  const buildInitialsSvg = () => {
+    const initials = getInitials();
+    const bg = '#e5e7eb';
+    const fg = '#111827';
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
+  <rect width="100%" height="100%" rx="16" ry="16" fill="${bg}"/>
+  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="700" fill="${fg}">${initials}</text>
+</svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  };
+
+  // If no type is provided, or unrecognized, return initials placeholder
+  if (!type || (type !== 'custom' && type !== 'default')) {
+    return buildInitialsSvg();
+  }
+
   // Custom uploads
   if (type === 'custom') {
     if (!normalized) return '';
@@ -73,14 +107,42 @@ export const resolveAvatarSrc = (userLike, options = {}) => {
     return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
 
-  // Default avatars
+  // Default avatars (only when explicitly chosen)
   if (/^https?:\/\//.test(normalized)) {
-    const url = routeViaProxyIfCrossOrigin(normalized, apiUrl);
+    let abs = normalized;
+    // If absolute URL points to our default avatar path, clamp the index
+    try {
+      const u = new URL(abs);
+      const m = u.pathname.match(/\/images\/default-avatars\/AVATAR(\d+)\.jpe?g$/i);
+      if (m) {
+        const MAX_DEFAULTS = 12;
+        let n = parseInt(m[1], 10);
+        if (!Number.isFinite(n) || n < 1) n = 1;
+        if (n > MAX_DEFAULTS) n = ((n - 1) % MAX_DEFAULTS) + 1;
+        u.pathname = u.pathname.replace(/AVATAR\d+\.jpe?g$/i, `AVATAR${n}.jpeg`);
+        // Force https if page is https to avoid mixed content
+        if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+          u.protocol = 'https:';
+        }
+        abs = u.toString();
+      }
+    } catch (_) {}
+    const url = routeViaProxyIfCrossOrigin(abs, apiUrl);
     return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
 
   if (/^\/.*\.[a-zA-Z]+$/.test(normalized) || normalized.includes('/images/default-avatars/')) {
-    let url = `${apiUrl}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
+    let path = normalized.startsWith('/') ? normalized : `/${normalized}`;
+    // Clamp AVATAR index in filename if present (e.g., AVATAR15.jpeg)
+    const m = path.match(/\/images\/default-avatars\/AVATAR(\d+)\.jpe?g$/i);
+    if (m) {
+      const MAX_DEFAULTS = 12;
+      let n = parseInt(m[1], 10);
+      if (!Number.isFinite(n) || n < 1) n = 1;
+      if (n > MAX_DEFAULTS) n = ((n - 1) % MAX_DEFAULTS) + 1;
+      path = path.replace(/AVATAR\d+\.jpe?g$/i, `AVATAR${n}.jpeg`);
+    }
+    let url = `${apiUrl}${path}`;
     url = routeViaProxyIfCrossOrigin(url, apiUrl);
     return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
