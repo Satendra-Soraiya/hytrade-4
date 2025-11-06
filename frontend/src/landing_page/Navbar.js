@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 // Profile Dropdown Component
 const ProfileDropdown = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showInitialsFallback, setShowInitialsFallback] = useState(false);
   // Fallback for default avatar extensions if exact file type is unknown
   const [avatarExt, setAvatarExt] = useState('jpeg');
   const avatarFallbackOrder = ['jpeg', 'jpg', 'png', 'svg'];
@@ -14,6 +15,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
     // Reset on user or avatar change
     // Start with 'jpeg' which matches our default avatar filenames
     setAvatarExt('jpeg');
+    setShowInitialsFallback(false); // Reset fallback state on user/avatar change
   }, [user?.profilePicture, user?.profilePictureType]);
 
   const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -38,88 +40,6 @@ const ProfileDropdown = ({ user, onLogout }) => {
       }
     })();
   }, [API_URL, user?.profilePictureType, defaultAvatarMap]);
-
-  // Normalize avatar paths from various sources (absolute URL, filename-only, relative)
-  const normalizeAvatarPath = (p) => {
-    if (!p) return '';
-    const pic = p.trim();
-    // Absolute URL: use as-is
-    if (/^https?:\/\//.test(pic)) return pic;
-    // Ensure leading slash for relative paths
-    let path = pic.startsWith('/') ? pic : `/${pic}`;
-
-    // If only a filename like "profile-12345-67890.jpg", prefix uploads directory
-    const isFilenameOnly = /^(\/)?profile-[^/]+\.(jpg|jpeg|png|gif)$/i.test(path) && !path.includes('/uploads/profiles/');
-    if (isFilenameOnly) {
-      // Strip any leading slash on filename before prefixing
-      const filename = path.replace(/^\//, '');
-      path = `/uploads/profiles/${filename}`;
-    }
-
-    // Normalize common directories without leading slash
-    if (/^\/uploads\//.test(path) || /^\/images\//.test(path)) {
-      return path;
-    }
-    if (/^uploads\//.test(pic)) return `/${pic}`;
-    if (/^images\//.test(pic)) return `/${pic}`;
-
-    return path;
-  };
-
-  const getCustomAvatarSrc = () => {
-    const pic = user?.profilePicture || '';
-    if (!pic) return '';
-    const normalized = normalizeAvatarPath(pic);
-    // If normalized is absolute and from a different host, route via proxy to avoid CORP
-    if (/^https?:\/\//.test(normalized)) {
-      try {
-        const u = new URL(normalized);
-        const apiHost = new URL(API_URL).host;
-        if (u.host !== apiHost && (u.pathname.includes('/uploads/profiles/') || u.pathname.includes('/images/default-avatars/'))) {
-          return `${API_URL}/api/proxy/image?url=${encodeURIComponent(normalized)}`;
-        }
-      } catch (_) {}
-      return normalized;
-    }
-    return `${API_URL}${normalized}`;
-  };
-
-  const getDefaultAvatarSrc = () => {
-    const pic = user?.profilePicture || '';
-    const normalized = normalizeAvatarPath(pic);
-    const isAbsolute = /^https?:\/\//.test(normalized);
-    if (isAbsolute) {
-      // If absolute and points to default avatars on a different host, re-host to current API_URL
-      try {
-        const u = new URL(normalized);
-        if (u.pathname.includes('/images/default-avatars/')) {
-          return `${API_URL}${u.pathname}`;
-        }
-      } catch (_) {}
-      return normalized; // Use provided URL directly for other cases
-    }
-
-    // If a relative path with extension or known directory, prefix API_URL
-    if (/^\//.test(normalized) && /\.[a-zA-Z]+$/.test(normalized)) {
-      return `${API_URL}${normalized}`;
-    }
-    if (normalized.includes('/images/default-avatars/')) {
-      return `${API_URL}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
-    }
-
-    // If stored as an id like "default-5", resolve via backend options
-    const match = normalized.match(/^default-(\d+)$/);
-    const idx = match ? match[1] : ((normalized || 'default-1').split('-')[1] || '1');
-
-    const id = `default-${idx}`;
-    if (defaultAvatarMap && defaultAvatarMap[id]) {
-      return defaultAvatarMap[id];
-    }
-
-    // Fallback to conventional filename pattern if options not available
-    // Match backend filenames (e.g., AVATAR4.jpeg)
-    return `${API_URL}/images/default-avatars/AVATAR${idx}.${avatarExt}`;
-  };
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -163,7 +83,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
           overflow: 'hidden',
           backgroundColor: '#007bff'
         }}>
-          {user?.profilePicture ? (
+          {!showInitialsFallback && user?.profilePicture ? (
             <img
               src={resolveAvatarSrc(user)}
               alt="Profile"
@@ -173,24 +93,26 @@ const ProfileDropdown = ({ user, onLogout }) => {
                 objectFit: 'cover'
               }}
               onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
+                e.target.style.display = 'none'; // Hide the broken image
+                setShowInitialsFallback(true); // Show the initials fallback
               }}
             />
           ) : null}
-          <div style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#007bff',
-            color: 'white',
-            fontWeight: '600',
-            fontSize: '0.875rem',
-            display: user.profilePicture ? 'none' : 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {user.firstName?.[0]?.toUpperCase() || 'U'}
-          </div>
+          {(showInitialsFallback || !user?.profilePicture) ? (
+            <div style={{
+              width: '100%',
+              height: '100%',
+              backgroundColor: '#007bff',
+              color: 'white',
+              fontWeight: '600',
+              fontSize: '0.875rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              {user.firstName?.[0]?.toUpperCase() || 'U'}
+            </div>
+          ) : null}
         </div>
         <div>
           <div style={{
@@ -256,7 +178,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
               }}>
                 {(user?.profilePictureType === 'custom' || (user?.profilePicture && user.profilePicture.includes('/uploads/'))) ? (
                   <img 
-                    src={getCustomAvatarSrc()}
+                    src={resolveAvatarSrc(user)}
                     alt="Profile"
                     style={{
                       width: '100%',
@@ -270,7 +192,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
                   />
                 ) : user?.profilePicture && user?.profilePictureType === 'default' ? (
                   <img 
-                    src={getDefaultAvatarSrc()}
+                    src={resolveAvatarSrc(user)}
                     alt="Profile"
                     style={{
                       width: '100%',
