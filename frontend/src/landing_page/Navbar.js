@@ -51,6 +51,9 @@ const ProfileDropdown = ({ user, onLogout }) => {
   };
 
   const avatarSrc = resolveAvatarSrc(user);
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const MARKETING_URL = process.env.REACT_APP_MARKETING_URL || 'https://hytrade-4.vercel.app';
+
   return (
     <div style={{ position: 'relative' }}>
       {/* Profile Button */}
@@ -698,18 +701,33 @@ function Navbar() {
     }}>
       <div className="container">
         {/* Logo - Clean and professional */}
-        <Link className="navbar-brand" to="/" style={{textDecoration: 'none'}}>
-          <img 
-            src="media/Images/logo.png"
-            style={{
-              maxWidth: '180px',
-              width: 'auto',
-              height: '45px',
-              objectFit: 'contain'
-            }}
-            alt="Hytrade Logo"
-          />
-        </Link>
+        {isLocal ? (
+          <Link className="navbar-brand" to="/" style={{textDecoration: 'none'}}>
+            <img 
+              src="media/Images/logo.png"
+              style={{
+                maxWidth: '180px',
+                width: 'auto',
+                height: '45px',
+                objectFit: 'contain'
+              }}
+              alt="Hytrade Logo"
+            />
+          </Link>
+        ) : (
+          <a className="navbar-brand" href={MARKETING_URL} style={{textDecoration: 'none'}}>
+            <img 
+              src="media/Images/logo.png"
+              style={{
+                maxWidth: '180px',
+                width: 'auto',
+                height: '45px',
+                objectFit: 'contain'
+              }}
+              alt="Hytrade Logo"
+            />
+          </a>
+        )}
 
         {/* Mobile Toggle Button */}
         <button

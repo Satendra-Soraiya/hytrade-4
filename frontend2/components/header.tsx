@@ -1,6 +1,6 @@
 "use client"
 
-import { Moon, Sun, TrendingUp } from 'lucide-react'
+import { Moon, Sun, TrendingUp, Rocket } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
 interface HeaderProps {
@@ -9,6 +9,8 @@ interface HeaderProps {
 }
 
 export default function Header({ theme, toggleTheme }: HeaderProps) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hytrade-frontend.vercel.app'
+  const dashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://hytrade-dashboard.vercel.app'
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -50,12 +52,18 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
                 <Sun className="h-5 w-5 text-foreground" />
               )}
             </button>
-            <a href="#" className="hidden text-sm font-medium text-foreground hover:text-primary sm:inline">
+            <a href={`${appUrl}/login`} className="hidden text-sm font-medium text-foreground hover:text-primary sm:inline">
               Login
             </a>
-            <Button className="hidden bg-primary hover:bg-primary/90 text-primary-foreground sm:inline-flex">
-              Sign Up
-            </Button>
+            <a href={`${appUrl}/signup`}>
+              <Button className="hidden bg-primary hover:bg-primary/90 text-primary-foreground sm:inline-flex">
+                Sign Up
+              </Button>
+            </a>
+            <a href={dashboardUrl} className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-secondary transition-colors">
+              <Rocket className="h-4 w-4" />
+              Launch App
+            </a>
           </div>
         </div>
       </div>
