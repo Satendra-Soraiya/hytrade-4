@@ -223,6 +223,7 @@ router.get('/proxy/image', async (req, res) => {
   try {
     const target = req.query.url;
     if (!target) {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       return res.status(400).json({ success: false, message: 'Missing url parameter' });
     }
 
@@ -230,6 +231,7 @@ router.get('/proxy/image', async (req, res) => {
     try {
       parsed = new URL(target);
     } catch (e) {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       return res.status(400).json({ success: false, message: 'Invalid URL' });
     }
 
@@ -242,29 +244,55 @@ router.get('/proxy/image', async (req, res) => {
     const isHostAllowed = allowedHosts.includes(parsed.host);
     const isPathAllowed = allowedPathPrefixes.some(prefix => parsed.pathname.startsWith(prefix));
     if (!isHostAllowed || !isPathAllowed) {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       return res.status(403).json({ success: false, message: 'Remote image not allowed' });
+    }
+
+    // Upgrade to https for onrender to avoid mixed-content issues
+    if (parsed.host.endsWith('.onrender.com') && parsed.protocol === 'http:') {
+      parsed.protocol = 'https:';
     }
 
     const client = parsed.protocol === 'https:' ? https : http;
 
-    client.get(parsed, (upstream) => {
-      if (upstream.statusCode && upstream.statusCode >= 400) {
-        res.status(upstream.statusCode).json({ success: false, message: `Upstream error ${upstream.statusCode}` });
-        upstream.resume();
-        return;
-      }
-      const contentType = upstream.headers['content-type'] || 'image/jpeg';
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'public, max-age=3600');
-      // Allow cross-origin embedding
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      upstream.pipe(res);
-    }).on('error', (err) => {
-      console.error('Image proxy error:', err);
-      res.status(500).json({ success: false, message: 'Failed to proxy image' });
-    });
+    const tryFetch = (urlObj, retryOnDefault = true) => {
+      const protoClient = urlObj.protocol === 'https:' ? https : http;
+      protoClient.get(urlObj, (upstream) => {
+        if (upstream.statusCode && upstream.statusCode >= 400) {
+          // If 404 and a default avatar path with out-of-range index, clamp and retry once
+          if (retryOnDefault && upstream.statusCode === 404) {
+            const m = urlObj.pathname.match(/\/images\/default-avatars\/AVATAR(\d+)\.jpe?g$/i);
+            if (m) {
+              const MAX_DEFAULTS = 12;
+              let n = parseInt(m[1], 10);
+              if (!Number.isFinite(n) || n < 1) n = 1;
+              if (n > MAX_DEFAULTS) n = ((n - 1) % MAX_DEFAULTS) + 1;
+              urlObj.pathname = urlObj.pathname.replace(/AVATAR\d+\.jpe?g$/i, `AVATAR${n}.jpeg`);
+              return tryFetch(urlObj, false);
+            }
+          }
+          res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+          res.status(upstream.statusCode).json({ success: false, message: `Upstream error ${upstream.statusCode}` });
+          upstream.resume();
+          return;
+        }
+        const contentType = upstream.headers['content-type'] || 'image/jpeg';
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        // Allow cross-origin embedding
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        upstream.pipe(res);
+      }).on('error', (err) => {
+        console.error('Image proxy error:', err);
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.status(500).json({ success: false, message: 'Failed to proxy image' });
+      });
+    };
+
+    tryFetch(parsed, true);
   } catch (error) {
     console.error('Proxy image handler error:', error);
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
