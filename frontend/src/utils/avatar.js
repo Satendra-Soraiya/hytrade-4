@@ -3,8 +3,18 @@
 
 const getApiUrl = () => {
   const isDev = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const reactUrl = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) || null;
-  return reactUrl || (isDev ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
+  let base = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) || (isDev ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
+  try {
+    // If the page is HTTPS and base is HTTP for same host, force HTTPS to avoid mixed content
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      const u = new URL(base);
+      if (u.protocol === 'http:') {
+        u.protocol = 'https:';
+        base = u.toString().replace(/\/$/, '');
+      }
+    }
+  } catch (_) {}
+  return base;
 };
 
 const normalizePath = (p) => {
@@ -30,8 +40,14 @@ const routeViaProxyIfCrossOrigin = (url, apiUrl) => {
   try {
     const u = new URL(url);
     const api = new URL(apiUrl);
-    if (u.host !== api.host) {
-      return `${apiUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+    const pageHost = typeof window !== 'undefined' ? window.location.host : '';
+    // Proxy if the image host is not the same as the current page host
+    if (u.host !== pageHost) {
+      return `${api.origin}/api/proxy/image?url=${encodeURIComponent(url)}`;
+    }
+    // If the image is on the API host but pageHost differs, also proxy
+    if (api.host !== pageHost) {
+      return `${api.origin}/api/proxy/image?url=${encodeURIComponent(url)}`;
     }
   } catch (_) {}
   return url;
@@ -52,7 +68,8 @@ export const resolveAvatarSrc = (userLike, options = {}) => {
       const url = routeViaProxyIfCrossOrigin(normalized, apiUrl);
       return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
     }
-    const url = `${apiUrl}${normalized}`;
+    let url = `${apiUrl}${normalized}`;
+    url = routeViaProxyIfCrossOrigin(url, apiUrl);
     return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
 
@@ -62,8 +79,9 @@ export const resolveAvatarSrc = (userLike, options = {}) => {
     return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
 
-  if (/^\/.+\.[a-zA-Z]+$/.test(normalized) || normalized.includes('/images/default-avatars/')) {
-    const url = `${apiUrl}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
+  if (/^\/.*\.[a-zA-Z]+$/.test(normalized) || normalized.includes('/images/default-avatars/')) {
+    let url = `${apiUrl}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
+    url = routeViaProxyIfCrossOrigin(url, apiUrl);
     return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
 
