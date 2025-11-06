@@ -112,7 +112,7 @@ const Sidebar = ({ open, onClose, isMobile }) => {
           href={`${(() => {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const envUrl = import.meta.env.VITE_FRONTEND_URL;
-            const fallback = isLocal ? 'http://localhost:3000' : 'https://hytrade-frontend.vercel.app';
+            const fallback = isLocal ? 'http://localhost:3001' : 'https://hytrade-frontend.vercel.app';
             return (envUrl || fallback);
           })()}?token=${localStorage.getItem('token') || ''}`}
           target="_self"

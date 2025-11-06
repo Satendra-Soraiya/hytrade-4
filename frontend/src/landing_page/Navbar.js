@@ -412,6 +412,31 @@ function Navbar() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [dark, setDark] = useState(() => document.body.classList.contains('dark'));
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.storageArea === localStorage && e.key === 'hytrade_theme_mode') {
+        const value = e.newValue;
+        if (value === 'dark' || value === 'light') {
+          document.body.classList.toggle('dark', value === 'dark');
+          setDark(value === 'dark');
+        }
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+
+  const toggleTheme = () => {
+    setDark((prev) => {
+      const next = !prev;
+      const mode = next ? 'dark' : 'light';
+      try { localStorage.setItem('hytrade_theme_mode', mode); } catch {}
+      document.body.classList.toggle('dark', next);
+      return next;
+    });
+  };
 
   // Handle dashboard button click - Check authentication first
   const handleDashboardClick = async (e) => {
@@ -423,7 +448,10 @@ function Navbar() {
     
     if (storedToken && storedUser) {
       // User has token, redirect to dashboard with token
-      const DASHBOARD_URL = process.env.REACT_APP_DASHBOARD_URL || 'https://hytrade-dashboard.vercel.app';
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const envDashboard = process.env.REACT_APP_DASHBOARD_URL;
+      const fallbackDashboard = isLocal ? 'http://localhost:5173' : 'https://hytrade-dashboard.vercel.app';
+      const DASHBOARD_URL = envDashboard || fallbackDashboard;
       window.location.href = `${DASHBOARD_URL}?token=${storedToken}`;
       return;
     }
@@ -793,6 +821,19 @@ function Navbar() {
           
           {/* Right Side Actions */}
           <div className="d-flex align-items-center gap-3">
+            <button 
+              onClick={toggleTheme}
+              className="btn btn-outline-secondary"
+              style={{
+                padding: '0.5rem 0.75rem',
+                fontWeight: 500,
+                borderRadius: '6px'
+              }}
+              aria-label="Toggle dark mode"
+              title={dark ? 'Light mode' : 'Dark mode'}
+            >
+              {dark ? '☀️' : '🌙'}
+            </button>
             {/* Dashboard Button - Professional styling */}
             <button 
               onClick={handleDashboardClick}

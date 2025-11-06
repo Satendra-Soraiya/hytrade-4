@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Grid, Paper, Typography, Button, Chip, Divider } from '@mui/material';
+import { Box, Grid, Paper, Typography, Button, Chip, Divider, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useAuth } from '../contexts/AuthContext';
 import BackendStatus from '../components/BackendStatus';
@@ -10,6 +10,7 @@ import { AccountBalanceWallet as WalletIcon, TrendingUp as TrendingUpIcon, Recei
 
 const DashboardPage = () => {
   const theme = useTheme();
+  const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
   const navigate = useNavigate();
   const { user, token, updateUser } = useAuth();
   const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -76,6 +77,12 @@ const DashboardPage = () => {
 
   const allocColors = [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.success.main, theme.palette.warning.main, theme.palette.info.main];
 
+  // Pie layout (adjusted to avoid legend overlap on md+)
+  const pieCx = isMdUp ? '46%' : '50%';
+  const pieInnerR = 80;
+  const pieOuterR = isMdUp ? 126 : 140;
+  const piePadding = 2;
+
   const formatCurrency = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n || 0);
 
   return (
@@ -139,8 +146,8 @@ const DashboardPage = () => {
 
       {/* Charts */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider', height: 380 }}>
+        <Grid size={{ xs: 12, md: 7 }}>
+          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider', height: 420 }}>
             <Typography variant="subtitle1" sx={{ mb: 1 }}>Portfolio Value (12 months)</Typography>
             <ResponsiveContainer width="100%" height="88%">
               <LineChart data={portfolioSeries}>
@@ -153,30 +160,49 @@ const DashboardPage = () => {
             </ResponsiveContainer>
           </Paper>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider', height: 380 }}>
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider', height: 420 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <PieIcon color="secondary" />
               <Typography variant="subtitle1">Allocation</Typography>
               <Chip label={`${summary.holdingsCount} holdings`} size="small" sx={{ ml: 'auto' }} />
             </Box>
             <ResponsiveContainer width="100%" height="88%">
-              <PieChart>
+              <PieChart margin={{ top: 4, right: 24, bottom: 4, left: 20 }}>
                 <Pie 
                   data={allocations.length ? allocations : [{ name: 'N/A', value: 1 }]} 
                   dataKey="value" 
-                  cx="50%" 
+                  cx={pieCx}
                   cy="50%" 
-                  innerRadius={70} 
-                  outerRadius={120} 
-                  paddingAngle={2}
+                  innerRadius={pieInnerR} 
+                  outerRadius={pieOuterR} 
+                  paddingAngle={piePadding}
                   labelLine={false}
                 >
                   {(allocations.length ? allocations : [{ name: 'N/A', value: 1 }]).map((entry, idx) => (
-                    <Cell key={`alloc-${idx}`} fill={allocColors[idx % allocColors.length]} />
+                    <Cell 
+                      key={`alloc-${idx}`} 
+                      fill={allocColors[idx % allocColors.length]} 
+                      stroke={theme.palette.background.paper}
+                      strokeWidth={2}
+                    />
                   ))}
                 </Pie>
-                {allocations.length ? <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" /> : null}
+                {allocations.length ? (
+                  isMdUp ? (
+                    <Legend 
+                      layout="vertical" 
+                      verticalAlign="middle" 
+                      align="right" 
+                      iconType="circle" 
+                      iconSize={10} 
+                      wrapperStyle={{ paddingLeft: 16, marginLeft: 8 }} 
+                      itemGap={10} 
+                    />
+                  ) : (
+                    <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" iconSize={10} wrapperStyle={{ marginTop: 8 }} itemGap={12} />
+                  )
+                ) : null}
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>

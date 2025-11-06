@@ -130,7 +130,16 @@ const getDesignTokens = (mode) => ({
 });
 
 const AppContent = () => {
-  const [mode, setMode] = useState('light');
+  const [mode, setMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('hytrade_theme_mode');
+      if (saved === 'light' || saved === 'dark') return saved;
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return prefersDark ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
   const { user, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -146,6 +155,14 @@ const AppContent = () => {
 
   const theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('hytrade_theme_mode', mode);
+    } catch {}
+  }, [mode]);
+
+  const toggleDarkMode = () => setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+
   if (isLoading) {
     return <div>Loading...</div>; 
   }
@@ -159,7 +176,7 @@ const AppContent = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <MainLayout />
+              <MainLayout toggleDarkMode={toggleDarkMode} darkMode={mode === 'dark'} />
             </ProtectedRoute>
           }
         >
