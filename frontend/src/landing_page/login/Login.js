@@ -45,8 +45,17 @@ function Login() {
     try {
       console.log('Attempting login with credentials:', { email: formData.email });
       
-      // Use environment variable for API URL (production/development)
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      // Use environment variable for API URL (production/development) and force HTTPS on HTTPS pages
+      let API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      try {
+        if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+          const u = new URL(API_URL);
+          if (u.protocol === 'http:') {
+            u.protocol = 'https:';
+            API_URL = u.toString().replace(/\/$/, '');
+          }
+        }
+      } catch (_) {}
       
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
@@ -59,7 +68,12 @@ function Login() {
         }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        data = { success: false, message: `Login failed (invalid response). Status: ${response.status}` };
+      }
       console.log('Login response:', data);
 
       if (data.success && data.token) {
