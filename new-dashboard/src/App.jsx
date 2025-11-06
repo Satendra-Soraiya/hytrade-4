@@ -134,8 +134,8 @@ const AppContent = () => {
     try {
       const saved = localStorage.getItem('hytrade_theme_mode');
       if (saved === 'light' || saved === 'dark') return saved;
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return prefersDark ? 'dark' : 'light';
+      // Default to light when no saved preference
+      return 'light';
     } catch {
       return 'light';
     }

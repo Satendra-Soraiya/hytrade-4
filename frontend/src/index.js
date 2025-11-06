@@ -19,8 +19,7 @@ import NotFound from './landing_page/NotFound';
 (function initTheme() {
   try {
     const saved = localStorage.getItem('hytrade_theme_mode');
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const mode = saved === 'dark' || saved === 'light' ? saved : (prefersDark ? 'dark' : 'light');
+    const mode = saved === 'dark' || saved === 'light' ? saved : 'light';
     document.body.classList.toggle('dark', mode === 'dark');
   } catch {}
 })();
