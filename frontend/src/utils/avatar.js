@@ -86,8 +86,13 @@ export const resolveAvatarSrc = (userLike, options = {}) => {
   }
 
   const match = normalized.match(/^default-(\d+)$/);
-  const idx = match ? match[1] : '1';
-  const url = `${apiUrl}/images/default-avatars/AVATAR${idx}.jpeg`;
+  let idx = match ? parseInt(match[1], 10) : 1;
+  // Clamp to a safe available range (1..12) and wrap if out of range
+  const MAX_DEFAULTS = 12;
+  if (!Number.isFinite(idx) || idx < 1) idx = 1;
+  if (idx > MAX_DEFAULTS) idx = ((idx - 1) % MAX_DEFAULTS) + 1;
+  let url = `${apiUrl}/images/default-avatars/AVATAR${idx}.jpeg`;
+  url = routeViaProxyIfCrossOrigin(url, apiUrl);
   return `${url}?v=${versionToken}`;
 };
 
