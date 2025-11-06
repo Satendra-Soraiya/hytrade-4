@@ -14,7 +14,6 @@ import SupportPage from './landing_page/support/SupportPage';
 import Navbar from './landing_page/Navbar';
 import Footer from './landing_page/Footer';
 import NotFound from './landing_page/NotFound';
-import MarketingLanding from './landing_page/marketing/MarketingLanding';
 
 // Initialize theme on first load based on localStorage or system preference
 (function initTheme() {
@@ -85,13 +84,6 @@ root.render(
         <>
           <Navbar />
           <HomePage />
-          <Footer />
-        </>
-      } />
-      <Route path="/preview" element={
-        <>
-          <Navbar />
-          <MarketingLanding />
           <Footer />
         </>
       } />
