@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import resolveAvatarSrc from "../utils/avatar";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 // Profile Dropdown Component
@@ -162,9 +163,9 @@ const ProfileDropdown = ({ user, onLogout }) => {
           overflow: 'hidden',
           backgroundColor: '#007bff'
         }}>
-          {(user?.profilePictureType === 'custom' || (user?.profilePicture && user.profilePicture.includes('/uploads/'))) ? (
-            <img 
-              src={getCustomAvatarSrc()}
+          {user?.profilePicture ? (
+            <img
+              src={resolveAvatarSrc(user)}
               alt="Profile"
               style={{
                 width: '100%',
@@ -174,26 +175,6 @@ const ProfileDropdown = ({ user, onLogout }) => {
               onError={(e) => {
                 e.target.style.display = 'none';
                 e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-          ) : user?.profilePicture && user?.profilePictureType === 'default' ? (
-            <img 
-              src={getDefaultAvatarSrc()}
-              alt="Profile"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-              onError={(e) => {
-                // Try next extension; if exhausted, fallback to initials
-                const nextIdx = avatarFallbackOrder.indexOf(avatarExt) + 1;
-                if (nextIdx < avatarFallbackOrder.length) {
-                  setAvatarExt(avatarFallbackOrder[nextIdx]);
-                } else {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }
               }}
             />
           ) : null}
@@ -653,11 +634,13 @@ function Navbar() {
           localStorage.setItem('user', JSON.stringify(data.user));
           localStorage.setItem('authenticated', 'true');
           localStorage.setItem('isLoggedIn', 'true');
+          let currentUser = data.user;
+          
           // Prefer sessionId if present in response (not required by /verify)
           if (data.sessionId || (data.session && data.session.id)) {
             localStorage.setItem('sessionId', data.sessionId || data.session.id);
           }
-
+          
           // Immediately fetch fresh profile from DB to ensure latest avatar fields
           try {
             const profileRes = await fetch(`${API_URL}/api/profile`, {
@@ -669,12 +652,18 @@ function Navbar() {
             });
             const profileData = await profileRes.json();
             if (profileData && profileData.success && profileData.user) {
-              setUser(profileData.user);
-              localStorage.setItem('user', JSON.stringify(profileData.user));
+              // Merge profileData.user with currentUser
+              currentUser = { ...currentUser, ...profileData.user };
             }
           } catch (profileErr) {
             console.warn('Profile fetch after verify failed, using verify user:', profileErr);
           }
+          
+          // Update state and localStorage with the merged user object
+          setUser(currentUser);
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          localStorage.setItem('authenticated', 'true');
+          localStorage.setItem('isLoggedIn', 'true');
         } else {
           // User is not authenticated, clear all session data
           setUser(null);
