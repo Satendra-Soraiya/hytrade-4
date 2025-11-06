@@ -50,6 +50,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
     onLogout();
   };
 
+  const avatarSrc = resolveAvatarSrc(user);
   return (
     <div style={{ position: 'relative' }}>
       {/* Profile Button */}
@@ -83,9 +84,9 @@ const ProfileDropdown = ({ user, onLogout }) => {
           overflow: 'hidden',
           backgroundColor: '#007bff'
         }}>
-          {!showInitialsFallback && user?.profilePicture ? (
+          {!showInitialsFallback && avatarSrc ? (
             <img
-              src={resolveAvatarSrc(user)}
+              src={avatarSrc}
               alt="Profile"
               style={{
                 width: '100%',
@@ -98,7 +99,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
               }}
             />
           ) : null}
-          {(showInitialsFallback || !user?.profilePicture) ? (
+          {(showInitialsFallback || !avatarSrc) ? (
             <div style={{
               width: '100%',
               height: '100%',
@@ -176,9 +177,9 @@ const ProfileDropdown = ({ user, onLogout }) => {
                 overflow: 'hidden',
                 backgroundColor: '#007bff'
               }}>
-                {(user?.profilePictureType === 'custom' || (user?.profilePicture && user.profilePicture.includes('/uploads/'))) ? (
+                {avatarSrc ? (
                   <img 
-                    src={resolveAvatarSrc(user)}
+                    src={avatarSrc}
                     alt="Profile"
                     style={{
                       width: '100%',
@@ -190,25 +191,6 @@ const ProfileDropdown = ({ user, onLogout }) => {
                       e.target.nextSibling.style.display = 'flex';
                     }}
                   />
-                ) : user?.profilePicture && user?.profilePictureType === 'default' ? (
-                  <img 
-                    src={resolveAvatarSrc(user)}
-                    alt="Profile"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                    onError={(e) => {
-                      const nextIdx = avatarFallbackOrder.indexOf(avatarExt) + 1;
-                      if (nextIdx < avatarFallbackOrder.length) {
-                        setAvatarExt(avatarFallbackOrder[nextIdx]);
-                      } else {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }
-                    }}
-                  />
                 ) : null}
                 <div style={{
                   width: '100%',
@@ -217,7 +199,7 @@ const ProfileDropdown = ({ user, onLogout }) => {
                   color: 'white',
                   fontWeight: '600',
                   fontSize: '1.125rem',
-                  display: user.profilePicture ? 'none' : 'flex',
+                  display: avatarSrc ? 'none' : 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
