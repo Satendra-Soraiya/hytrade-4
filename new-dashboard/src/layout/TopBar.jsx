@@ -78,9 +78,26 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
 
         {/* App title and environment chip */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Hytrade Dashboard
-          </Typography>
+          <Box
+            component="a"
+            href={`${(() => {
+              const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+              const envUrl = import.meta.env.VITE_FRONTEND_URL;
+              const fallback = isLocal ? 'http://localhost:3006' : 'https://hytrade-4.vercel.app';
+              return (envUrl || fallback);
+            })()}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              textDecoration: 'none',
+              color: 'inherit',
+              '&:hover': { textDecoration: 'underline' }
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Hytrade Dashboard
+            </Typography>
+          </Box>
           {isDevelopment && (
             <Chip 
               label="LOCAL DEV"

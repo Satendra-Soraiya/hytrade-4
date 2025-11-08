@@ -28,7 +28,7 @@ export default function Trust() {
 
   return (
     <section className="py-20 md:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
         <h2 className="text-5xl md:text-6xl font-bold text-center mb-16">
           Trust with <span className="text-primary">Confidence</span>
         </h2>

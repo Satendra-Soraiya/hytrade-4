@@ -20,7 +20,7 @@ export default function Newsletter() {
 
   return (
     <section className="py-20 md:py-32 bg-card border-y border-border">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-6">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground">Stay Updated</h2>
           <p className="text-lg text-foreground/70">

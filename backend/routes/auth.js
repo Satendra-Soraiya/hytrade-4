@@ -286,7 +286,11 @@ router.get('/profile', authMiddleware, async (req, res) => {
         isActive: user.isActive,
         isVerified: user.isVerified,
         createdAt: user.createdAt,
-        lastLoginAt: user.lastLoginAt
+        lastLoginAt: user.lastLoginAt,
+        // Avatar fields for frontend rendering parity
+        profilePicture: user.profilePicture,
+        profilePictureType: user.profilePictureType,
+        updatedAt: user.updatedAt
       }
     });
 
@@ -301,3 +305,87 @@ router.get('/profile', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
+// Resolve avatar URL (server-side single source of truth)
+router.get('/avatar-url', require('../middleware/auth').authMiddleware, async (req, res) => {
+  try {
+    // Always fetch fresh from DB to avoid stale values from req.user/session cache
+    const dbUser = await CustomUserModel.findById(req.user.id).select('profilePicture profilePictureType updatedAt');
+    if (!dbUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    const user = dbUser;
+
+    const baseApiUrl = `${req.protocol}://${req.get('host')}`; // e.g., http://localhost:3002
+
+    const normalizePath = (p) => {
+      if (!p) return '';
+      const pic = String(p).trim();
+      if (/^https?:\/\//.test(pic)) return pic; // absolute URL
+      let path = pic.startsWith('/') ? pic : `/${pic}`;
+      const isFilenameOnly = /^(\/)?profile-[^/]+\.(jpg|jpeg|png|gif)$/i.test(path) && !path.includes('/uploads/profiles/');
+      if (isFilenameOnly) {
+        const filename = path.replace(/^\//, '');
+        path = `/uploads/profiles/${filename}`;
+      }
+      if (/^\/uploads\//.test(path) || /^\/images\//.test(path)) return path;
+      if (/^uploads\//.test(pic) || /^images\//.test(pic)) return `/${pic}`;
+      return path;
+    };
+
+    const routeViaProxyIfCrossOrigin = (url, apiUrl) => {
+      try {
+        const u = new URL(url);
+        const a = new URL(apiUrl);
+        if (u.host !== a.host) {
+          return `${apiUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+        }
+      } catch {}
+      return url;
+    };
+
+    const resolveUrl = (u) => {
+      const pic = u?.profilePicture || '';
+      let type = u?.profilePictureType || '';
+      const versionToken = u?.updatedAt ? new Date(u.updatedAt).getTime() : Date.now();
+      const normalized = normalizePath(pic);
+
+      if (!type && (/^https?:\/\//.test(normalized) || /(^\/uploads\/)|(^uploads\/)|profile-[^/]+\.(jpg|jpeg|png|gif)$/i.test(normalized))) {
+        type = 'custom';
+      }
+
+      if (type === 'custom') {
+        if (!normalized) return '';
+        if (/^https?:\/\//.test(normalized)) {
+          const proxied = routeViaProxyIfCrossOrigin(normalized, baseApiUrl);
+          return `${proxied}${proxied.includes('?') ? '&' : '?'}v=${versionToken}`;
+        }
+        const url = `${baseApiUrl}${normalized}`;
+        return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
+      }
+
+      if (/^https?:\/\//.test(normalized)) {
+        const proxied = routeViaProxyIfCrossOrigin(normalized, baseApiUrl);
+        return `${proxied}${proxied.includes('?') ? '&' : '?'}v=${versionToken}`;
+      }
+
+      if (/^\/.+\.[a-zA-Z]+$/.test(normalized) || normalized.includes('/images/default-avatars/')) {
+        const url = `${baseApiUrl}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
+        return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
+      }
+
+      const match = normalized.match(/^default-(\d+)$/);
+      const idx = match ? match[1] : '1';
+      const url = `${baseApiUrl}/images/default-avatars/AVATAR${idx}.jpeg`;
+      return `${url}?v=${versionToken}`;
+    };
+
+    const url = resolveUrl(user);
+    return res.json({ success: true, url });
+  } catch (error) {
+    console.error('avatar-url error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to resolve avatar URL' });
+  }
+});
+
+// After exports in file order, but ensure route is defined before module export if needed

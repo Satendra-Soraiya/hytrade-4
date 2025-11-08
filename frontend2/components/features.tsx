@@ -31,8 +31,8 @@ export default function Features() {
   ]
 
   return (
-    <section className="py-20 md:py-32 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mb-16 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground">
