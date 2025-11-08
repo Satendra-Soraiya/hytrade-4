@@ -29,6 +29,7 @@ import {
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import resolveAvatarSrc from '../utils/avatar';
 
 const drawerWidth = 260;
 
@@ -112,10 +113,20 @@ const Sidebar = ({ open, onClose, isMobile }) => {
           href={`${(() => {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const envUrl = import.meta.env.VITE_FRONTEND_URL;
-            const fallback = isLocal ? 'http://localhost:3001' : 'https://hytrade-frontend.vercel.app';
-            return (envUrl || fallback);
-          })()}?token=${localStorage.getItem('token') || ''}`}
-          target="_self"
+            const fallback = isLocal ? 'http://localhost:3000' : 'https://hytrade-4.vercel.app';
+            let base = (envUrl || fallback);
+            // strip accidental trailing ? or & in env
+            base = base.replace(/[?&]+$/, '');
+            const t = localStorage.getItem('token') || '';
+            const avatar = user ? resolveAvatarSrc(user) : '';
+            const qp = [];
+            if (t) qp.push(`token=${encodeURIComponent(t)}`);
+            if (avatar) qp.push(`avatar=${encodeURIComponent(avatar)}`);
+            if (!qp.length) return base;
+            const sep = base.includes('?') ? '&' : '?';
+            return `${base}${sep}${qp.join('&')}`;
+          })()}`}
+          target="_blank"
           rel="noopener noreferrer"
           sx={{ 
             display: 'flex', 

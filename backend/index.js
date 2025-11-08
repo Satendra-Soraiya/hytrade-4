@@ -45,6 +45,35 @@ app.use(helmet({
 //   }
 // });
 
+// Image proxy for cross-origin avatars and images
+app.get('/api/proxy/image', async (req, res) => {
+  try {
+    const target = req.query.url;
+    if (!target || typeof target !== 'string') {
+      return res.status(400).json({ success: false, message: 'Missing url query parameter' });
+    }
+    // Only allow http/https
+    if (!/^https?:\/\//i.test(target)) {
+      return res.status(400).json({ success: false, message: 'Invalid URL scheme' });
+    }
+    const response = await fetch(target, {
+      headers: { 'Accept': 'image/*,*/*;q=0.8' },
+    });
+    if (!response.ok) {
+      return res.status(response.status).json({ success: false, message: `Upstream error: ${response.status}` });
+    }
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+    res.setHeader('Content-Type', contentType);
+    // Cache for a short duration; avatar URLs are cache-busted via v= token
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return res.status(200).end(buffer);
+  } catch (err) {
+    console.error('Image proxy error:', err);
+    return res.status(500).json({ success: false, message: 'Image proxy failed' });
+  }
+});
+
 // app.use(generalLimiter); // Disabled for testing
 
 // CORS configuration
@@ -57,6 +86,13 @@ const corsOptions = {
     'http://localhost:3006',
     'http://localhost:5173',
     'http://localhost:5174',
+    // 127.0.0.1 equivalents (including preview/proxy)
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:3006',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:49604',
     // Production URLs - Vercel
     /^https:\/\/.*\.vercel\.app$/,
     /^https:\/\/.*\.vercel\.com$/,

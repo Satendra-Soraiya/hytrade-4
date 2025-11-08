@@ -8,14 +8,14 @@ export default function Hero() {
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <div className="space-y-8">
             {/* Trust Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5">
               <TrendingUp className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Trusted by 1.6+ Crore investors</span>
+              <span className="text-sm font-medium text-primary">Trusted by many traders</span>
             </div>
 
             {/* Main Heading */}
@@ -71,7 +71,7 @@ export default function Hero() {
           {/* Right Dashboard Preview */}
           <div className="hidden md:block relative">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl blur-3xl" />
-            <div className="relative bg-card border border-border rounded-2xl p-8 shadow-2xl">
+            <div className="relative bg-card border border-border rounded-2xl p-8 shadow-2xl max-w-[520px] ml-auto">
               <div className="space-y-6">
                 {/* Dashboard Header */}
                 <div className="flex items-start justify-between">

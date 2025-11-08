@@ -114,7 +114,8 @@ export const AuthProvider = ({ children }) => {
     // Redirect to frontend with logout message
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const envFrontend = import.meta.env.VITE_FRONTEND_URL;
-    const fallbackFrontend = isLocal ? 'http://localhost:3001' : 'https://hytrade-frontend.vercel.app';
+    // Point to new landing (frontend2). Local: Next dev on 3006. Prod: marketing site on Vercel.
+    const fallbackFrontend = isLocal ? 'http://localhost:3006' : 'https://hytrade-4.vercel.app';
     const FRONTEND_URL = envFrontend || fallbackFrontend;
     window.location.href = FRONTEND_URL + '?message=' + 
       encodeURIComponent('You have been logged out successfully');
