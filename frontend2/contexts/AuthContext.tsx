@@ -19,8 +19,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const init = async () => {
+      // Check for token in URL first
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        
+        if (tokenFromUrl) {
+          // Store the token from URL
+          storage.setSession({ token: tokenFromUrl });
+          // Clean up the URL
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }
+      }
+
+      // Proceed with normal auth check
       const has = !!storage.getToken();
       setIsLoggedIn(has);
+      
       if (has) {
         const ok = await verify();
         if (!ok) {
@@ -47,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     };
+    
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
