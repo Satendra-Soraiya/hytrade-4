@@ -83,15 +83,20 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
             href={`${(() => {
               const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
               const envUrl = import.meta.env.VITE_FRONTEND_URL;
-              const fallback = isLocal ? 'http://localhost:3006' : 'https://hytrade-4.vercel.app';
-              return (envUrl || fallback);
+              const fallback = isLocal ? 'http://localhost:3000' : 'https://hytrade.in';
+              const baseUrl = envUrl || fallback;
+              // Get token from localStorage
+              const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+              // Add token to URL if it exists
+              return token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
             })()}`}
-            target="_blank"
+            target="_self"
             rel="noopener noreferrer"
             sx={{
               textDecoration: 'none',
               color: 'inherit',
-              '&:hover': { textDecoration: 'underline' }
+              '&:hover': { textDecoration: 'underline' },
+              cursor: 'pointer'
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
