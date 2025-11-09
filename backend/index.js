@@ -95,7 +95,10 @@ const corsOptions = {
     'http://127.0.0.1:49604',
     'https://hytrade-dashboard.vercel.app',
     'https://hytrade-frontend.vercel.app',
+    'https://hytrade.in',
+    'https://www.hytrade.in',
     // Production URLs - Vercel
+    /^\.hytrade\.in$/,
     /^https:\/\/.*\.vercel\.app$/,
     /^https:\/\/.*\.vercel\.com$/,
     // Production URLs - Render (if needed)
