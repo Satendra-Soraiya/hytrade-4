@@ -26,14 +26,33 @@ const getApiUrl = () => {
 export const storage = {
   setSession(data: { token: string; user?: any; sessionId?: string; session?: any }) {
     try {
+      // Store the token
       localStorage.setItem("token", data.token);
       localStorage.setItem("authToken", data.token);
+      
+      // Store session data if provided
       if (data.sessionId) localStorage.setItem("sessionId", data.sessionId);
       if (data.session) localStorage.setItem("session", JSON.stringify(data.session));
-      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      
+      // Process and store user data if provided
+      if (data.user) {
+        // Ensure avatar URL is processed
+        const user = processUser(data.user);
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+      
+      // Update login state
       localStorage.setItem("isLoggedIn", "true");
-      window.dispatchEvent(new StorageEvent("storage", { key: "token", newValue: data.token }));
-    } catch {}
+      
+      // Dispatch storage event to notify other tabs/windows
+      window.dispatchEvent(new StorageEvent("storage", { 
+        key: "token", 
+        newValue: data.token,
+        url: window.location.href
+      }));
+    } catch (error) {
+      console.error('Error setting session:', error);
+    }
   },
   clearSession() {
     try {
@@ -81,22 +100,90 @@ export async function verify(): Promise<boolean> {
   const API = getApiUrl();
   const token = storage.getToken();
   if (!token) return false;
-  const res = await fetch(`${API}/api/auth/verify`, {
-    headers: { Authorization: `Bearer ${token}` }
-  }).catch(() => null as any);
-  return !!(res && res.ok);
+  
+  try {
+    const res = await fetch(`${API}/api/auth/verify`, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      },
+      cache: 'no-store'
+    });
+    
+    if (!res.ok) {
+      if (res.status === 401) {
+        // Token is invalid or expired
+        storage.clearSession();
+      }
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return false;
+  }
+}
+
+// Helper function to process user object and ensure avatar URL is correct
+function processUser(user: any): any {
+  if (!user) return null;
+  
+  // Ensure avatar URL is absolute
+  if (user.avatar && !user.avatar.startsWith('http')) {
+    const baseUrl = getApiUrl();
+    user.avatar = `${baseUrl}${user.avatar.startsWith('/') ? '' : '/'}${user.avatar}`;
+  }
+  
+  return user;
 }
 
 export async function getProfile(): Promise<any | null> {
   const API = getApiUrl();
   const token = storage.getToken();
   if (!token) return null;
-  const res = await fetch(`${API}/api/auth/profile`, {
-    headers: { Authorization: `Bearer ${token}` }
-  }).catch(() => null as any);
-  if (!res || !res.ok) return null;
-  const data = await res.json().catch(() => ({}));
-  return data?.user || null;
+  
+  try {
+    const res = await fetch(`${API}/api/auth/profile`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      },
+      cache: 'no-store'
+    });
+    
+    if (!res.ok) {
+      if (res.status === 401) {
+        // Token is invalid or expired
+        storage.clearSession();
+      }
+      return null;
+    }
+    
+    const data = await res.json().catch(() => ({}));
+    const user = data?.user || null;
+    
+    // Store the user data in localStorage if it exists
+    if (user) {
+      const processedUser = processUser(user);
+      try {
+        localStorage.setItem('user', JSON.stringify(processedUser));
+      } catch (e) {
+        console.error('Failed to store user in localStorage:', e);
+      }
+      return processedUser;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
 }
 
 export async function logout(): Promise<void> {

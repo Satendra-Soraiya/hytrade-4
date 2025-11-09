@@ -25,40 +25,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const tokenFromUrl = urlParams.get('token');
         
         if (tokenFromUrl) {
-          // Store the token from URL
-          storage.setSession({ token: tokenFromUrl });
-          // Clean up the URL
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
+          try {
+            // Store the token from URL
+            storage.setSession({ token: tokenFromUrl });
+            // Clean up the URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+            
+            // Force a refresh of the user profile
+            const u = await getProfile();
+            if (u) {
+              setUser(u);
+              setIsLoggedIn(true);
+              return;
+            }
+          } catch (error) {
+            console.error('Error processing token from URL:', error);
+            storage.clearSession();
+          }
         }
       }
 
-      // Proceed with normal auth check
-      const has = !!storage.getToken();
-      setIsLoggedIn(has);
+      // Proceed with normal auth check if no token in URL or if token was invalid
+      const token = storage.getToken();
+      const hasToken = !!token;
       
-      if (has) {
-        const ok = await verify();
-        if (!ok) {
+      if (hasToken) {
+        try {
+          const ok = await verify();
+          if (!ok) {
+            throw new Error('Token verification failed');
+          }
+          const u = await getProfile();
+          if (u) {
+            setUser(u);
+            setIsLoggedIn(true);
+            return;
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
           storage.clearSession();
-          setIsLoggedIn(false);
-          setUser(null);
-          return;
         }
-        const u = await getProfile();
-        if (u) setUser(u);
       }
+      
+      // If we get here, either there's no token or verification failed
+      setUser(null);
+      setIsLoggedIn(false);
     };
     init();
 
     const onStorage = (e: StorageEvent) => {
+      // Only process events for relevant keys
       if (!e.key || ["token", "authToken", "user", "isLoggedIn"].includes(e.key)) {
-        const tok = storage.getToken();
-        setIsLoggedIn(!!tok && (localStorage.getItem("isLoggedIn") === "true"));
+        const token = storage.getToken();
+        const isLoggedIn = !!token && (localStorage.getItem("isLoggedIn") === "true");
+        
+        // Update the logged-in state
+        setIsLoggedIn(isLoggedIn);
+        
+        // Update the user data
         try {
-          const raw = localStorage.getItem("user");
-          setUser(raw ? JSON.parse(raw) : null);
-        } catch {
+          const rawUser = localStorage.getItem("user");
+          if (rawUser) {
+            const user = JSON.parse(rawUser);
+            setUser(user);
+          } else if (!isLoggedIn) {
+            // If not logged in, ensure user is null
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error parsing user data from storage:', error);
           setUser(null);
         }
       }
