@@ -26,23 +26,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (tokenFromUrl) {
           try {
+            console.log('Token found in URL, processing...');
             // Store the token from URL
             storage.setSession({ token: tokenFromUrl });
-            // Clean up the URL
-            const newUrl = window.location.pathname;
+            
+            // Clean up the URL without causing a reload
+            const newUrl = window.location.pathname + window.location.hash;
             window.history.replaceState({}, '', newUrl);
             
-            // Force a refresh of the user profile
-            const u = await getProfile();
-            if (u) {
-              setUser(u);
-              setIsLoggedIn(true);
-              return;
+            // Verify the token and get user profile
+            const isVerified = await verify();
+            if (isVerified) {
+              const u = await getProfile();
+              if (u) {
+                console.log('User profile loaded successfully', u);
+                setUser(u);
+                setIsLoggedIn(true);
+                return;
+              }
             }
+            
+            console.error('Failed to verify token or load profile');
+            storage.clearSession();
           } catch (error) {
             console.error('Error processing token from URL:', error);
             storage.clearSession();
           }
+        } else {
+          console.log('No token found in URL, checking existing session...');
         }
       }
 

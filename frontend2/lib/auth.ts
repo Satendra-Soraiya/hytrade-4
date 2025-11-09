@@ -99,28 +99,44 @@ export async function register(payload: { firstName: string; lastName: string; e
 export async function verify(): Promise<boolean> {
   const API = getApiUrl();
   const token = storage.getToken();
-  if (!token) return false;
+  
+  if (!token) {
+    console.log('No token found in storage');
+    return false;
+  }
+  
+  console.log('Verifying token...');
   
   try {
-    const res = await fetch(`${API}/api/auth/verify`, {
+    const verifyUrl = `${API}/api/auth/verify`;
+    console.log('Verification URL:', verifyUrl);
+    
+    const res = await fetch(verifyUrl, {
       method: 'POST',
       headers: { 
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       },
+      credentials: 'include',
       cache: 'no-store'
     });
     
+    console.log('Verification response status:', res.status);
+    
     if (!res.ok) {
       if (res.status === 401) {
-        // Token is invalid or expired
+        console.log('Token verification failed: Unauthorized (401)');
         storage.clearSession();
+      } else {
+        console.error(`Token verification failed with status: ${res.status}`);
       }
       return false;
     }
     
+    console.log('Token verified successfully');
     return true;
   } catch (error) {
     console.error('Error verifying token:', error);
