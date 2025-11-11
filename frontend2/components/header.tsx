@@ -3,6 +3,7 @@
 import { Moon, Sun, TrendingUp, Rocket } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from 'react'
+import { useAuth } from "@/contexts/AuthContext"
 
 interface HeaderProps {
   theme: "light" | "dark"
@@ -10,6 +11,7 @@ interface HeaderProps {
 }
 
 export default function Header({ theme, toggleTheme }: HeaderProps) {
+  const { isLoggedIn, user, logout } = useAuth()
   const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   const dashboardUrl = isLocal
     ? 'http://localhost:5173'
@@ -17,108 +19,9 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
   // Always use same-origin relative paths for internal navigation
   const loginHref = '/login'
   const signupHref = '/signup'
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [user, setUser] = useState<any>(null)
   const [avatarUrl, setAvatarUrl] = useState<string>('')
   const [loggingOut, setLoggingOut] = useState(false)
   const [imgFailed, setImgFailed] = useState(false)
-
-  useEffect(() => {
-    try {
-      const compute = () => (
-        (localStorage.getItem('isLoggedIn') === 'true') ||
-        !!localStorage.getItem('authToken') ||
-        !!localStorage.getItem('token')
-      )
-      setLoggedIn(compute())
-      const onStorage = (e: StorageEvent) => {
-        if (!e.key || ['isLoggedIn','authToken','token','user'].includes(e.key)) {
-          setLoggedIn(compute())
-          try {
-            const raw = localStorage.getItem('user')
-            setUser(raw ? JSON.parse(raw) : null)
-          } catch { setUser(null) }
-        }
-
-  // Populate user from backend if logged in but no user cached yet
-  useEffect(() => {
-    const maybeFetch = async () => {
-      if (!loggedIn) return
-      try {
-        const token = localStorage.getItem('token') || localStorage.getItem('authToken')
-        if (!token) return
-        const API_URL = getApiUrl()
-        const res = await fetch(`${API_URL}/api/auth/verify`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-        // Even if verify succeeds, rely on full profile to get avatar fields
-        if (res.ok) {
-          await res.json().catch(() => ({}))
-        }
-
-        // Fetch full profile from both endpoints and prefer the one with avatar
-        const pRes = await fetch(`${API_URL}/api/auth/profile`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-        let bestUser: any = null
-        if (pRes.ok) {
-          const pData = await pRes.json()
-          if (pData?.user) bestUser = pData.user
-        }
-
-        // Also try /api/profile (profileRoutes)
-        try {
-          const p2Res = await fetch(`${API_URL}/api/profile`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          })
-          if (p2Res.ok) {
-            const p2Data = await p2Res.json()
-            const u2 = p2Data?.user
-            // Prefer the one that has a non-empty profilePicture
-            const hasPic = (u: any) => !!(u?.profilePicture && String(u.profilePicture).trim())
-            if (u2 && (hasPic(u2) || !bestUser)) bestUser = u2
-          }
-        } catch {}
-
-        if (bestUser) {
-          setUser(bestUser)
-          try { localStorage.setItem('user', JSON.stringify(bestUser)) } catch {}
-          // Avatar will be sourced from the canonical server endpoint below
-        }
-
-        // Fetch server-computed avatar URL (canonical source)
-        try {
-          const aRes = await fetch(`${API_URL}/api/auth/avatar-url`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          })
-          if (aRes.ok) {
-            const aData = await aRes.json()
-            if (aData?.url) setAvatarUrl(aData.url)
-          }
-        } catch {}
-      } catch {}
-    }
-    maybeFetch()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loggedIn])
-      }
-      // initialize user
-      try {
-        const raw = localStorage.getItem('user')
-        setUser(raw ? JSON.parse(raw) : null)
-      } catch { setUser(null) }
-      window.addEventListener('storage', onStorage)
-      return () => window.removeEventListener('storage', onStorage)
-    } catch {}
-  }, [])
 
   // No query-param based avatar; always use canonical backend URL
 
@@ -144,7 +47,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
 
   // Auto-refresh avatar from canonical endpoint on focus and every 15s
   useEffect(() => {
-    if (!loggedIn) return
+    if (!isLoggedIn) return
     const API_URL = getApiUrl()
 
     let cancelled = false
@@ -174,7 +77,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
       window.removeEventListener('focus', onFocus)
       window.clearInterval(id)
     }
-  }, [loggedIn])
+  }, [isLoggedIn])
 
   const normalizePath = (p: string) => {
     if (!p) return ''
@@ -253,29 +156,8 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
     if (loggingOut) return
     setLoggingOut(true)
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken') || ''
-      if (token) {
-        const API_URL = getApiUrl()
-        try {
-          await fetch(`${API_URL}/api/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          })
-        } catch {}
-      }
+      await logout()
     } finally {
-      try {
-        localStorage.removeItem('token')
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('sessionId')
-        localStorage.removeItem('session')
-        localStorage.setItem('isLoggedIn', 'false')
-        // Notify tabs/components
-        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'false' }))
-      } catch {}
       setLoggingOut(false)
       const url = new URL(window.location.href)
       url.searchParams.set('message', 'You have been logged out successfully')
@@ -324,7 +206,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
                 <Sun className="h-5 w-5 text-foreground" />
               )}
             </button>
-            {!loggedIn && (
+            {!isLoggedIn && (
               <>
                 <a href={loginHref} className="hidden text-base font-medium text-foreground hover:text-primary sm:inline">
                   Login
@@ -338,7 +220,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
             )}
             <a href={`${(() => {
               try {
-                if (!loggedIn) return dashboardUrl
+                if (!isLoggedIn) return dashboardUrl
                 const t = localStorage.getItem('token') || localStorage.getItem('authToken') || ''
                 if (!t) return dashboardUrl
                 const sep = dashboardUrl.includes('?') ? '&' : '?'
@@ -347,9 +229,9 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
             })()}`}
                className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-base font-medium hover:bg-secondary transition-colors">
               <Rocket className="h-5 w-5" />
-              {loggedIn ? 'Dashboard' : 'Launch App'}
+              {isLoggedIn ? 'Dashboard' : 'Launch App'}
             </a>
-            {loggedIn && (
+            {isLoggedIn && (
               <div className="ml-1 h-10 w-10 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">
                 {(!imgFailed && (avatarUrl || resolveAvatarSrc(user))) ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -367,7 +249,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
                 )}
               </div>
             )}
-            {loggedIn && (
+            {isLoggedIn && (
               <Button
                 onClick={handleLogout}
                 disabled={loggingOut}
