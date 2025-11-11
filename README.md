@@ -13,82 +13,38 @@ Hytrade 4 is a comprehensive trading platform with a modern, responsive interfac
 - **Trading Interface** - Buy and sell stocks with ease
 - **Responsive Design** - Works on desktop and mobile devices
 
-## 🚀 Quick Start
+## 🚀 Quick Start (New)
 
-### Prerequisites
+### One-command Local Setup
 
-- Node.js (v14 or higher)
-- npm (v6 or higher)
-- MongoDB (v4.4 or higher) - [Download MongoDB](https://www.mongodb.com/try/download/community)
+- Run the bootstrap script to configure env files, install deps, and optionally start all services:
+  ```bash
+  chmod +x bootstrap-local-dev.sh
+  ./bootstrap-local-dev.sh
+  ```
+  - Prompts for your `MONGODB_URI` and auto-generates a `JWT_SECRET`.
+  - Writes `backend/.env`, `frontend2/.env.local`, and `new-dashboard/.env` for local dev.
+  - Installs dependencies for `backend`, `frontend2`, and `new-dashboard`.
+  - Optionally starts all dev servers.
 
-### Installation
+### Manual Start (if you prefer)
 
-1. **Clone the repository**
+1. **Backend**
    ```bash
-   git clone <repository-url>
-   cd Hytrade-4
+   cd backend && npm install
+   PORT=3002 NODE_ENV=development npm start
    ```
 
-2. **Install dependencies**
+2. **Landing (Next.js)**
    ```bash
-   # Install backend dependencies
-   cd backend
-   npm install
-   
-   # Install dashboard dependencies
-   cd ../dashboard
-   npm install
-   
-   # Install frontend dependencies
-   cd ../frontend
-   npm install
+   cd frontend2 && npm install
+   npm run dev -- -p 3001
    ```
 
-3. **Set up environment variables**
-   - Create a `.env` file in the `backend` directory with:
-     ```
-     PORT=3002
-     MONGODB_URI=mongodb://localhost:27017/hytrade
-     JWT_SECRET=your_jwt_secret_here
-     NODE_ENV=development
-     ```
-
-### Running the Application
-
-#### Option 1: Using the Setup Script (Recommended)
-
-1. Make the script executable (Mac/Linux):
+3. **Dashboard (Vite)**
    ```bash
-   chmod +x setup_and_run.sh
-   ```
-
-2. Run the script:
-   - **Mac/Linux**: `./setup_and_run.sh`
-   - **Windows**: Double-click `setup_and_run.bat` or run it from Command Prompt
-
-#### Option 2: Manual Start
-
-1. **Start MongoDB** (if not running as a service)
-   ```bash
-   mongod
-   ```
-
-2. **Start the backend server**
-   ```bash
-   cd backend
-   npm start
-   ```
-
-3. **Start the dashboard** (in a new terminal)
-   ```bash
-   cd dashboard
-   npm start
-   ```
-
-4. **Start the frontend** (in a new terminal)
-   ```bash
-   cd frontend
-   npm start
+   cd new-dashboard && npm install
+   npm run dev -- --port 5174
    ```
 
 ## 🔗 Application URLs
@@ -98,7 +54,7 @@ Hytrade 4 is a comprehensive trading platform with a modern, responsive interfac
 - **Backend API**: http://localhost:3002
 - **MongoDB**: http://localhost:27017
 
-## 📂 Project Structure
+## 📂 Project Structure (Cleaned)
 
 ```
 Hytrade-4/
@@ -107,16 +63,15 @@ Hytrade-4/
 │   ├── routes/        # API routes
 │   └── index.js       # Main server file
 │
-├── dashboard/         # React dashboard application
+├── new-dashboard/     # Vite dashboard application
 │   ├── public/        # Static files
 │   └── src/           # React components and logic
 │
-├── frontend/          # React landing page
+├── frontend2/         # Next.js landing app
 │   ├── public/        # Static files
-│   └── src/           # React components and pages
+│   └── app/           # Next.js app router pages/components
 │
-├── setup_and_run.sh   # Setup and run script (Mac/Linux)
-├── setup_and_run.bat  # Setup and run script (Windows)
+├── bootstrap-local-dev.sh  # New guided local setup script
 └── README.md          # This file
 ```
 
