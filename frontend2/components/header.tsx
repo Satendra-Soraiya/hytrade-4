@@ -10,13 +10,13 @@ interface HeaderProps {
 }
 
 export default function Header({ theme, toggleTheme }: HeaderProps) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hytrade-frontend.vercel.app'
   const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   const dashboardUrl = isLocal
     ? 'http://localhost:5173'
-    : (process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://hytrade-dashboard.vercel.app')
-  const loginHref = isLocal ? '/login' : `${appUrl}/login`
-  const signupHref = isLocal ? '/signup' : `${appUrl}/signup`
+    : (process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.hytrade.in')
+  // Always use same-origin relative paths for internal navigation
+  const loginHref = '/login'
+  const signupHref = '/signup'
   const [loggedIn, setLoggedIn] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [avatarUrl, setAvatarUrl] = useState<string>('')
@@ -129,11 +129,17 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
   const getApiUrl = () => {
     let api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'
     try {
-      if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-        const u = new URL(api)
-        if (u.protocol === 'http:') {
-          u.protocol = 'https:'
-          api = u.toString().replace(/\/$/, '')
+      if (typeof window !== 'undefined') {
+        const isLocalLanding = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '3000'
+        if (isLocalLanding) {
+          return ''
+        }
+        if (window.location.protocol === 'https:') {
+          const u = new URL(api)
+          if (u.protocol === 'http:') {
+            u.protocol = 'https:'
+            api = u.toString().replace(/\/$/, '')
+          }
         }
       }
     } catch {}
