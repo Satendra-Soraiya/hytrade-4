@@ -113,7 +113,7 @@ const Sidebar = ({ open, onClose, isMobile }) => {
           href={`${(() => {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const envUrl = import.meta.env.VITE_FRONTEND_URL;
-            const fallback = isLocal ? 'http://localhost:3000' : 'https://www.hytrade.in';
+            const fallback = isLocal ? 'http://localhost:3001' : 'https://www.hytrade.in';
             const base = (envUrl || fallback).replace(/[?&]+$/, '');
 
             // Prefer robust URL construction to avoid double ? or &

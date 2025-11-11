@@ -12,10 +12,14 @@ interface HeaderProps {
 
 export default function Header({ theme, toggleTheme }: HeaderProps) {
   const { isLoggedIn, user, logout } = useAuth()
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  const dashboardUrl = isLocal
-    ? 'http://localhost:5173'
-    : (process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.hytrade.in')
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  const dashboardUrl = (() => {
+    const envDashboard = process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.hytrade.in'
+    if (!mounted) return envDashboard
+    const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    return isLocal ? 'http://localhost:5174' : envDashboard
+  })()
   // Always use same-origin relative paths for internal navigation
   const loginHref = '/login'
   const signupHref = '/signup'
@@ -26,11 +30,15 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
   // No query-param based avatar; always use canonical backend URL
 
   const getApiUrl = () => {
-    let api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'
+    let api = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com')
     try {
       if (typeof window !== 'undefined') {
-        const isLocalLanding = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '3000'
-        if (isLocalLanding) {
+        const host = window.location.hostname
+        const port = window.location.port
+        const isHytradeProd = /(^|\.)hytrade\.in$/.test(host)
+        const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && port === '3001'
+        // Use same-origin path in both local dev and production domains; Next rewrites proxy to backend
+        if (isHytradeProd || isLocalLanding) {
           return ''
         }
         if (window.location.protocol === 'https:') {
@@ -206,7 +214,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
                 <Sun className="h-5 w-5 text-foreground" />
               )}
             </button>
-            {!isLoggedIn && (
+            {(!mounted || !isLoggedIn) && (
               <>
                 <a href={loginHref} className="hidden text-base font-medium text-foreground hover:text-primary sm:inline">
                   Login
@@ -220,7 +228,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
             )}
             <a href={`${(() => {
               try {
-                if (!isLoggedIn) return dashboardUrl
+                if (!mounted || !isLoggedIn) return dashboardUrl
                 const t = localStorage.getItem('token') || localStorage.getItem('authToken') || ''
                 if (!t) return dashboardUrl
                 const sep = dashboardUrl.includes('?') ? '&' : '?'
@@ -229,9 +237,9 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
             })()}`}
                className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-base font-medium hover:bg-secondary transition-colors">
               <Rocket className="h-5 w-5" />
-              {isLoggedIn ? 'Dashboard' : 'Launch App'}
+              {mounted && isLoggedIn ? 'Dashboard' : 'Launch App'}
             </a>
-            {isLoggedIn && (
+            {mounted && isLoggedIn && (
               <div className="ml-1 h-10 w-10 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">
                 {(!imgFailed && (avatarUrl || resolveAvatarSrc(user))) ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -249,7 +257,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
                 )}
               </div>
             )}
-            {isLoggedIn && (
+            {mounted && isLoggedIn && (
               <Button
                 onClick={handleLogout}
                 disabled={loggingOut}

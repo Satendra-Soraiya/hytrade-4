@@ -17,6 +17,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
+  // Shared token cookie utilities for cross-subdomain SSO
+  const getCookieToken = (): string | null => {
+    if (typeof document === 'undefined') return null;
+    try {
+      const cookies = document.cookie?.split(';') || [];
+      for (const c of cookies) {
+        const [k, v] = c.trim().split('=');
+        if (k === 'hytrade_token' && v) return decodeURIComponent(v);
+      }
+    } catch {}
+    return null;
+  };
+
+  const setCookieToken = (token: string) => {
+    if (typeof document === 'undefined') return;
+    try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      const attrs = [`path=/`, `SameSite=Lax`, isHttps ? `Secure` : ``].filter(Boolean).join('; ');
+      // Set cookie for current host
+      document.cookie = `hytrade_token=${encodeURIComponent(token)}; ${attrs}`;
+      // Also set for root domain when applicable
+      if (host.endsWith('hytrade.in')) {
+        document.cookie = `hytrade_token=${encodeURIComponent(token)}; domain=.hytrade.in; ${attrs}`;
+      }
+    } catch {}
+  };
+
+  const clearCookieToken = () => {
+    if (typeof document === 'undefined') return;
+    try {
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      const attrs = [`path=/`, `Max-Age=0`, `SameSite=Lax`, isHttps ? `Secure` : ``].filter(Boolean).join('; ');
+      // Clear for current host
+      document.cookie = `hytrade_token=; ${attrs}`;
+      // Clear for root domain when applicable
+      if (host.endsWith('hytrade.in')) {
+        document.cookie = `hytrade_token=; domain=.hytrade.in; ${attrs}`;
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     const init = async () => {
       // Check for token in URL first
@@ -29,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('Token found in URL, processing...');
             // Store the token from URL
             storage.setSession({ token: tokenFromUrl });
+            setCookieToken(tokenFromUrl);
             
             // Clean up the URL without causing a reload
             const newUrl = window.location.pathname + window.location.hash;
@@ -47,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (result.status === 401) {
           console.error('Failed to verify token (401). Clearing session.');
           storage.clearSession();
+          clearCookieToken();
         } else {
           // Network/CORS error or temporary failure – keep session and mark logged in
           console.warn('Verify failed due to network/CORS; keeping session.');
@@ -60,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (error) {
             console.error('Error processing token from URL:', error);
             storage.clearSession();
+            clearCookieToken();
           }
         } else {
           console.log('No token found in URL, checking existing session...');
@@ -67,7 +113,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Proceed with normal auth check if no token in URL or if token was invalid
-      const token = storage.getToken();
+      let token = storage.getToken();
+      // If no token in storage, try shared cookie
+      if (!token && typeof window !== 'undefined') {
+        token = getCookieToken() || '';
+        if (token) {
+          storage.setSession({ token });
+        }
+      }
       const hasToken = !!token;
       
       if (hasToken) {
@@ -76,21 +129,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!result.ok && result.status === 401) {
             throw new Error('Token verification failed (401)');
           }
+
           const u = await getProfile();
           if (u) {
             setUser(u);
             setIsLoggedIn(true);
             return;
           }
+
           // If profile load fails but token likely valid, keep logged-in state
           if (result.ok) {
             setIsLoggedIn(true);
             try { const raw = localStorage.getItem('user'); setUser(raw ? JSON.parse(raw) : null); } catch { setUser(null) }
             return;
           }
+
+          // Network/CORS or temporary failure: keep session and mark logged in
+          if (!result.ok && result.status !== 401) {
+            console.warn('Verify failed due to network/CORS; keeping session.');
+            setIsLoggedIn(true);
+            try {
+              const raw = localStorage.getItem('user');
+              setUser(raw ? JSON.parse(raw) : null);
+            } catch { setUser(null) }
+            return;
+          }
         } catch (error) {
           console.error('Auth check failed:', error);
           storage.clearSession();
+          clearCookieToken();
         }
       }
       
@@ -134,6 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await apiLogin(email, password);
     if (res?.success && res.token) {
       storage.setSession({ token: res.token, user: res.user, sessionId: res.sessionId, session: res.session });
+      setCookieToken(res.token);
       setIsLoggedIn(true);
       if (res.user) setUser(res.user);
       return true;
@@ -145,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await apiLogout();
     setIsLoggedIn(false);
     setUser(null);
+    clearCookieToken();
   };
 
   const refreshProfile = async () => {

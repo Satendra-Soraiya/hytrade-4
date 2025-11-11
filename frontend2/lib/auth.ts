@@ -9,13 +9,16 @@ export type LoginResponse = {
   session?: any;
 };
 
-const getApiUrl = () => {
-  let api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+export const getApiUrl = () => {
+  let api = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
   try {
     if (typeof window !== "undefined") {
-      // Use same-origin proxy in local dev to avoid cross-origin issues
-      const isLocalLanding = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '3000';
-      if (isLocalLanding) {
+      const host = window.location.hostname;
+      const port = window.location.port;
+      const isHytradeProd = /(^|\.)hytrade\.in$/.test(host);
+      const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && port === '3001';
+      // Use same-origin path in both local dev and production domains; Next rewrites proxy to backend
+      if (isHytradeProd || isLocalLanding) {
         return '';
       }
       if (window.location.protocol === "https:") {
@@ -136,7 +139,7 @@ export async function verify(): Promise<{ ok: boolean; status?: number }> {
         console.log('Token verification failed: Unauthorized (401)');
         return { ok: false, status: 401 };
       } else {
-        console.error(`Token verification failed with status: ${res.status}`);
+        console.warn(`Token verification failed with status: ${res.status}`);
       }
       return { ok: false, status: res.status };
     }
@@ -144,7 +147,7 @@ export async function verify(): Promise<{ ok: boolean; status?: number }> {
     console.log('Token verified successfully');
     return { ok: true, status: res.status };
   } catch (error) {
-    console.error('Error verifying token:', error);
+    console.warn('Verify request failed (network/CORS):', error);
     // Network or CORS error: treat as non-fatal and keep session
     return { ok: false, status: 0 };
   }
@@ -196,14 +199,14 @@ export async function getProfile(): Promise<any | null> {
       try {
         localStorage.setItem('user', JSON.stringify(processedUser));
       } catch (e) {
-        console.error('Failed to store user in localStorage:', e);
+        console.warn('Failed to store user in localStorage:', e);
       }
       return processedUser;
     }
     
     return null;
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.warn('Profile request failed (network/CORS):', error);
     return null;
   }
 }

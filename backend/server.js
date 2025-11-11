@@ -45,13 +45,15 @@ app.use(generalLimiter);
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
+      // Local development
       'http://localhost:3000',
       'http://localhost:3001', 
       'http://localhost:5173',
       'http://localhost:5174',
-      'https://hytrade-frontend-gqvf8c92x-satendra-soraiya-s-projects.vercel.app',
-      'https://hytrade-dashboard-88t9jtiu5-satendra-soraiya-s-projects.vercel.app',
-      'https://new-dashboard-8gb7pxajw-satendra-soraiya-s-projects.vercel.app'
+      // Canonical production domains
+      'https://hytrade.in',
+      'https://www.hytrade.in',
+      'https://dashboard.hytrade.in'
     ];
     
     // Allow requests with no origin (mobile apps, etc.)

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { getApiUrl as resolveApiUrl } from "@/lib/auth"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -20,17 +21,11 @@ export default function LoginPage() {
   }, [])
 
   const getApiUrl = () => {
-    let api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002"
-    try {
-      if (typeof window !== "undefined" && window.location.protocol === "https:") {
-        const u = new URL(api)
-        if (u.protocol === "http:") {
-          u.protocol = "https:"
-          api = u.toString().replace(/\/$/, "")
-        }
-      }
-    } catch {}
-    return api
+    // Use shared helper:
+    // - Returns '' on hytrade.in/www.hytrade.in for same-origin proxying
+    // - Uses localhost in dev
+    // - Falls back to https://hytrade-backend.onrender.com when env is missing
+    return resolveApiUrl()
   }
 
   const getDashboardUrl = () => {

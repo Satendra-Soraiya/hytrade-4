@@ -86,41 +86,24 @@ const corsOptions = {
       'http://localhost:3006',
       'http://localhost:5173',
       'http://localhost:5174',
-      // 127.0.0.1 equivalents (including preview/proxy)
+      // 127.0.0.1 equivalents
       'http://127.0.0.1:3000',
       'http://127.0.0.1:3001',
       'http://127.0.0.1:3006',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174',
-      // Known prod frontends
+      // Canonical production domains
       'https://hytrade.in',
       'https://www.hytrade.in',
-      'https://hytrade-dashboard.vercel.app',
-      'https://hytrade-frontend.vercel.app',
-      // Allow any hytrade.in subdomain over http/https
-      /^https?:\/\/(?:.*\.)?hytrade\.in$/,
-      // Allow any Vercel preview domains
-      /^https:\/\/.*\.vercel\.app$/,
-      // Allow Render-hosted frontends if needed
-      /^https:\/\/.*\.onrender\.com$/
+      'https://dashboard.hytrade.in'
     ];
     
     // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
     
-    // Check if origin matches any allowed origin (string or regex)
+    // Check if origin matches any allowed origin (string only)
     const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
-        return allowedOrigin === origin;
-      }
-      if (allowedOrigin instanceof RegExp) {
-        try {
-          return allowedOrigin.test(origin);
-        } catch {
-          return false;
-        }
-      }
-      return false;
+      return typeof allowedOrigin === 'string' && allowedOrigin === origin;
     });
     
     if (isAllowed) {
