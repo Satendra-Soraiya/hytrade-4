@@ -1,0 +1,71 @@
+name: Deploy on main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-frontend2-vercel:
+    name: Deploy frontend2 to Vercel
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+      - name: Deploy to Vercel (frontend2)
+        if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_PROJECT_ID_FRONTEND2 != '' && secrets.VERCEL_ORG_ID != '' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND2 }}
+        run: |
+          npx vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
+          npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+
+  deploy-dashboard-vercel:
+    name: Deploy new-dashboard to Vercel
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: new-dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+      - name: Deploy to Vercel (dashboard)
+        if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_PROJECT_ID_DASHBOARD != '' && secrets.VERCEL_ORG_ID != '' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DASHBOARD }}
+        run: |
+          npx vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
+          npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+
+  deploy-backend-render:
+    name: Trigger backend deploy on Render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trigger Render Deploy Hook
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
+        run: |
+          curl -X POST "$RENDER_DEPLOY_HOOK_URL"
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}

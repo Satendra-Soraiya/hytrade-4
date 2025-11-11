@@ -76,3 +76,46 @@ After deployment, update the environment variables with actual URLs:
 - Check CORS configuration in backend
 - Verify environment variables are set correctly
 - Ensure all URLs are using HTTPS in production
+
+---
+
+## 🔄 **CI/CD: Auto-deploy on push to `main`**
+
+To ensure every push to `main` deploys automatically across all services, the repo includes a GitHub Actions workflow and uses native platform auto-deploy settings.
+
+### ✅ What’s configured
+- Vercel projects (Landing and Dashboard) are linked to GitHub and deploy from `main` (`git-main` shows on active deployments).
+- Render backend service is defined in `render.yaml` with `autoDeploy: true`.
+- A multi-app GitHub Actions workflow is added at `.github/workflows/deploy.yml` to deploy both frontends (Vercel) and trigger backend deploy (Render) on each push to `main`.
+
+### 🔐 Required GitHub Secrets
+Add repository secrets in GitHub → Settings → Secrets and variables → Actions:
+- `VERCEL_TOKEN` — Vercel token with deploy permission.
+- `VERCEL_ORG_ID` — Vercel Org ID.
+- `VERCEL_PROJECT_ID_FRONTEND2` — Project ID for `frontend2` (landing).
+- `VERCEL_PROJECT_ID_DASHBOARD` — Project ID for `new-dashboard`.
+- `RENDER_DEPLOY_HOOK_URL` — Deploy hook URL for the `hytrade-backend` Render service.
+
+Notes:
+- Project IDs are found in Vercel Dashboard → Project → Settings → General.
+- Create the Render Deploy Hook in Service Settings and copy the URL.
+
+### 🧭 Workflow behavior
+On push to `main`:
+- Frontend2 job runs `vercel pull` and `vercel deploy --prod` in `frontend2` (when secrets are present).
+- Dashboard job runs the same in `new-dashboard`.
+- Backend job POSTs the `RENDER_DEPLOY_HOOK_URL` to trigger a backend deploy.
+
+### 🛠️ Platform settings to verify
+- Vercel → Project Settings:
+  - Production Branch: `main`
+  - Git Auto Deploy: Enabled
+  - Environment Variables: Production values set
+- Render → Service Settings:
+  - Branch: `main`
+  - Auto-deploy: Enabled
+  - Environment Variables: `MONGODB_URI`, `JWT_SECRET`, etc.
+
+### 🧪 Troubleshooting CI
+- If a Vercel job fails, native Git integration should still deploy; check Vercel build logs.
+- If the Render deploy does not trigger, verify the hook URL and service logs.
