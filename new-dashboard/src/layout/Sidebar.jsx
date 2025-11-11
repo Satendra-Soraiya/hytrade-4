@@ -113,20 +113,23 @@ const Sidebar = ({ open, onClose, isMobile }) => {
           href={`${(() => {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const envUrl = import.meta.env.VITE_FRONTEND_URL;
-            const fallback = isLocal ? 'http://localhost:3000' : 'https://hytrade-4.vercel.app';
-            let base = (envUrl || fallback);
-            // strip accidental trailing ? or & in env
-            base = base.replace(/[?&]+$/, '');
-            const t = localStorage.getItem('token') || '';
-            const avatar = user ? resolveAvatarSrc(user) : '';
-            const qp = [];
-            if (t) qp.push(`token=${encodeURIComponent(t)}`);
-            if (avatar) qp.push(`avatar=${encodeURIComponent(avatar)}`);
-            if (!qp.length) return base;
-            const sep = base.includes('?') ? '&' : '?';
-            return `${base}${sep}${qp.join('&')}`;
+            const fallback = isLocal ? 'http://localhost:3001' : 'https://www.hytrade.in';
+            const base = (envUrl || fallback).replace(/[?&]+$/, '');
+
+            // Prefer robust URL construction to avoid double ? or &
+            let url;
+            try {
+              url = new URL(base);
+            } catch {
+              // Fallback: if base is missing protocol, assume https
+              url = new URL(base.startsWith('http') ? base : `https://${base}`);
+            }
+
+            const t = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+            if (t) url.searchParams.set('token', t);
+            return url.toString();
           })()}`}
-          target="_blank"
+          target="_self"
           rel="noopener noreferrer"
           sx={{ 
             display: 'flex', 

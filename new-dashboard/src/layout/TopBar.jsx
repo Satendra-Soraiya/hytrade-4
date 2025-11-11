@@ -81,20 +81,21 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
           <Box
             component="a"
             href={`${(() => {
-              // Always use the production domain for the frontend
-              const frontendUrl = 'https://www.hytrade.in';
-              
+              // Compute landing URL from env with sensible fallbacks
+              const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+              const envFrontend = import.meta.env.VITE_FRONTEND_URL;
+              const frontendUrl = envFrontend || (isLocal ? 'http://localhost:3001' : 'https://www.hytrade.in');
+
               // Get token from localStorage
               const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-              
+
               // Add token to URL if it exists
               if (token) {
-                // Create a URL object to handle the URL construction properly
                 const url = new URL(frontendUrl);
                 url.searchParams.set('token', token);
                 return url.toString();
               }
-              
+
               return frontendUrl;
             })()}`}
             target="_self"

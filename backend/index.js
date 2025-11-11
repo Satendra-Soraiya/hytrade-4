@@ -80,42 +80,30 @@ app.get('/api/proxy/image', async (req, res) => {
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
-    // Development URLs
-    'http://localhost:3000', 
-    'http://localhost:3001',
-    'http://localhost:3006',
-    'http://localhost:5173',
-    'http://localhost:5174',
-    // 127.0.0.1 equivalents (including preview/proxy)
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    'http://127.0.0.1:3006',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:49604',
-    'https://hytrade-dashboard.vercel.app',
-    'https://hytrade-frontend.vercel.app',
-    'https://hytrade.in',
-    'https://www.hytrade.in',
-    // Production URLs - Vercel
-    /^\.hytrade\.in$/,
-    /^https:\/\/.*\.vercel\.app$/,
-    /^https:\/\/.*\.vercel\.com$/,
-    // Production URLs - Render (if needed)
-    /^https:\/\/.*\.onrender\.com$/
+      // Development URLs
+      'http://localhost:3000', 
+      'http://localhost:3001',
+      'http://localhost:3006',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      // 127.0.0.1 equivalents
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
+      'http://127.0.0.1:3006',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      // Canonical production domains
+      'https://hytrade.in',
+      'https://www.hytrade.in',
+      'https://dashboard.hytrade.in'
     ];
     
     // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
     
-    // Check if origin matches any allowed origin (string or regex)
+    // Check if origin matches any allowed origin (string only)
     const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
-        return allowedOrigin === origin;
-      } else if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
-      }
-      return false;
+      return typeof allowedOrigin === 'string' && allowedOrigin === origin;
     });
     
     if (isAllowed) {

@@ -87,7 +87,7 @@ function Login() {
         // Redirect to dashboard with token in URL
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const envDashboard = process.env.REACT_APP_DASHBOARD_URL;
-        const fallbackDashboard = isLocal ? 'http://localhost:5173' : 'https://hytrade-dashboard.vercel.app';
+        const fallbackDashboard = isLocal ? 'http://localhost:5173' : 'https://dashboard.hytrade.in';
         const DASHBOARD_URL = envDashboard || fallbackDashboard;
         window.location.href = `${DASHBOARD_URL}?token=${data.token}`;
       } else {

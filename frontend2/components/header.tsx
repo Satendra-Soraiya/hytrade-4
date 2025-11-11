@@ -3,6 +3,7 @@
 import { Moon, Sun, TrendingUp, Rocket } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from 'react'
+import { useAuth } from "@/contexts/AuthContext"
 
 interface HeaderProps {
   theme: "light" | "dark"
@@ -10,130 +11,42 @@ interface HeaderProps {
 }
 
 export default function Header({ theme, toggleTheme }: HeaderProps) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hytrade-frontend.vercel.app'
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  const dashboardUrl = isLocal
-    ? 'http://localhost:5173'
-    : (process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://hytrade-dashboard.vercel.app')
-  const loginHref = isLocal ? '/login' : `${appUrl}/login`
-  const signupHref = isLocal ? '/signup' : `${appUrl}/signup`
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const { isLoggedIn, user, logout } = useAuth()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  const dashboardUrl = (() => {
+    const envDashboard = process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.hytrade.in'
+    if (!mounted) return envDashboard
+    const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    return isLocal ? 'http://localhost:5174' : envDashboard
+  })()
+  // Always use same-origin relative paths for internal navigation
+  const loginHref = '/login'
+  const signupHref = '/signup'
   const [avatarUrl, setAvatarUrl] = useState<string>('')
   const [loggingOut, setLoggingOut] = useState(false)
   const [imgFailed, setImgFailed] = useState(false)
 
-  useEffect(() => {
-    try {
-      const compute = () => (
-        (localStorage.getItem('isLoggedIn') === 'true') ||
-        !!localStorage.getItem('authToken') ||
-        !!localStorage.getItem('token')
-      )
-      setLoggedIn(compute())
-      const onStorage = (e: StorageEvent) => {
-        if (!e.key || ['isLoggedIn','authToken','token','user'].includes(e.key)) {
-          setLoggedIn(compute())
-          try {
-            const raw = localStorage.getItem('user')
-            setUser(raw ? JSON.parse(raw) : null)
-          } catch { setUser(null) }
-        }
-
-  // Populate user from backend if logged in but no user cached yet
-  useEffect(() => {
-    const maybeFetch = async () => {
-      if (!loggedIn) return
-      try {
-        const token = localStorage.getItem('token') || localStorage.getItem('authToken')
-        if (!token) return
-        const API_URL = getApiUrl()
-        const res = await fetch(`${API_URL}/api/auth/verify`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-        // Even if verify succeeds, rely on full profile to get avatar fields
-        if (res.ok) {
-          await res.json().catch(() => ({}))
-        }
-
-        // Fetch full profile from both endpoints and prefer the one with avatar
-        const pRes = await fetch(`${API_URL}/api/auth/profile`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-        let bestUser: any = null
-        if (pRes.ok) {
-          const pData = await pRes.json()
-          if (pData?.user) bestUser = pData.user
-        }
-
-        // Also try /api/profile (profileRoutes)
-        try {
-          const p2Res = await fetch(`${API_URL}/api/profile`, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-          })
-          if (p2Res.ok) {
-            const p2Data = await p2Res.json()
-            const u2 = p2Data?.user
-            // Prefer the one that has a non-empty profilePicture
-            const hasPic = (u: any) => !!(u?.profilePicture && String(u.profilePicture).trim())
-            if (u2 && (hasPic(u2) || !bestUser)) bestUser = u2
-          }
-        } catch {}
-
-        if (bestUser) {
-          setUser(bestUser)
-          try { localStorage.setItem('user', JSON.stringify(bestUser)) } catch {}
-          // Avatar will be sourced from the canonical server endpoint below
-        }
-
-        // Fetch server-computed avatar URL (canonical source)
-        try {
-          const aRes = await fetch(`${API_URL}/api/auth/avatar-url`, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-          })
-          if (aRes.ok) {
-            const aData = await aRes.json()
-            if (aData?.url) setAvatarUrl(aData.url)
-          }
-        } catch {}
-      } catch {}
-    }
-    maybeFetch()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loggedIn])
-      }
-      // initialize user
-      try {
-        const raw = localStorage.getItem('user')
-        setUser(raw ? JSON.parse(raw) : null)
-      } catch { setUser(null) }
-      window.addEventListener('storage', onStorage)
-      return () => window.removeEventListener('storage', onStorage)
-    } catch {}
-  }, [])
-
   // No query-param based avatar; always use canonical backend URL
 
   const getApiUrl = () => {
-    let api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'
+    let api = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com')
     try {
-      if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-        const u = new URL(api)
-        if (u.protocol === 'http:') {
-          u.protocol = 'https:'
-          api = u.toString().replace(/\/$/, '')
+      if (typeof window !== 'undefined') {
+        const host = window.location.hostname
+        const port = window.location.port
+        const isHytradeProd = /(^|\.)hytrade\.in$/.test(host)
+        const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && port === '3001'
+        // Use same-origin path in both local dev and production domains; Next rewrites proxy to backend
+        if (isHytradeProd || isLocalLanding) {
+          return ''
+        }
+        if (window.location.protocol === 'https:') {
+          const u = new URL(api)
+          if (u.protocol === 'http:') {
+            u.protocol = 'https:'
+            api = u.toString().replace(/\/$/, '')
+          }
         }
       }
     } catch {}
@@ -142,7 +55,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
 
   // Auto-refresh avatar from canonical endpoint on focus and every 15s
   useEffect(() => {
-    if (!loggedIn) return
+    if (!isLoggedIn) return
     const API_URL = getApiUrl()
 
     let cancelled = false
@@ -172,7 +85,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
       window.removeEventListener('focus', onFocus)
       window.clearInterval(id)
     }
-  }, [loggedIn])
+  }, [isLoggedIn])
 
   const normalizePath = (p: string) => {
     if (!p) return ''
@@ -251,29 +164,8 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
     if (loggingOut) return
     setLoggingOut(true)
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken') || ''
-      if (token) {
-        const API_URL = getApiUrl()
-        try {
-          await fetch(`${API_URL}/api/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          })
-        } catch {}
-      }
+      await logout()
     } finally {
-      try {
-        localStorage.removeItem('token')
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('sessionId')
-        localStorage.removeItem('session')
-        localStorage.setItem('isLoggedIn', 'false')
-        // Notify tabs/components
-        window.dispatchEvent(new StorageEvent('storage', { key: 'isLoggedIn', newValue: 'false' }))
-      } catch {}
       setLoggingOut(false)
       const url = new URL(window.location.href)
       url.searchParams.set('message', 'You have been logged out successfully')
@@ -322,7 +214,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
                 <Sun className="h-5 w-5 text-foreground" />
               )}
             </button>
-            {!loggedIn && (
+            {(!mounted || !isLoggedIn) && (
               <>
                 <a href={loginHref} className="hidden text-base font-medium text-foreground hover:text-primary sm:inline">
                   Login
@@ -336,7 +228,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
             )}
             <a href={`${(() => {
               try {
-                if (!loggedIn) return dashboardUrl
+                if (!mounted || !isLoggedIn) return dashboardUrl
                 const t = localStorage.getItem('token') || localStorage.getItem('authToken') || ''
                 if (!t) return dashboardUrl
                 const sep = dashboardUrl.includes('?') ? '&' : '?'
@@ -345,9 +237,9 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
             })()}`}
                className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-base font-medium hover:bg-secondary transition-colors">
               <Rocket className="h-5 w-5" />
-              {loggedIn ? 'Dashboard' : 'Launch App'}
+              {mounted && isLoggedIn ? 'Dashboard' : 'Launch App'}
             </a>
-            {loggedIn && (
+            {mounted && isLoggedIn && (
               <div className="ml-1 h-10 w-10 rounded-full overflow-hidden border border-border bg-secondary flex items-center justify-center text-xs font-semibold text-foreground">
                 {(!imgFailed && (avatarUrl || resolveAvatarSrc(user))) ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -365,7 +257,7 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
                 )}
               </div>
             )}
-            {loggedIn && (
+            {mounted && isLoggedIn && (
               <Button
                 onClick={handleLogout}
                 disabled={loggingOut}

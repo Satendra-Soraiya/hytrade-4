@@ -9,14 +9,24 @@ export type LoginResponse = {
   session?: any;
 };
 
-const getApiUrl = () => {
-  let api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+export const getApiUrl = () => {
+  let api = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
   try {
-    if (typeof window !== "undefined" && window.location.protocol === "https:") {
-      const u = new URL(api);
-      if (u.protocol === "http:") {
-        u.protocol = "https:";
-        api = u.toString().replace(/\/$/, "");
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      const port = window.location.port;
+      const isHytradeProd = /(^|\.)hytrade\.in$/.test(host);
+      const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && port === '3001';
+      // Use same-origin path in both local dev and production domains; Next rewrites proxy to backend
+      if (isHytradeProd || isLocalLanding) {
+        return '';
+      }
+      if (window.location.protocol === "https:") {
+        const u = new URL(api);
+        if (u.protocol === "http:") {
+          u.protocol = "https:";
+          api = u.toString().replace(/\/$/, "");
+        }
       }
     }
   } catch {}
@@ -96,13 +106,13 @@ export async function register(payload: { firstName: string; lastName: string; e
   return data as LoginResponse;
 }
 
-export async function verify(): Promise<boolean> {
+export async function verify(): Promise<{ ok: boolean; status?: number }> {
   const API = getApiUrl();
   const token = storage.getToken();
   
   if (!token) {
     console.log('No token found in storage');
-    return false;
+    return { ok: false };
   }
   
   console.log('Verifying token...');
@@ -112,15 +122,13 @@ export async function verify(): Promise<boolean> {
     console.log('Verification URL:', verifyUrl);
     
     const res = await fetch(verifyUrl, {
-      method: 'POST',
+      method: 'GET',
       headers: { 
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       },
-      credentials: 'include',
       cache: 'no-store'
     });
     
@@ -129,18 +137,19 @@ export async function verify(): Promise<boolean> {
     if (!res.ok) {
       if (res.status === 401) {
         console.log('Token verification failed: Unauthorized (401)');
-        storage.clearSession();
+        return { ok: false, status: 401 };
       } else {
-        console.error(`Token verification failed with status: ${res.status}`);
+        console.warn(`Token verification failed with status: ${res.status}`);
       }
-      return false;
+      return { ok: false, status: res.status };
     }
     
     console.log('Token verified successfully');
-    return true;
+    return { ok: true, status: res.status };
   } catch (error) {
-    console.error('Error verifying token:', error);
-    return false;
+    console.warn('Verify request failed (network/CORS):', error);
+    // Network or CORS error: treat as non-fatal and keep session
+    return { ok: false, status: 0 };
   }
 }
 
@@ -190,14 +199,14 @@ export async function getProfile(): Promise<any | null> {
       try {
         localStorage.setItem('user', JSON.stringify(processedUser));
       } catch (e) {
-        console.error('Failed to store user in localStorage:', e);
+        console.warn('Failed to store user in localStorage:', e);
       }
       return processedUser;
     }
     
     return null;
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.warn('Profile request failed (network/CORS):', error);
     return null;
   }
 }

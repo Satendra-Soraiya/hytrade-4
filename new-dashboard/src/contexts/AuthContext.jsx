@@ -14,6 +14,46 @@ export const AuthProvider = ({ children }) => {
   const API_URL = import.meta.env.VITE_API_URL || 
     (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
 
+  // Shared token cookie utilities for cross-subdomain SSO
+  const getCookieToken = () => {
+    try {
+      const cookies = document.cookie?.split(';') || [];
+      for (const c of cookies) {
+        const [k, v] = c.trim().split('=');
+        if (k === 'hytrade_token' && v) return decodeURIComponent(v);
+      }
+    } catch {}
+    return null;
+  };
+
+  const setCookieToken = (tkn) => {
+    try {
+      const isHttps = window.location.protocol === 'https:';
+      const host = window.location.hostname;
+      const attrs = [`path=/`, `SameSite=Lax`, isHttps ? `Secure` : ``].filter(Boolean).join('; ');
+      // Set for current host
+      document.cookie = `hytrade_token=${encodeURIComponent(tkn)}; ${attrs}`;
+      // Also set for root domain when applicable
+      if (host.endsWith('hytrade.in')) {
+        document.cookie = `hytrade_token=${encodeURIComponent(tkn)}; domain=.hytrade.in; ${attrs}`;
+      }
+    } catch {}
+  };
+
+  const clearCookieToken = () => {
+    try {
+      const isHttps = window.location.protocol === 'https:';
+      const host = window.location.hostname;
+      const attrs = [`path=/`, `Max-Age=0`, `SameSite=Lax`, isHttps ? `Secure` : ``].filter(Boolean).join('; ');
+      // Clear for current host
+      document.cookie = `hytrade_token=; ${attrs}`;
+      // Clear for root domain when applicable
+      if (host.endsWith('hytrade.in')) {
+        document.cookie = `hytrade_token=; domain=.hytrade.in; ${attrs}`;
+      }
+    } catch {}
+  };
+
   // Check for token in URL on initial load
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -24,9 +64,16 @@ export const AuthProvider = ({ children }) => {
         if (urlToken) {
           // Remove token from URL
           window.history.replaceState({}, document.title, window.location.pathname);
+          setCookieToken(urlToken);
           await validateToken(urlToken);
         } else if (token) {
           await validateToken(token);
+        } else {
+          // Try shared cookie if localStorage empty
+          const cookieToken = getCookieToken();
+          if (cookieToken) {
+            await validateToken(cookieToken);
+          }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -44,7 +91,6 @@ export const AuthProvider = ({ children }) => {
       console.log('Validating token...');
       const response = await fetch(`${API_URL}/api/auth/verify`, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`,
         },
       });
@@ -57,6 +103,7 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
           setToken(authToken);
           localStorage.setItem('token', authToken);
+          setCookieToken(authToken);
           return true;
         }
       }
@@ -110,12 +157,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('sessionId');
     localStorage.removeItem('session');
     localStorage.removeItem('isLoggedIn');
+    clearCookieToken();
     
     // Redirect to frontend with logout message
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const envFrontend = import.meta.env.VITE_FRONTEND_URL;
-    // Point to new landing (frontend2). Local: Next dev on 3006. Prod: marketing site on Vercel.
-    const fallbackFrontend = isLocal ? 'http://localhost:3006' : 'https://hytrade-4.vercel.app';
+    // Point to landing (frontend2). Local: Next dev on 3001. Prod: canonical domain.
+    const fallbackFrontend = isLocal ? 'http://localhost:3001' : 'https://www.hytrade.in';
     const FRONTEND_URL = envFrontend || fallbackFrontend;
     window.location.href = FRONTEND_URL + '?message=' + 
       encodeURIComponent('You have been logged out successfully');
