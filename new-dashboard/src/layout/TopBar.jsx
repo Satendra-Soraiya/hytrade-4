@@ -84,7 +84,7 @@ const TopBar = ({ drawerWidth, handleDrawerToggle, isMobile, toggleDarkMode, dar
               // Compute landing URL from env with sensible fallbacks
               const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
               const envFrontend = import.meta.env.VITE_FRONTEND_URL;
-              const frontendUrl = envFrontend || (isLocal ? 'http://localhost:3001' : 'https://www.hytrade.in');
+              const frontendUrl = envFrontend || (isLocal ? 'http://localhost:3004' : 'https://www.hytrade.in');
 
               // Get token from localStorage
               const token = localStorage.getItem('token') || localStorage.getItem('authToken');

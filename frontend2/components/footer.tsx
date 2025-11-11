@@ -10,11 +10,13 @@ export default function Footer() {
         <div className="grid md:grid-cols-5 gap-8 py-16 mb-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-primary-foreground">HY</span>
-              </div>
-              <span className="text-lg font-bold">HYtrade</span>
+            <div className="flex items-center gap-3 mb-4">
+              {/* Use actual Hytrade logo image */}
+              <img
+                src="/logo.png"
+                alt="Hytrade"
+                className="h-8 w-auto object-contain"
+              />
             </div>
             <p className="text-sm text-muted-foreground">
               Your trusted partner in online trading and investment.

@@ -29,29 +29,29 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
 
   // No query-param based avatar; always use canonical backend URL
 
-  const getApiUrl = () => {
-    let api = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com')
-    try {
-      if (typeof window !== 'undefined') {
-        const host = window.location.hostname
-        const port = window.location.port
-        const isHytradeProd = /(^|\.)hytrade\.in$/.test(host)
-        const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && port === '3001'
-        // Use same-origin path in both local dev and production domains; Next rewrites proxy to backend
-        if (isHytradeProd || isLocalLanding) {
-          return ''
-        }
-        if (window.location.protocol === 'https:') {
-          const u = new URL(api)
-          if (u.protocol === 'http:') {
-            u.protocol = 'https:'
-            api = u.toString().replace(/\/$/, '')
+    const getApiUrl = () => {
+      let api = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com')
+      try {
+        if (typeof window !== 'undefined') {
+          const host = window.location.hostname
+          const port = window.location.port
+          const isHytradeProd = /(^|\.)hytrade\.in$/.test(host)
+          const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && (port === '3001' || port === '3004' || port === '3006')
+          // Use same-origin path in both local dev and production domains; Next rewrites proxy to backend
+          if (isHytradeProd || isLocalLanding) {
+            return ''
+          }
+          if (window.location.protocol === 'https:') {
+            const u = new URL(api)
+            if (u.protocol === 'http:') {
+              u.protocol = 'https:'
+              api = u.toString().replace(/\/$/, '')
+            }
           }
         }
-      }
-    } catch {}
-    return api
-  }
+      } catch {}
+      return api
+    }
 
   // Auto-refresh avatar from canonical endpoint on focus and every 15s
   useEffect(() => {

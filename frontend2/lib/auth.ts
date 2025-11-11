@@ -16,7 +16,7 @@ export const getApiUrl = () => {
       const host = window.location.hostname;
       const port = window.location.port;
       const isHytradeProd = /(^|\.)hytrade\.in$/.test(host);
-      const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && port === '3001';
+      const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && (port === '3001' || port === '3004' || port === '3006');
       // Use same-origin path in both local dev and production domains; Next rewrites proxy to backend
       if (isHytradeProd || isLocalLanding) {
         return '';

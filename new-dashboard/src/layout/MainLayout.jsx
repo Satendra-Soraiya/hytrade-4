@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Box, CssBaseline, useMediaQuery, useTheme, styled, Alert, Typography } from '@mui/material';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import { useAuth } from '../contexts/AuthContext';
 
 const drawerWidth = 260;
 
@@ -37,6 +38,8 @@ const MainLayout = ({ toggleDarkMode, darkMode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const location = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  const [showWelcome, setShowWelcome] = useState(false);
 
   // Close mobile drawer when route changes
   useEffect(() => {
@@ -66,6 +69,35 @@ const MainLayout = ({ toggleDarkMode, darkMode }) => {
   const handleDrawerTransitionEnd = () => {
     setIsClosing(false);
   };
+
+  // If arriving with a token in URL, show welcome immediately once per tab
+  useEffect(() => {
+    try {
+      const hasToken = new URLSearchParams(location.search).get('token');
+      if (hasToken && !sessionStorage.getItem('hytrade_welcome_shown')) {
+        setShowWelcome(true);
+        sessionStorage.setItem('hytrade_welcome_shown', '1');
+        const t = window.setTimeout(() => setShowWelcome(false), 4000);
+        return () => window.clearTimeout(t);
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Show welcome message once after login per tab session
+  useEffect(() => {
+    try {
+      if (isAuthenticated && !sessionStorage.getItem('hytrade_welcome_shown')) {
+        setShowWelcome(true);
+        sessionStorage.setItem('hytrade_welcome_shown', '1');
+        const t = window.setTimeout(() => setShowWelcome(false), 4000);
+        return () => window.clearTimeout(t);
+      }
+      if (!isAuthenticated) {
+        setShowWelcome(false);
+      }
+    } catch {}
+  }, [isAuthenticated]);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -126,6 +158,15 @@ const MainLayout = ({ toggleDarkMode, darkMode }) => {
             },
           }}
         >
+          {showWelcome && (
+            <Alert
+              severity="success"
+              variant="filled"
+              sx={{ mb: 2, borderRadius: 2 }}
+            >
+              {`hey ${user?.firstName || user?.name || 'there'} welcome to hytrade`}
+            </Alert>
+          )}
                {/* System Status */}
                <Alert
                  severity="success"

@@ -58,8 +58,15 @@ export default function LoginPage() {
         if (data.user) localStorage.setItem("user", JSON.stringify(data.user))
         if (data.session) localStorage.setItem("session", JSON.stringify(data.session))
         localStorage.setItem("isLoggedIn", "true")
+        // Show immediate welcome message before redirecting
+        try {
+          setInfo(`🎉 Welcome ${data?.user?.firstName || data?.user?.name || "to Hytrade"}! Redirecting...`)
+        } catch {}
         const DASHBOARD_URL = getDashboardUrl()
-        window.location.href = `${DASHBOARD_URL}?token=${data.token}`
+        // Small delay so user can see the welcome message
+        setTimeout(() => {
+          window.location.href = `${DASHBOARD_URL}?token=${data.token}`
+        }, 800)
       } else {
         setError(data.message || "Login failed. Please check your credentials.")
       }
