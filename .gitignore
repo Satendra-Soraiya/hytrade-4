@@ -39,6 +39,7 @@ yarn-error.log*
 # Logs
 logs
 *.log
+backend/backend.log
 
 # Misc
 .cache/
@@ -64,3 +65,23 @@ coverage/
 /new-dashboard/.env
 backups/*.zip
 .tmp_v0_landing/
+ 
+# PIDs and runtime artifacts
+*.pid
+frontend2/frontend2.pid
+new-dashboard/dashboard.pid
+backend/backend.pid
+
+# Cookie dumps and local test artifacts
+*_cookies.txt
+cookies.txt
+test_cookies.txt
+test10_cookies.txt
+test10_new_cookies.txt
+newuser_cookies.txt
+
+# Legacy apps (removed)
+/frontend/
+/hytrade-4-src/
+/unified-app/
+/working-app/
