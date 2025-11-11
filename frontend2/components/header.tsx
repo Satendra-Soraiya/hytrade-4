@@ -50,7 +50,6 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
         const API_URL = getApiUrl()
         const res = await fetch(`${API_URL}/api/auth/verify`, {
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
         })
@@ -62,7 +61,6 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
         // Fetch full profile from both endpoints and prefer the one with avatar
         const pRes = await fetch(`${API_URL}/api/auth/profile`, {
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
         })
@@ -76,7 +74,6 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
         try {
           const p2Res = await fetch(`${API_URL}/api/profile`, {
             headers: {
-              'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`,
             },
           })
@@ -99,7 +96,6 @@ export default function Header({ theme, toggleTheme }: HeaderProps) {
         try {
           const aRes = await fetch(`${API_URL}/api/auth/avatar-url`, {
             headers: {
-              'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`,
             },
           })

@@ -12,11 +12,18 @@ export type LoginResponse = {
 const getApiUrl = () => {
   let api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
   try {
-    if (typeof window !== "undefined" && window.location.protocol === "https:") {
-      const u = new URL(api);
-      if (u.protocol === "http:") {
-        u.protocol = "https:";
-        api = u.toString().replace(/\/$/, "");
+    if (typeof window !== "undefined") {
+      // Use same-origin proxy in local dev to avoid cross-origin issues
+      const isLocalLanding = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port === '3000';
+      if (isLocalLanding) {
+        return '';
+      }
+      if (window.location.protocol === "https:") {
+        const u = new URL(api);
+        if (u.protocol === "http:") {
+          u.protocol = "https:";
+          api = u.toString().replace(/\/$/, "");
+        }
       }
     }
   } catch {}
@@ -96,13 +103,13 @@ export async function register(payload: { firstName: string; lastName: string; e
   return data as LoginResponse;
 }
 
-export async function verify(): Promise<boolean> {
+export async function verify(): Promise<{ ok: boolean; status?: number }> {
   const API = getApiUrl();
   const token = storage.getToken();
   
   if (!token) {
     console.log('No token found in storage');
-    return false;
+    return { ok: false };
   }
   
   console.log('Verifying token...');
@@ -112,15 +119,13 @@ export async function verify(): Promise<boolean> {
     console.log('Verification URL:', verifyUrl);
     
     const res = await fetch(verifyUrl, {
-      method: 'POST',
+      method: 'GET',
       headers: { 
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
       },
-      credentials: 'include',
       cache: 'no-store'
     });
     
@@ -129,18 +134,19 @@ export async function verify(): Promise<boolean> {
     if (!res.ok) {
       if (res.status === 401) {
         console.log('Token verification failed: Unauthorized (401)');
-        storage.clearSession();
+        return { ok: false, status: 401 };
       } else {
         console.error(`Token verification failed with status: ${res.status}`);
       }
-      return false;
+      return { ok: false, status: res.status };
     }
     
     console.log('Token verified successfully');
-    return true;
+    return { ok: true, status: res.status };
   } catch (error) {
     console.error('Error verifying token:', error);
-    return false;
+    // Network or CORS error: treat as non-fatal and keep session
+    return { ok: false, status: 0 };
   }
 }
 

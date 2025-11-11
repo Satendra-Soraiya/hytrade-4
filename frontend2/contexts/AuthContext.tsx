@@ -35,19 +35,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             window.history.replaceState({}, '', newUrl);
             
             // Verify the token and get user profile
-            const isVerified = await verify();
-            if (isVerified) {
-              const u = await getProfile();
-              if (u) {
-                console.log('User profile loaded successfully', u);
-                setUser(u);
-                setIsLoggedIn(true);
-                return;
-              }
-            }
-            
-            console.error('Failed to verify token or load profile');
-            storage.clearSession();
+        const result = await verify();
+        if (result.ok) {
+          const u = await getProfile();
+          if (u) {
+            console.log('User profile loaded successfully', u);
+            setUser(u);
+            setIsLoggedIn(true);
+            return;
+          }
+        } else if (result.status === 401) {
+          console.error('Failed to verify token (401). Clearing session.');
+          storage.clearSession();
+        } else {
+          // Network/CORS error or temporary failure – keep session and mark logged in
+          console.warn('Verify failed due to network/CORS; keeping session.');
+          setIsLoggedIn(true);
+          try {
+            const raw = localStorage.getItem('user');
+            setUser(raw ? JSON.parse(raw) : null);
+          } catch { setUser(null) }
+          return;
+        }
           } catch (error) {
             console.error('Error processing token from URL:', error);
             storage.clearSession();
@@ -63,14 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (hasToken) {
         try {
-          const ok = await verify();
-          if (!ok) {
-            throw new Error('Token verification failed');
+          const result = await verify();
+          if (!result.ok && result.status === 401) {
+            throw new Error('Token verification failed (401)');
           }
           const u = await getProfile();
           if (u) {
             setUser(u);
             setIsLoggedIn(true);
+            return;
+          }
+          // If profile load fails but token likely valid, keep logged-in state
+          if (result.ok) {
+            setIsLoggedIn(true);
+            try { const raw = localStorage.getItem('user'); setUser(raw ? JSON.parse(raw) : null); } catch { setUser(null) }
             return;
           }
         } catch (error) {
