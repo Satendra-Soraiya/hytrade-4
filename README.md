@@ -27,6 +27,15 @@ Hytrade 4 is a comprehensive trading platform with a modern, responsive interfac
   - Installs dependencies for `backend`, `frontend2`, and `new-dashboard`.
   - Optionally starts all dev servers.
 
+### Windows One-click Local Setup
+
+- Double-click `bootstrap-local-dev-windows.bat`
+- Or run from Command Prompt: `bootstrap-local-dev-windows.bat`
+- Requires Node.js 18+ on PATH; the script opens three windows:
+  - Backend on `3002`
+  - Landing (Next.js) on `3001`
+  - Dashboard (Vite) on `5174`
+
 ### Manual Start (if you prefer)
 
 1. **Backend**
@@ -72,6 +81,7 @@ Hytrade-4/
 │   └── app/           # Next.js app router pages/components
 │
 ├── bootstrap-local-dev.sh  # New guided local setup script
+├── bootstrap-local-dev-windows.bat  # One-click Windows setup
 └── README.md          # This file
 ```
 
