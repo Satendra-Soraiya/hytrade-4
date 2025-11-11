@@ -36,7 +36,7 @@ export default function LoginPage() {
   const getDashboardUrl = () => {
     const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
     const envDash = process.env.NEXT_PUBLIC_DASHBOARD_URL
-    const fallback = isLocal ? "http://localhost:5173" : "https://hytrade-dashboard.vercel.app"
+    const fallback = isLocal ? "http://localhost:5173" : "https://dashboard.hytrade.in"
     return envDash || fallback
   }
 
