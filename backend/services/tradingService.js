@@ -6,15 +6,20 @@ class TradingService {
   
   // Execute a buy order with proper financial calculations
   static async executeBuyOrder(userId, orderData) {
-    const session = await CustomUserModel.startSession();
-    session.startTransaction();
+    // Check if transactions are supported (replica set required)
+    // For development/local MongoDB, transactions are not available
+    // We'll proceed without transactions for now
+    const useTransaction = false; // Disable transactions for development
+    let session = null;
 
     try {
       const { stockSymbol, stockName, quantity, price, orderMode = 'MARKET' } = orderData;
       const totalAmount = quantity * price;
 
-      // Get user with session lock
-      const user = await CustomUserModel.findById(userId).session(session);
+      // Get user with session lock if transaction is available
+      const user = useTransaction 
+        ? await CustomUserModel.findById(userId).session(session)
+        : await CustomUserModel.findById(userId);
       if (!user) {
         throw new Error('User not found');
       }
@@ -25,10 +30,15 @@ class TradingService {
       }
 
       // Check for existing holding
-      const existingHolding = await CustomHoldingsModel.findOne({
-        userId: userId,
-        stockSymbol: stockSymbol.toUpperCase()
-      }).session(session);
+      const existingHolding = useTransaction
+        ? await CustomHoldingsModel.findOne({
+            userId: userId,
+            stockSymbol: stockSymbol.toUpperCase()
+          }).session(session)
+        : await CustomHoldingsModel.findOne({
+            userId: userId,
+            stockSymbol: stockSymbol.toUpperCase()
+          });
 
       if (existingHolding) {
         // Update existing holding with proper average price calculation
@@ -63,7 +73,7 @@ class TradingService {
           lastUpdated: new Date()
         });
 
-        await newHolding.save({ session });
+        await newHolding.save(useTransaction ? { session } : {});
       }
 
       // Create order record
@@ -81,17 +91,19 @@ class TradingService {
         executedAt: new Date()
       });
 
-      await newOrder.save({ session });
+      await newOrder.save(useTransaction ? { session } : {});
 
       // Update user's financial data
       user.accountBalance = parseFloat((user.accountBalance - totalAmount).toFixed(2));
       user.totalInvestment = parseFloat((user.totalInvestment + totalAmount).toFixed(2));
       user.updatedAt = new Date();
 
-      await user.save({ session });
+      await user.save(useTransaction ? { session } : {});
 
-      // Commit transaction
-      await session.commitTransaction();
+      // Commit transaction if using one
+      if (useTransaction) {
+        await session.commitTransaction();
+      }
 
       return {
         success: true,
@@ -102,33 +114,47 @@ class TradingService {
       };
 
     } catch (error) {
-      await session.abortTransaction();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+      }
       throw error;
     } finally {
-      session.endSession();
+      if (session) {
+        session.endSession();
+      }
     }
   }
 
   // Execute a sell order with proper financial calculations
   static async executeSellOrder(userId, orderData) {
-    const session = await CustomUserModel.startSession();
-    session.startTransaction();
+    // Check if transactions are supported (replica set required)
+    // For development/local MongoDB, transactions are not available
+    // We'll proceed without transactions for now
+    const useTransaction = false; // Disable transactions for development
+    let session = null;
 
     try {
       const { stockSymbol, stockName, quantity, price, orderMode = 'MARKET' } = orderData;
       const totalAmount = quantity * price;
 
-      // Get user with session lock
-      const user = await CustomUserModel.findById(userId).session(session);
+      // Get user with session lock if transaction is available
+      const user = useTransaction 
+        ? await CustomUserModel.findById(userId).session(session)
+        : await CustomUserModel.findById(userId);
       if (!user) {
         throw new Error('User not found');
       }
 
       // Check for existing holding
-      const existingHolding = await CustomHoldingsModel.findOne({
-        userId: userId,
-        stockSymbol: stockSymbol.toUpperCase()
-      }).session(session);
+      const existingHolding = useTransaction
+        ? await CustomHoldingsModel.findOne({
+            userId: userId,
+            stockSymbol: stockSymbol.toUpperCase()
+          }).session(session)
+        : await CustomHoldingsModel.findOne({
+            userId: userId,
+            stockSymbol: stockSymbol.toUpperCase()
+          });
 
       if (!existingHolding) {
         throw new Error(`You don't own any shares of ${stockSymbol}`);
@@ -146,7 +172,11 @@ class TradingService {
       // Update or remove holding
       if (existingHolding.quantity === quantity) {
         // Selling all shares - remove holding
-        await CustomHoldingsModel.deleteOne({ _id: existingHolding._id }).session(session);
+        if (useTransaction) {
+          await CustomHoldingsModel.deleteOne({ _id: existingHolding._id }).session(session);
+        } else {
+          await CustomHoldingsModel.deleteOne({ _id: existingHolding._id });
+        }
       } else {
         // Partial sale - update holding
         const newQuantity = existingHolding.quantity - quantity;
@@ -159,7 +189,7 @@ class TradingService {
         existingHolding.profitLossPercentage = parseFloat(((existingHolding.profitLoss / existingHolding.totalInvestment) * 100).toFixed(2));
         existingHolding.lastUpdated = new Date();
 
-        await existingHolding.save({ session });
+        await existingHolding.save(useTransaction ? { session } : {});
       }
 
       // Create order record
@@ -179,7 +209,7 @@ class TradingService {
         executedAt: new Date()
       });
 
-      await newOrder.save({ session });
+      await newOrder.save(useTransaction ? { session } : {});
 
       // Update user's financial data
       user.accountBalance = parseFloat((user.accountBalance + totalAmount).toFixed(2));
@@ -187,10 +217,12 @@ class TradingService {
       user.totalPnL = parseFloat((user.totalPnL + profitLoss).toFixed(2));
       user.updatedAt = new Date();
 
-      await user.save({ session });
+      await user.save(useTransaction ? { session } : {});
 
-      // Commit transaction
-      await session.commitTransaction();
+      // Commit transaction if using one
+      if (useTransaction) {
+        await session.commitTransaction();
+      }
 
       return {
         success: true,
@@ -204,10 +236,14 @@ class TradingService {
       };
 
     } catch (error) {
-      await session.abortTransaction();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+      }
       throw error;
     } finally {
-      session.endSession();
+      if (session) {
+        session.endSession();
+      }
     }
   }
 

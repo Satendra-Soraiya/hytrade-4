@@ -80,29 +80,29 @@ app.get('/api/proxy/image', async (req, res) => {
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
-    // Development URLs
-    'http://localhost:3000', 
-    'http://localhost:3001',
-    'http://localhost:3006',
-    'http://localhost:5173',
-    'http://localhost:5174',
-    // 127.0.0.1 equivalents (including preview/proxy)
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    'http://127.0.0.1:3006',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:49604',
-    'https://hytrade-dashboard.vercel.app',
-    'https://hytrade-frontend.vercel.app',
-    'https://hytrade.in',
-    'https://www.hytrade.in',
-    // Production URLs - Vercel
-    /^\.hytrade\.in$/,
-    /^https:\/\/.*\.vercel\.app$/,
-    /^https:\/\/.*\.vercel\.com$/,
-    // Production URLs - Render (if needed)
-    /^https:\/\/.*\.onrender\.com$/
+      // Development URLs
+      'http://localhost:3000', 
+      'http://localhost:3001',
+      'http://localhost:3006',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      // 127.0.0.1 equivalents (including preview/proxy)
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
+      'http://127.0.0.1:3006',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      // Known prod frontends
+      'https://hytrade.in',
+      'https://www.hytrade.in',
+      'https://hytrade-dashboard.vercel.app',
+      'https://hytrade-frontend.vercel.app',
+      // Allow any hytrade.in subdomain over http/https
+      /^https?:\/\/(?:.*\.)?hytrade\.in$/,
+      // Allow any Vercel preview domains
+      /^https:\/\/.*\.vercel\.app$/,
+      // Allow Render-hosted frontends if needed
+      /^https:\/\/.*\.onrender\.com$/
     ];
     
     // Allow requests with no origin (mobile apps, etc.)
@@ -112,8 +112,13 @@ const corsOptions = {
     const isAllowed = allowedOrigins.some(allowedOrigin => {
       if (typeof allowedOrigin === 'string') {
         return allowedOrigin === origin;
-      } else if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
+      }
+      if (allowedOrigin instanceof RegExp) {
+        try {
+          return allowedOrigin.test(origin);
+        } catch {
+          return false;
+        }
       }
       return false;
     });
