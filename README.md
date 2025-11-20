@@ -1,6 +1,6 @@
 # Hytrade 4 - Modern Trading Platform
 
-![Hytrade Logo](https://via.placeholder.com/150x50?text=Hytrade+Logo)
+![Hytrade Logo](frontend2/public/logo.png)
 
 Hytrade 4 is a comprehensive trading platform with a modern, responsive interface for managing your investments, tracking market data, and executing trades.
 
