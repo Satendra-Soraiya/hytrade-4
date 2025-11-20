@@ -61,14 +61,14 @@ Hytrade 4 is a comprehensive trading platform with a modern, responsive interfac
 - **Landing (Next.js)**: http://localhost:3001
 - **Dashboard (Vite)**: http://localhost:5174
 - **Backend API**: http://localhost:3002
-- **MongoDB**: http://localhost:27017
+- **MongoDB**: mongodb://localhost:27017
 
 ## 📂 Project Structure (Cleaned)
 
 ```
 Hytrade-4/
 ├── backend/           # Node.js/Express API server
-│   ├── models/        # MongoDB models
+│   ├── model/         # MongoDB models
 │   ├── routes/        # API routes
 │   └── index.js       # Main server file
 │
@@ -172,14 +172,15 @@ Authorization: Bearer <your_jwt_token>
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
 - Built with React, Node.js, Express, and MongoDB
-- Uses Material-UI for UI components
-- Chart.js for data visualization
-- And all the amazing open-source libraries we depend on!
+- Next.js (landing) with Tailwind CSS, Radix UI primitives, and Vaul
+- Vite + Material-UI (dashboard)
+- Recharts for data visualization
+- And the amazing open-source libraries we depend on!
 
 ## 🧩 Troubleshooting
 
