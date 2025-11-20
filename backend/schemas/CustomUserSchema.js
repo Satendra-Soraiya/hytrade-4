@@ -40,12 +40,14 @@ const CustomUserSchema = new Schema({
   // Profile avatar
   profilePicture: {
     type: String,
-    default: ''
+    // Use a stable default ID. Frontend/backend resolvers map this to a concrete image.
+    default: 'default-1'
   },
   profilePictureType: {
     type: String,
+    // Keep '' in enum to avoid breaking existing records, but default to 'default'
     enum: ['default', 'custom', ''],
-    default: ''
+    default: 'default'
   },
   
   // Account Information

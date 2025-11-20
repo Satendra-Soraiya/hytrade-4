@@ -30,10 +30,19 @@ const normalizePath = (p) => {
 const routeViaProxyIfCrossOrigin = (url, apiUrl) => {
   try {
     const u = new URL(url);
-    const api = new URL(apiUrl);
-    if (u.host !== api.host) {
-      const proxied = `${apiUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
-      return proxied;
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    const currentHost = currentOrigin ? new URL(currentOrigin).host : '';
+    const apiHost = new URL(apiUrl).host;
+    const isLocalDev = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    // In local dev, prefer same-origin proxy to avoid cross-origin image fetch issues
+    if (isLocalDev && currentHost && u.host !== currentHost) {
+      return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+    }
+
+    // Otherwise, fall back to backend-hosted proxy when crossing origins
+    if (u.host !== apiHost) {
+      return `${apiUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
     }
   } catch (_) {}
   return url;
@@ -52,31 +61,34 @@ export const resolveAvatarSrc = (userLike, options = {}) => {
   if (type === 'custom') {
     if (!normalized) return '';
     if (/^https?:\/\//.test(normalized)) {
-      const url = routeViaProxyIfCrossOrigin(normalized, apiUrl);
-      return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
+      const final = routeViaProxyIfCrossOrigin(normalized, apiUrl);
+      return `${final}${final.includes('?') ? '&' : '?'}v=${versionToken}`;
     }
     // relative or filename-only
-    const url = `${apiUrl}${normalized}`;
-    return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
+    const absolute = `${apiUrl}${normalized}`;
+    const final = routeViaProxyIfCrossOrigin(absolute, apiUrl);
+    return `${final}${final.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
 
   // Default avatars: handle id like "default-5" or direct path
   if (/^https?:\/\//.test(normalized)) {
-    const url = routeViaProxyIfCrossOrigin(normalized, apiUrl);
-    return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
+    const final = routeViaProxyIfCrossOrigin(normalized, apiUrl);
+    return `${final}${final.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
 
   // If direct relative image path
   if (/^\/.+\.[a-zA-Z]+$/.test(normalized) || normalized.includes('/images/default-avatars/')) {
-    const url = `${apiUrl}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
-    return `${url}${url.includes('?') ? '&' : '?'}v=${versionToken}`;
+    const absolute = `${apiUrl}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
+    const final = routeViaProxyIfCrossOrigin(absolute, apiUrl);
+    return `${final}${final.includes('?') ? '&' : '?'}v=${versionToken}`;
   }
 
   // If stored as id `default-N`
   const match = normalized.match(/^default-(\d+)$/);
   const idx = match ? match[1] : '1';
-  const url = `${apiUrl}/images/default-avatars/AVATAR${idx}.jpeg`;
-  return `${url}?v=${versionToken}`;
+  const absoluteDefault = `${apiUrl}/images/default-avatars/AVATAR${idx}.jpeg`;
+  const final = routeViaProxyIfCrossOrigin(absoluteDefault, apiUrl);
+  return `${final}${final.includes('?') ? '&' : '?'}v=${versionToken}`;
 };
 
 export default resolveAvatarSrc;

@@ -161,9 +161,30 @@ const ProfilePage = () => {
                 <DialogContent>
                   <ImageList cols={5} gap={12} sx={{ m: 0 }}>
                     {defaults.map((item) => (
-                      <ImageListItem key={item.id} sx={{ cursor: 'pointer', borderRadius: 2, overflow: 'hidden', border: (selectedDefault === item.url ? '2px solid ' + theme.palette.primary.main : '1px solid ' + theme.palette.divider) }} onClick={() => onPickDefault(item.url)}>
-                        <img src={item.url} alt={item.name} crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <ImageListItemBar title={item.name} position="below" sx={{ textAlign: 'center', fontSize: '0.75rem' }} />
+                      <ImageListItem
+                        key={item.id}
+                        sx={{
+                          cursor: 'pointer',
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                          border:
+                            selectedDefault === item.url
+                              ? '2px solid ' + theme.palette.primary.main
+                              : '1px solid ' + theme.palette.divider,
+                        }}
+                        onClick={() => onPickDefault(item.url)}
+                      >
+                        <img
+                          src={resolveAvatarSrc({ profilePicture: item.url, profilePictureType: 'default' }, { API_URL }) || item.url}
+                          alt={item.name}
+                          crossOrigin="anonymous"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <ImageListItemBar
+                          title={item.name}
+                          position="below"
+                          sx={{ textAlign: 'center', fontSize: '0.75rem' }}
+                        />
                       </ImageListItem>
                     ))}
                   </ImageList>

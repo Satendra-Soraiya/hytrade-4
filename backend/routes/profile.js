@@ -8,21 +8,11 @@ const fs = require('fs');
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
+const { isS3Configured, uploadProfileImage } = require('../services/s3Service');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../uploads/profiles');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer for file uploads: use memory storage so we can
+// upload to S3 directly; fall back to local disk if S3 is not configured.
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -122,13 +112,39 @@ router.post('/profile/upload', authMiddleware, upload.single('profilePicture'), 
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const fileUrl = `${baseUrl}/uploads/profiles/${req.file.filename}`;
-    
+    let storedUrlOrPath;
+    const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+    const mime = req.file.mimetype || 'image/jpeg';
+
+    if (isS3Configured()) {
+      try {
+        const key = `profiles/profile-${req.user.id}-${Date.now()}${ext}`;
+        storedUrlOrPath = await uploadProfileImage(req.file.buffer, mime, key);
+      } catch (err) {
+        console.error('S3 upload failed, will not store to S3:', err);
+        return res.status(500).json({ success: false, message: 'Failed to upload to storage' });
+      }
+    } else {
+      const uploadDir = path.join(__dirname, '../uploads/profiles');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      const filename = `profile-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      const filePath = path.join(uploadDir, filename);
+      try {
+        fs.writeFileSync(filePath, req.file.buffer);
+      } catch (err) {
+        console.error('Local disk write failed:', err);
+        return res.status(500).json({ success: false, message: 'Failed to store file' });
+      }
+      // Store relative path to make avatar portable across environments
+      storedUrlOrPath = `/uploads/profiles/${filename}`;
+    }
+
     const user = await CustomUserModel.findByIdAndUpdate(
       req.user.id,
       {
-        profilePicture: fileUrl,
+        profilePicture: storedUrlOrPath,
         profilePictureType: 'custom',
         updatedAt: new Date()
       },
@@ -142,7 +158,7 @@ router.post('/profile/upload', authMiddleware, upload.single('profilePicture'), 
     res.json({
       success: true,
       message: 'Profile picture uploaded successfully',
-      profilePicture: fileUrl,
+      profilePicture: storedUrlOrPath,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -235,14 +251,23 @@ router.get('/proxy/image', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid URL' });
     }
 
-    // Allowlist remote hosts and paths we expect
+    // Allowlist remote hosts and paths we expect, plus optional S3 host
     const allowedHosts = [
       'hytrade-backend.onrender.com',
       'www.hytrade-backend.onrender.com'
     ];
+    const s3Base = process.env.AWS_S3_PUBLIC_BASE_URL;
+    if (s3Base) {
+      try {
+        const s3Host = new URL(s3Base).host;
+        allowedHosts.push(s3Host);
+      } catch (e) {
+        // ignore invalid env host
+      }
+    }
     const allowedPathPrefixes = ['/uploads/profiles/', '/images/default-avatars/'];
-    const isHostAllowed = allowedHosts.includes(parsed.host);
-    const isPathAllowed = allowedPathPrefixes.some(prefix => parsed.pathname.startsWith(prefix));
+    const isHostAllowed = allowedHosts.includes(parsed.host) || parsed.host.endsWith('amazonaws.com');
+    const isPathAllowed = allowedPathPrefixes.some(prefix => parsed.pathname.startsWith(prefix)) || parsed.pathname.includes('/profiles/');
     if (!isHostAllowed || !isPathAllowed) {
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       return res.status(403).json({ success: false, message: 'Remote image not allowed' });
