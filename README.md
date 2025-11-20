@@ -58,8 +58,8 @@ Hytrade 4 is a comprehensive trading platform with a modern, responsive interfac
 
 ## 🔗 Application URLs
 
-- **Frontend**: http://localhost:3000
-- **Dashboard**: http://localhost:3001
+- **Landing (Next.js)**: http://localhost:3001
+- **Dashboard (Vite)**: http://localhost:5174
 - **Backend API**: http://localhost:3002
 - **MongoDB**: http://localhost:27017
 
@@ -72,11 +72,11 @@ Hytrade-4/
 │   ├── routes/        # API routes
 │   └── index.js       # Main server file
 │
-├── new-dashboard/     # Vite dashboard application
+├── new-dashboard/     # Vite dashboard application (port 5174 by default)
 │   ├── public/        # Static files
 │   └── src/           # React components and logic
 │
-├── frontend2/         # Next.js landing app
+├── frontend2/         # Next.js landing app (port 3001 by default)
 │   ├── public/        # Static files
 │   └── app/           # Next.js app router pages/components
 │
@@ -85,11 +85,31 @@ Hytrade-4/
 └── README.md          # This file
 ```
 
+## 🔧 Environment Variables
+
+The local bootstrap writes env files with sensible defaults. You can edit these as needed:
+
+- `backend/.env`
+  - `PORT=3002`
+  - `NODE_ENV=development`
+  - `MONGODB_URI=mongodb://localhost:27017/hytrade` (or your Atlas URI)
+  - `JWT_SECRET=<generated>`
+
+- `frontend2/.env.local`
+  - `NEXT_PUBLIC_API_URL=http://localhost:3002`
+  - `NEXT_PUBLIC_DASHBOARD_URL=http://localhost:5174`
+  - `NEXT_PUBLIC_APP_URL=http://localhost:3001`
+
+- `new-dashboard/.env`
+  - `VITE_API_URL=http://localhost:3002`
+  - `VITE_FRONTEND_URL=http://localhost:3001`
+  - `VITE_DASHBOARD_URL=http://localhost:5174`
+
 ## 🛠 Development
 
 ### Available Scripts
 
-#### Backend
+#### Backend (Express)
 ```bash
 cd backend
 npm start       # Start the backend server
@@ -97,20 +117,20 @@ npm run dev     # Start in development mode with nodemon
 npm test        # Run tests
 ```
 
-#### Dashboard
+#### Dashboard (Vite)
 ```bash
-cd dashboard
-npm start       # Start the dashboard in development mode
+cd new-dashboard
+npm run dev     # Start the dashboard in development mode (Vite)
 npm run build   # Build for production
-npm test        # Run tests
+npm run preview # Preview the production build
 ```
 
-#### Frontend
+#### Landing (Next.js)
 ```bash
-cd frontend
-npm start       # Start the frontend in development mode
+cd frontend2
+npm run dev     # Start the landing app in development mode (Next.js)
 npm run build   # Build for production
-npm test        # Run tests
+npm start       # Start the production server
 ```
 
 ## 🔒 Authentication
@@ -130,8 +150,8 @@ Authorization: Bearer <your_jwt_token>
 ### Production Build
 1. Build all applications:
    ```bash
-   cd frontend && npm run build && cd ..
-   cd dashboard && npm run build && cd ..
+   cd frontend2 && npm run build && cd ..
+   cd new-dashboard && npm run build && cd ..
    ```
 
 2. Set `NODE_ENV=production` in your environment variables
@@ -160,3 +180,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Uses Material-UI for UI components
 - Chart.js for data visualization
 - And all the amazing open-source libraries we depend on!
+
+## 🧩 Troubleshooting
+
+- Next.js warnings about `eslint` in `next.config.mjs` and workspace root may appear if multiple lockfiles exist. You can remove redundant lockfiles or set `turbopack.root` in `next.config.mjs`.
+- If `npm install` fails in `frontend2` due to peer dependency conflicts (React 19 with certain UI libs), use:
+  ```bash
+  npm install --legacy-peer-deps
+  ```
+  Alternatively, align React/Next versions with library peer requirements.
+- If ports are busy, free them on macOS/Linux: `lsof -ti :3001 -ti :3002 -ti :5174 | xargs kill -9`.
