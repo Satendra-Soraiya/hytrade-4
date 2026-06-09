@@ -1,22 +1,22 @@
 "use client"
 
 export default function Stats() {
+  const items = [
+    { value: "25", label: "NSE stocks to practice" },
+    { value: "₹1L", label: "Starting paper balance" },
+    { value: "Live", label: "Portfolio & P&L tracking" },
+  ]
+
   return (
-    <section className="py-12 bg-card border-y border-border">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-3 gap-8 text-center">
-          <div>
-            <div className="text-3xl md:text-4xl font-bold text-primary">₹6L+</div>
-            <div className="text-foreground/60 mt-2">Daily Volume</div>
-          </div>
-          <div>
-            <div className="text-3xl md:text-4xl font-bold text-primary">15%</div>
-            <div className="text-foreground/60 mt-2">Market Share</div>
-          </div>
-          <div>
-            <div className="text-3xl md:text-4xl font-bold text-primary">30+</div>
-            <div className="text-foreground/60 mt-2">Fintech Partners</div>
-          </div>
+    <section className="border-y border-border/80 bg-card/50 py-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 text-center sm:grid-cols-3 sm:gap-8">
+          {items.map((item) => (
+            <div key={item.label} className="space-y-2">
+              <div className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">{item.value}</div>
+              <div className="text-sm text-muted-foreground">{item.label}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

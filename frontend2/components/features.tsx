@@ -1,60 +1,56 @@
 "use client"
 
-import { Users, Bell, Zap, TrendingUp } from "lucide-react"
+import { BarChart3, Bell, Shield, Wallet } from "lucide-react"
 
 export default function Features() {
   const features = [
     {
-      icon: Users,
-      title: "Customer-first Always",
-      description:
-        "1.6+ crore customers trust HYtrade with ₹6 lakh crores of equity investments contributing to 15% of daily retail exchange volumes in India.",
+      icon: Wallet,
+      title: "INR paper wallet",
+      description: "Start with ₹1,00,000 virtual balance. Every buy and sell updates your ledger like a real brokerage account.",
+    },
+    {
+      icon: BarChart3,
+      title: "Real NSE instruments",
+      description: "Practice on 25 liquid NSE stocks with market-style quotes, watchlists, and a portfolio timeline.",
+    },
+    {
+      icon: Shield,
+      title: "Zero financial risk",
+      description: "Paper trading only — no bank linking, no real orders. Learn execution and risk management safely.",
     },
     {
       icon: Bell,
-      title: "No Spam or Gimmicks",
-      description:
-        "No gimmicks, spam, or annoying push notifications. High quality apps that you use at your pace, the way you like.",
-    },
-    {
-      icon: Zap,
-      title: "The HYtrade Universe",
-      description:
-        "Not just an app, but a whole ecosystem. Our investments in 30+ fintech startups offer you tailored services specific to your needs.",
-    },
-    {
-      icon: TrendingUp,
-      title: "Do Better with Money",
-      description:
-        "With initiatives like Nudge and Kill Switch, we don't just facilitate transactions, but actively help you do better with your money.",
+      title: "Clean, focused UX",
+      description: "A dashboard built for clarity: trade, track holdings, and review performance without clutter or gimmicks.",
     },
   ]
 
   return (
-    <section className="py-20">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="mb-16 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-            Trust with <span className="text-primary">Confidence</span>
+    <section className="bg-background py-20 md:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-14 max-w-2xl">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+            Everything you need to <span className="text-primary">practice well</span>
           </h2>
-          <p className="text-lg text-foreground/60 mt-4 max-w-2xl mx-auto">
-            Your financial success is our priority. Experience the difference with HYtrade.
+          <p className="mt-4 text-lg text-muted-foreground">
+            Hytrade mirrors the flow of real trading while keeping your capital completely safe.
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 gap-8">
-          {features.map((feature, index) => {
+        <div className="grid gap-6 md:grid-cols-2">
+          {features.map((feature) => {
             const Icon = feature.icon
             return (
               <div
-                key={index}
-                className="p-8 border border-border rounded-2xl bg-card hover:border-primary/50 transition-colors hover:shadow-lg"
+                key={feature.title}
+                className="group rounded-2xl border border-border/80 bg-card/40 p-6 transition-colors hover:border-primary/30 hover:bg-card/70"
               >
-                <Icon className="w-12 h-12 text-primary mb-4" />
-                <h3 className="text-xl font-bold text-foreground mb-3">{feature.title}</h3>
-                <p className="text-foreground/70 leading-relaxed">{feature.description}</p>
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
               </div>
             )
           })}

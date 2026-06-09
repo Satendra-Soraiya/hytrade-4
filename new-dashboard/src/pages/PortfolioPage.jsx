@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -16,19 +16,21 @@ import {
   Chip,
   LinearProgress,
   useTheme,
-  useMediaQuery,
   Alert,
   CircularProgress,
   Tabs,
   Tab,
   IconButton,
-  Tooltip
+  Tooltip,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
-  PieChart as PieChartIcon,
   Assessment as AssessmentIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
@@ -50,120 +52,39 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
 import HoldingsTable from '../components/HoldingsTable';
+import { formatInr, formatPercentage as formatPct } from '../utils/currency';
+import { getApiUrl } from '../utils/api';
+import { PageContent, PageHeader, StatCard, Panel } from '../components/layout/PageShell';
+import AllocationChart from '../components/portfolio/AllocationChart';
+import { enrichAllocationItems, buildChartSeries, chartYDomain, getChartColor } from '../utils/chartTheme';
 
-// Mock data for development - will be replaced with real API calls
-const mockPortfolioData = {
-  totalValue: 125000,
-  totalInvestment: 100000,
-  totalPnL: 25000,
-  totalPnLPercentage: 25.0,
-  dayChange: 1250,
-  dayChangePercentage: 1.01,
-  timeline: [
-    { date: '2024-01-01', value: 95000 },
-    { date: '2024-02-01', value: 98000 },
-    { date: '2024-03-01', value: 102000 },
-    { date: '2024-04-01', value: 105000 },
-    { date: '2024-05-01', value: 108000 },
-    { date: '2024-06-01', value: 112000 },
-    { date: '2024-07-01', value: 115000 },
-    { date: '2024-08-01', value: 118000 },
-    { date: '2024-09-01', value: 120000 },
-    { date: '2024-10-01', value: 123000 },
-    { date: '2024-11-01', value: 124500 },
-    { date: '2024-12-01', value: 125000 }
-  ],
-  holdings: [
-    {
-      symbol: 'AAPL',
-      name: 'Apple Inc.',
-      quantity: 50,
-      avgBuyPrice: 150.00,
-      currentPrice: 175.50,
-      marketValue: 8775,
-      pnl: 1275,
-      pnlPercentage: 17.0,
-      allocation: 7.02,
-      sector: 'Technology'
-    },
-    {
-      symbol: 'GOOGL',
-      name: 'Alphabet Inc.',
-      quantity: 25,
-      avgBuyPrice: 120.00,
-      currentPrice: 142.30,
-      marketValue: 3557.5,
-      pnl: 557.5,
-      pnlPercentage: 18.6,
-      allocation: 2.85,
-      sector: 'Technology'
-    },
-    {
-      symbol: 'TSLA',
-      name: 'Tesla Inc.',
-      quantity: 30,
-      avgBuyPrice: 200.00,
-      currentPrice: 245.80,
-      marketValue: 7374,
-      pnl: 1374,
-      pnlPercentage: 22.9,
-      allocation: 5.90,
-      sector: 'Automotive'
-    },
-    {
-      symbol: 'MSFT',
-      name: 'Microsoft Corporation',
-      quantity: 40,
-      avgBuyPrice: 300.00,
-      currentPrice: 385.20,
-      marketValue: 15408,
-      pnl: 3408,
-      pnlPercentage: 28.4,
-      allocation: 12.33,
-      sector: 'Technology'
-    },
-    {
-      symbol: 'AMZN',
-      name: 'Amazon.com Inc.',
-      quantity: 20,
-      avgBuyPrice: 3200.00,
-      currentPrice: 3450.75,
-      marketValue: 69015,
-      pnl: 5015,
-      pnlPercentage: 7.8,
-      allocation: 55.21,
-      sector: 'E-commerce'
-    }
-  ],
-  sectorAllocation: [
-    { name: 'Technology', value: 67.41, color: '#8884d8' },
-    { name: 'E-commerce', value: 55.21, color: '#82ca9d' },
-    { name: 'Automotive', value: 5.90, color: '#ffc658' },
-    { name: 'Healthcare', value: 3.25, color: '#ff7300' },
-    { name: 'Finance', value: 2.15, color: '#00ff00' },
-    { name: 'Others', value: 1.08, color: '#0088fe' }
-  ]
+const emptyPortfolio = {
+  totalValue: 0,
+  totalInvestment: 0,
+  totalPnL: 0,
+  totalPnLPercentage: 0,
+  dayChange: 0,
+  dayChangePercentage: 0,
+  timeline: [],
+  holdings: [],
+  sectorAllocation: [],
 };
 
 const PortfolioPage = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { user, token } = useAuth();
   const [depositOpen, setDepositOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
-  const [portfolioData, setPortfolioData] = useState(mockPortfolioData);
+  const [portfolioData, setPortfolioData] = useState(emptyPortfolio);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const [actionMessage, setActionMessage] = useState('');
 
   // Algorithm performance data
   const algorithmTrades = [
@@ -307,20 +228,8 @@ const PortfolioPage = () => {
     volatility: 25.8
   };
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Format percentage
-  const formatPercentage = (value) => {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-  };
+  const formatCurrency = (amount) => formatInr(amount, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const formatPercentage = formatPct;
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -330,10 +239,8 @@ const PortfolioPage = () => {
   // Fetch portfolio data from API
   const fetchPortfolioData = async () => {
     try {
-      setError(null);
-      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const API_URL = isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com';
-      
+      setLoadError(null);
+      const API_URL = getApiUrl();
       const response = await fetch(`${API_URL}/api/trading/portfolio/detailed`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -367,9 +274,8 @@ const PortfolioPage = () => {
       }
     } catch (err) {
       console.error('Error fetching portfolio data:', err);
-      setError(err.message);
-      // Fall back to mock data if API fails
-      setPortfolioData(mockPortfolioData);
+      setLoadError(err.message);
+      setPortfolioData(emptyPortfolio);
     } finally {
       setLoading(false);
     }
@@ -385,13 +291,12 @@ const PortfolioPage = () => {
   const handleDeposit = async () => {
     const amountNum = parseFloat(depositAmount);
     if (isNaN(amountNum) || amountNum <= 0) {
-      setError('Please enter a valid amount greater than 0');
+      setActionMessage('Please enter a valid amount greater than 0');
       return;
     }
     try {
       setDepositLoading(true);
-      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const API_URL = isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com';
+      const API_URL = getApiUrl();
       const res = await fetch(`${API_URL}/api/trading/portfolio/deposit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -403,53 +308,35 @@ const PortfolioPage = () => {
       setDepositAmount('');
       await fetchPortfolioData();
     } catch (e) {
-      setError(e.message);
+      setActionMessage(e.message);
     } finally {
       setDepositLoading(false);
     }
   };
 
-  // Load data on component mount
   useEffect(() => {
     if (token) {
       fetchPortfolioData();
     }
   }, [token]);
 
-  // Custom tooltip for timeline chart
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <Paper sx={{ p: 2, backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="body2" color="text.secondary">
-            {new Date(label).toLocaleDateString()}
-          </Typography>
-          <Typography variant="h6" color="primary.main">
-            {formatCurrency(payload[0].value)}
-          </Typography>
-        </Paper>
-      );
-    }
-    return null;
-  };
+  const chartData = useMemo(
+    () => buildChartSeries(portfolioData.timeline, portfolioData.totalValue),
+    [portfolioData.timeline, portfolioData.totalValue],
+  );
 
-  // Custom tooltip for pie chart
-  const CustomPieTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      return (
-        <Paper sx={{ p: 2, backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="body2" color="text.secondary">
-            {data.name}
-          </Typography>
-          <Typography variant="h6" color="primary.main">
-            {data.value.toFixed(1)}%
-          </Typography>
-        </Paper>
-      );
-    }
-    return null;
-  };
+  const yDomain = useMemo(() => chartYDomain(chartData), [chartData]);
+
+  const allocationChartData = useMemo(
+    () => enrichAllocationItems(portfolioData.sectorAllocation, portfolioData.totalValue),
+    [portfolioData.sectorAllocation, portfolioData.totalValue],
+  );
+
+  const allocationColorBySymbol = useMemo(() => {
+    const map = new Map();
+    allocationChartData.forEach((item) => map.set(item.name, item.color));
+    return map;
+  }, [allocationChartData]);
 
   // Show loading state
   if (loading) {
@@ -461,7 +348,7 @@ const PortfolioPage = () => {
   }
 
   // Show error state
-  if (error) {
+  if (loadError && !portfolioData.holdings.length && !portfolioData.totalValue) {
     return (
       <Box sx={{ width: '100%' }}>
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -469,7 +356,7 @@ const PortfolioPage = () => {
             Error Loading Portfolio
           </Typography>
           <Typography variant="body2">
-            {error}
+            {loadError}
           </Typography>
         </Alert>
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -482,36 +369,37 @@ const PortfolioPage = () => {
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-            Portfolio
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Track your investments and performance
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="contained" color="primary" onClick={() => setDepositOpen(true)}>Add Funds</Button>
-          <Tooltip title="Refresh Data">
-            <IconButton onClick={handleRefresh} disabled={refreshing}>
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Export Portfolio">
-            <IconButton>
-              <DownloadIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Filter Holdings">
-            <IconButton>
-              <FilterIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+    <PageContent>
+      <PageHeader
+        title="Portfolio"
+        subtitle="Track your paper holdings and performance"
+        actions={(
+          <>
+            <Button variant="contained" onClick={() => setDepositOpen(true)}>Add funds</Button>
+            <Tooltip title="Refresh data">
+              <IconButton onClick={handleRefresh} disabled={refreshing} aria-label="Refresh">
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Export portfolio">
+              <IconButton aria-label="Export">
+                <DownloadIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Filter holdings">
+              <IconButton aria-label="Filter">
+                <FilterIcon />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+      />
+
+      {actionMessage && (
+        <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setActionMessage('')}>
+          {actionMessage}
+        </Alert>
+      )}
 
       <Dialog open={depositOpen} onClose={() => setDepositOpen(false)}>
         <DialogTitle>Add Funds</DialogTitle>
@@ -533,97 +421,35 @@ const PortfolioPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Portfolio Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <AssessmentIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  Total Value
-                </Typography>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-                {formatCurrency(portfolioData.totalValue)}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                {portfolioData.dayChange >= 0 ? (
-                  <TrendingUpIcon color="success" sx={{ mr: 0.5, fontSize: 20 }} />
-                ) : (
-                  <TrendingDownIcon color="error" sx={{ mr: 0.5, fontSize: 20 }} />
-                )}
-                <Typography
-                  variant="body2"
-                  color={portfolioData.dayChange >= 0 ? 'success.main' : 'error.main'}
-                  sx={{ fontWeight: 500 }}
-                >
-                  {formatCurrency(portfolioData.dayChange)} ({formatPercentage(portfolioData.dayChangePercentage)})
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
+      <Grid container spacing={2} sx={{ mb: 3, width: '100%' }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard
+            label="Total value"
+            value={formatCurrency(portfolioData.totalValue)}
+            hint={`Cash + holdings · ${formatCurrency(portfolioData.dayChange)} (${formatPercentage(portfolioData.dayChangePercentage)}) today`}
+          />
         </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <TrendingUpIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  Total P&L
-                </Typography>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-                {formatCurrency(portfolioData.totalPnL)}
-              </Typography>
-              <Typography
-                variant="body2"
-                color={portfolioData.totalPnL >= 0 ? 'success.main' : 'error.main'}
-                sx={{ fontWeight: 500 }}
-              >
-                {formatPercentage(portfolioData.totalPnLPercentage)}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard
+            label="Unrealized P&L"
+            value={formatCurrency(portfolioData.totalPnL)}
+            hint={formatPercentage(portfolioData.totalPnLPercentage)}
+            tone={portfolioData.totalPnL >= 0 ? 'up' : 'down'}
+          />
         </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <PieChartIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  Total Investment
-                </Typography>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-                {formatCurrency(portfolioData.totalInvestment)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Invested amount
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard
+            label="Invested"
+            value={formatCurrency(portfolioData.totalInvestment)}
+            hint="Cost basis in open positions"
+          />
         </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <AssessmentIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  Holdings
-                </Typography>
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-                {portfolioData.holdings.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Active positions
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard
+            label="Holdings"
+            value={String(portfolioData.holdings.length)}
+            hint="Active NSE positions"
+          />
         </Grid>
       </Grid>
 
@@ -640,75 +466,47 @@ const PortfolioPage = () => {
 
       {/* Tab Content */}
       {activeTab === 0 && (
-        <Grid container spacing={3}>
-          {/* Portfolio Timeline */}
-          <Grid item xs={12} lg={8}>
-            <Card>
-              <CardHeader
-                title="Portfolio Value Timeline"
-                subheader="Historical performance over time"
-              />
-              <CardContent>
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={portfolioData.timeline}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short' })}
-                        stroke={theme.palette.text.secondary}
-                      />
-                      <YAxis 
-                        tickFormatter={(value) => formatCurrency(value)}
-                        stroke={theme.palette.text.secondary}
-                      />
-                      <RechartsTooltip content={<CustomTooltip />} />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke={theme.palette.primary.main}
-                        strokeWidth={3}
-                        dot={{ fill: theme.palette.primary.main, strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, stroke: theme.palette.primary.main, strokeWidth: 2 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardContent>
-            </Card>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <Panel title="Portfolio value" subtitle="Based on your trade history">
+              <Box sx={{ width: '100%', height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 11, fill: theme.palette.text.secondary }}
+                      interval="preserveStartEnd"
+                      minTickGap={28}
+                    />
+                    <YAxis
+                      domain={yDomain}
+                      tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+                      tick={{ fontSize: 11, fill: theme.palette.text.secondary }}
+                      width={56}
+                    />
+                    <RechartsTooltip formatter={(v) => formatCurrency(v)} labelFormatter={(l) => l} />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke={theme.palette.primary.main}
+                      strokeWidth={2}
+                      dot={chartData.length <= 1}
+                      activeDot={{ r: 4, fill: theme.palette.primary.main }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            </Panel>
           </Grid>
 
-          {/* Sector Allocation */}
-          <Grid item xs={12} lg={4}>
-            <Card>
-              <CardHeader
-                title="Sector Allocation"
-                subheader="Portfolio diversification"
-              />
-              <CardContent>
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={portfolioData.sectorAllocation}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {portfolioData.sectorAllocation.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip content={<CustomPieTooltip />} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardContent>
-            </Card>
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Panel
+              title="Holdings allocation"
+              subtitle={portfolioData.holdings.length ? `${portfolioData.holdings.length} positions` : 'No open positions'}
+            >
+              <AllocationChart data={allocationChartData} height={320} />
+            </Panel>
           </Grid>
         </Grid>
       )}
@@ -739,20 +537,28 @@ const PortfolioPage = () => {
                     <TableCell align="right">Market Value</TableCell>
                     <TableCell align="right">P&L</TableCell>
                     <TableCell align="right">Allocation</TableCell>
-                    <TableCell>Sector</TableCell>
+                    <TableCell>Exchange</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {portfolioData.holdings.map((holding) => (
-                    <TableRow key={holding.symbol} hover>
+                  {portfolioData.holdings.map((holding, index) => {
+                    const symbol = holding.stockSymbol || holding.symbol;
+                    const pnl = holding.profitLoss ?? holding.pnl ?? 0;
+                    const pnlPct = holding.profitLossPercentage ?? holding.pnlPercentage ?? 0;
+                    const marketValue = holding.currentValue ?? holding.marketValue ?? 0;
+                    const allocationPct = portfolioData.totalValue > 0
+                      ? (marketValue / portfolioData.totalValue) * 100
+                      : 0;
+                    return (
+                    <TableRow key={symbol || index} hover>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {holding.symbol}
+                          {symbol}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {holding.name}
+                          {holding.stockName || holding.name || symbol}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
@@ -762,7 +568,7 @@ const PortfolioPage = () => {
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2">
-                          {formatCurrency(holding.avgBuyPrice)}
+                          {formatCurrency(holding.averagePrice ?? holding.avgBuyPrice)}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
@@ -772,12 +578,12 @@ const PortfolioPage = () => {
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {formatCurrency(holding.marketValue)}
+                          {formatCurrency(marketValue)}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                          {holding.pnl >= 0 ? (
+                          {pnl >= 0 ? (
                             <TrendingUpIcon color="success" sx={{ mr: 0.5, fontSize: 16 }} />
                           ) : (
                             <TrendingDownIcon color="error" sx={{ mr: 0.5, fontSize: 16 }} />
@@ -785,16 +591,16 @@ const PortfolioPage = () => {
                           <Box>
                             <Typography
                               variant="body2"
-                              color={holding.pnl >= 0 ? 'success.main' : 'error.main'}
+                              color={pnl >= 0 ? 'success.main' : 'error.main'}
                               sx={{ fontWeight: 500 }}
                             >
-                              {formatCurrency(holding.pnl)}
+                              {formatCurrency(pnl)}
                             </Typography>
                             <Typography
                               variant="caption"
-                              color={holding.pnl >= 0 ? 'success.main' : 'error.main'}
+                              color={pnl >= 0 ? 'success.main' : 'error.main'}
                             >
-                              {formatPercentage(holding.pnlPercentage)}
+                              {formatPercentage(pnlPct)}
                             </Typography>
                           </Box>
                         </Box>
@@ -804,32 +610,29 @@ const PortfolioPage = () => {
                           <Box sx={{ width: 60, mr: 1 }}>
                             <LinearProgress
                               variant="determinate"
-                              value={holding.allocation}
+                              value={Math.min(100, allocationPct)}
                               sx={{
                                 height: 6,
-                                borderRadius: 3,
-                                backgroundColor: theme.palette.grey[200],
+                                borderRadius: 1,
+                                bgcolor: 'action.hover',
                                 '& .MuiLinearProgress-bar': {
-                                  backgroundColor: theme.palette.primary.main,
+                                  bgcolor: allocationColorBySymbol.get(symbol) || getChartColor(index),
+                                  borderRadius: 1,
                                 },
                               }}
                             />
                           </Box>
                           <Typography variant="body2">
-                            {holding.allocation.toFixed(1)}%
+                            {allocationPct.toFixed(1)}%
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Chip
-                          label={holding.sector}
-                          size="small"
-                          variant="outlined"
-                          color="primary"
-                        />
+                        <Typography variant="caption" color="text.secondary">NSE</Typography>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -868,7 +671,7 @@ const PortfolioPage = () => {
 
           {/* Performance Comparison Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardHeader
                   title="Algorithm Trading"
@@ -877,7 +680,7 @@ const PortfolioPage = () => {
                 />
                 <CardContent>
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Total Trades
                       </Typography>
@@ -885,7 +688,7 @@ const PortfolioPage = () => {
                         {algorithmPerformance.totalTrades}
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Win Rate
                       </Typography>
@@ -893,7 +696,7 @@ const PortfolioPage = () => {
                         {algorithmPerformance.winRate.toFixed(1)}%
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Total P&L
                       </Typography>
@@ -907,7 +710,7 @@ const PortfolioPage = () => {
                         {formatCurrency(algorithmPerformance.totalPnL)}
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Avg Confidence
                       </Typography>
@@ -915,7 +718,7 @@ const PortfolioPage = () => {
                         {(algorithmPerformance.avgConfidence * 100).toFixed(0)}%
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Sharpe Ratio
                       </Typography>
@@ -923,7 +726,7 @@ const PortfolioPage = () => {
                         {algorithmPerformance.sharpeRatio}
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Max Drawdown
                       </Typography>
@@ -936,7 +739,7 @@ const PortfolioPage = () => {
               </Card>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardHeader
                   title="Manual Trading"
@@ -945,7 +748,7 @@ const PortfolioPage = () => {
                 />
                 <CardContent>
                   <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Total Trades
                       </Typography>
@@ -953,7 +756,7 @@ const PortfolioPage = () => {
                         {manualPerformance.totalTrades}
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Win Rate
                       </Typography>
@@ -961,7 +764,7 @@ const PortfolioPage = () => {
                         {manualPerformance.winRate.toFixed(1)}%
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Total P&L
                       </Typography>
@@ -975,7 +778,7 @@ const PortfolioPage = () => {
                         {formatCurrency(manualPerformance.totalPnL)}
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Avg Duration
                       </Typography>
@@ -983,7 +786,7 @@ const PortfolioPage = () => {
                         {manualPerformance.avgTradeDuration}
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Sharpe Ratio
                       </Typography>
@@ -991,7 +794,7 @@ const PortfolioPage = () => {
                         {manualPerformance.sharpeRatio}
                       </Typography>
                     </Grid>
-                    <Grid item xs={6}>
+                    <Grid size={{ xs: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         Max Drawdown
                       </Typography>
@@ -1104,10 +907,11 @@ const PortfolioPage = () => {
                                 value={trade.confidence * 100}
                                 sx={{
                                   height: 6,
-                                  borderRadius: 3,
-                                  backgroundColor: 'grey.200',
+                                  borderRadius: 1,
+                                  bgcolor: 'action.hover',
                                   '& .MuiLinearProgress-bar': {
-                                    backgroundColor: 'primary.main',
+                                    bgcolor: 'primary.main',
+                                    borderRadius: 1,
                                   },
                                 }}
                               />
@@ -1147,7 +951,7 @@ const PortfolioPage = () => {
 
           {/* Risk Metrics Comparison */}
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardHeader
                   title="Algorithm Risk Metrics"
@@ -1197,7 +1001,7 @@ const PortfolioPage = () => {
               </Card>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardHeader
                   title="Manual Risk Metrics"
@@ -1255,7 +1059,7 @@ const PortfolioPage = () => {
           Risk analysis and advanced portfolio metrics will be implemented here.
         </Alert>
       )}
-    </Box>
+    </PageContent>
   );
 };
 

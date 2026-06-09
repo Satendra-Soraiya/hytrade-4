@@ -1,20 +1,57 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Grid, Paper, Typography, Button, Chip, Divider, useMediaQuery } from '@mui/material';
+import { Box, Grid, Button, Stack, LinearProgress, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useAuth } from '../contexts/AuthContext';
-import BackendStatus from '../components/BackendStatus';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import HoldingsTable from '../components/HoldingsTable';
-import { AccountBalanceWallet as WalletIcon, TrendingUp as TrendingUpIcon, ReceiptLong as OrdersIcon, PieChart as PieIcon } from '@mui/icons-material';
+import { getApiUrl } from '../utils/api';
+import { formatInr } from '../utils/currency';
+import { useAuth } from '../contexts/AuthContext';
+import { PageContent, PageHeader, StatCard, Panel } from '../components/layout/PageShell';
+import { CHART_COLORS, buildChartSeries, chartYDomain } from '../utils/chartTheme';
+
+function AllocationList({ items, total }) {
+  const sum = total > 0 ? total : items.reduce((s, i) => s + i.value, 0) || 1;
+  return (
+    <Stack spacing={1.75} sx={{ py: 0.5 }}>
+      {items.map((item, i) => {
+        const pct = (item.value / sum) * 100;
+        return (
+          <Box key={item.name}>
+            <Stack direction="row" justifyContent="space-between" alignItems="baseline" spacing={1}>
+              <Typography variant="body2" fontWeight={600} noWrap sx={{ minWidth: 0, flex: 1 }}>
+                {item.name}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                {pct.toFixed(1)}%
+              </Typography>
+            </Stack>
+            <LinearProgress
+              variant="determinate"
+              value={Math.min(100, pct)}
+              sx={{
+                mt: 0.75,
+                height: 6,
+                borderRadius: 1,
+                bgcolor: 'action.hover',
+                '& .MuiLinearProgress-bar': { bgcolor: CHART_COLORS[i % CHART_COLORS.length], borderRadius: 1 },
+              }}
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, display: 'block' }}>
+              {formatInr(item.value)}
+            </Typography>
+          </Box>
+        );
+      })}
+    </Stack>
+  );
+}
 
 const DashboardPage = () => {
   const theme = useTheme();
-  const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
   const navigate = useNavigate();
   const { user, token, updateUser } = useAuth();
-  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const API_URL = import.meta.env.VITE_API_URL || (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
+  const API_URL = getApiUrl();
 
   const [summary, setSummary] = useState({
     totalInvestment: 0,
@@ -22,200 +59,139 @@ const DashboardPage = () => {
     totalProfitLoss: 0,
     totalProfitLossPercentage: 0,
     holdingsCount: 0,
+    totalPortfolioValue: 0,
+    accountBalance: 0,
   });
   const [ordersCount, setOrdersCount] = useState(0);
   const [allocations, setAllocations] = useState([]);
+  const [timeline, setTimeline] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!token) return;
+    (async () => {
       try {
-        if (!token) return; // wait for auth
-        const holdingsRes = await fetch(`${API_URL}/api/trading/holdings?limit=50`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (holdingsRes.ok) {
-          const json = await holdingsRes.json();
-          const s = json.data.summary;
-          setSummary(s);
-          const alloc = json.data.holdings.map(h => ({ name: h.stockSymbol, value: h.currentValue }));
-          setAllocations(alloc);
-        }
-        // Also sync account balance from portfolio summary to keep user state consistent
-        const summaryRes = await fetch(`${API_URL}/api/trading/portfolio/summary`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (summaryRes.ok) {
-          const js = await summaryRes.json();
-          const latestBalance = js?.data?.accountBalance;
-          if (typeof latestBalance === 'number' && updateUser) {
-            updateUser({ ...user, accountBalance: latestBalance });
+        const [detailedRes, ordersRes] = await Promise.all([
+          fetch(`${API_URL}/api/trading/portfolio/detailed`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/trading/orders?limit=1`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        if (detailedRes.ok) {
+          const { data } = await detailedRes.json();
+          setSummary({
+            totalInvestment: data.totalInvestment || 0,
+            totalCurrentValue: data.totalCurrentValue || 0,
+            totalProfitLoss: data.totalProfitLoss || 0,
+            totalProfitLossPercentage: data.totalProfitLossPercentage || 0,
+            holdingsCount: data.holdingsCount || 0,
+            totalPortfolioValue: data.totalPortfolioValue || data.totalValue || 0,
+            accountBalance: data.accountBalance || 0,
+          });
+          setTimeline(data.timeline || []);
+          setAllocations((data.holdings || []).map((h) => ({ name: h.stockSymbol, value: h.currentValue })));
+          if (typeof data.accountBalance === 'number' && updateUser && user) {
+            updateUser({ ...user, accountBalance: data.accountBalance });
           }
         }
-
-        const ordersRes = await fetch(`${API_URL}/api/trading/orders?limit=1`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
         if (ordersRes.ok) {
           const json = await ordersRes.json();
-          setOrdersCount(json.data.pagination.total);
+          setOrdersCount(json.data?.pagination?.total || 0);
         }
       } catch (e) {
-        console.warn('Dashboard data fetch fallback:', e);
+        console.warn('Dashboard fetch error:', e);
       }
-    };
-    fetchData();
+    })();
   }, [API_URL, token]);
 
-  const portfolioSeries = useMemo(() => {
-    const base = summary.totalCurrentValue || 50000;
-    // Mock a 12-point monthly series around base
-    return Array.from({ length: 12 }, (_, i) => ({
-      month: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i],
-      value: Math.round(base * (0.95 + Math.random() * 0.1)),
-    }));
-  }, [summary.totalCurrentValue]);
+  const chartData = useMemo(
+    () => buildChartSeries(timeline, summary.totalPortfolioValue || summary.accountBalance),
+    [timeline, summary.totalPortfolioValue, summary.accountBalance],
+  );
 
-  const allocColors = [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.success.main, theme.palette.warning.main, theme.palette.info.main];
+  const yDomain = useMemo(() => chartYDomain(chartData), [chartData]);
 
-  // Pie layout (adjusted to avoid legend overlap on md+)
-  const pieCx = isMdUp ? '46%' : '50%';
-  const pieInnerR = 80;
-  const pieOuterR = isMdUp ? 126 : 140;
-  const piePadding = 2;
+  const allocationItems = useMemo(() => {
+    if (allocations.length) return allocations;
+    return [{ name: 'Cash', value: summary.accountBalance || 0 }];
+  }, [allocations, summary.accountBalance]);
 
-  const formatCurrency = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n || 0);
+  const allocationTotal = summary.totalPortfolioValue || summary.accountBalance || 0;
 
   return (
-    <Box sx={{ pb: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Box>
-          <Typography variant="h3" sx={{ fontWeight: 700 }}>Dashboard</Typography>
-          <Typography variant="body2" color="text.secondary">Overview of your trading portfolio</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="contained" color="primary" onClick={() => navigate('/portfolio')}>Deposit</Button>
-          <Button variant="outlined" color="primary" onClick={() => navigate('/trade')}>Trade</Button>
-        </Box>
-      </Box>
+    <PageContent>
+      <PageHeader
+        title="Dashboard"
+        subtitle="Overview of your paper trading account"
+        actions={(
+          <>
+            <Button variant="outlined" onClick={() => navigate('/portfolio')}>Portfolio</Button>
+            <Button variant="contained" onClick={() => navigate('/trade')}>Trade</Button>
+          </>
+        )}
+      />
 
-      <BackendStatus />
-
-      {/* Key Metrics */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <WalletIcon color="primary" />
-              <Typography variant="body2" color="text.secondary">Account Balance</Typography>
-            </Box>
-            <Typography variant="h5" sx={{ mt: 1 }}>{formatCurrency(user?.accountBalance)}</Typography>
-          </Paper>
+      <Grid container spacing={2} sx={{ mb: 3, width: '100%' }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard label="Cash balance" value={formatInr(summary.accountBalance || user?.accountBalance)} hint="Available INR" />
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <TrendingUpIcon color="success" />
-              <Typography variant="body2" color="text.secondary">Portfolio Value</Typography>
-            </Box>
-            <Typography variant="h5" sx={{ mt: 1 }}>{formatCurrency(summary.totalCurrentValue)}</Typography>
-            <Typography variant="caption" color="text.secondary">Invested: {formatCurrency(summary.totalInvestment)}</Typography>
-          </Paper>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard label="Holdings value" value={formatInr(summary.totalCurrentValue)} hint={`Invested ${formatInr(summary.totalInvestment)}`} />
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <TrendingUpIcon color={summary.totalProfitLoss >= 0 ? 'success' : 'error'} />
-              <Typography variant="body2" color="text.secondary">Total P&L</Typography>
-            </Box>
-            <Typography variant="h5" sx={{ mt: 1, color: summary.totalProfitLoss >= 0 ? 'success.main' : 'error.main' }}>
-              {formatCurrency(summary.totalProfitLoss)} ({summary.totalProfitLossPercentage || 0}%)
-            </Typography>
-          </Paper>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard
+            label="Unrealized P&L"
+            value={`${formatInr(summary.totalProfitLoss)} (${summary.totalProfitLossPercentage || 0}%)`}
+            tone={summary.totalProfitLoss >= 0 ? 'up' : 'down'}
+          />
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <OrdersIcon color="info" />
-              <Typography variant="body2" color="text.secondary">Orders</Typography>
-            </Box>
-            <Typography variant="h5" sx={{ mt: 1 }}>{ordersCount}</Typography>
-            <Typography variant="caption" color="text.secondary">Total orders placed</Typography>
-          </Paper>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <StatCard label="Total orders" value={String(ordersCount)} hint="All time" />
         </Grid>
       </Grid>
 
-      {/* Charts */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, md: 7 }}>
-          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider', height: 420 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>Portfolio Value (12 months)</Typography>
-            <ResponsiveContainer width="100%" height="88%">
-              <LineChart data={portfolioSeries}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
-                <Line type="monotone" dataKey="value" stroke={theme.palette.primary.main} strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 5 }}>
-          <Paper sx={{ p: 2, border: '1px solid', borderColor: 'divider', height: 420 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <PieIcon color="secondary" />
-              <Typography variant="subtitle1">Allocation</Typography>
-              <Chip label={`${summary.holdingsCount} holdings`} size="small" sx={{ ml: 'auto' }} />
+      <Grid container spacing={2} sx={{ mb: 3, width: '100%' }}>
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <Panel title="Portfolio value" subtitle="Based on your trade history">
+            <Box sx={{ width: '100%', height: 320 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 11 }}
+                    interval="preserveStartEnd"
+                    minTickGap={28}
+                  />
+                  <YAxis
+                    domain={yDomain}
+                    tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+                    tick={{ fontSize: 11 }}
+                    width={56}
+                  />
+                  <Tooltip formatter={(v) => formatInr(v)} labelFormatter={(l) => l} />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke={theme.palette.primary.main}
+                    strokeWidth={2}
+                    dot={chartData.length <= 1}
+                    activeDot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </Box>
-            <ResponsiveContainer width="100%" height="88%">
-              <PieChart margin={{ top: 4, right: 24, bottom: 4, left: 20 }}>
-                <Pie 
-                  data={allocations.length ? allocations : [{ name: 'N/A', value: 1 }]} 
-                  dataKey="value" 
-                  cx={pieCx}
-                  cy="50%" 
-                  innerRadius={pieInnerR} 
-                  outerRadius={pieOuterR} 
-                  paddingAngle={piePadding}
-                  labelLine={false}
-                >
-                  {(allocations.length ? allocations : [{ name: 'N/A', value: 1 }]).map((entry, idx) => (
-                    <Cell 
-                      key={`alloc-${idx}`} 
-                      fill={allocColors[idx % allocColors.length]} 
-                      stroke={theme.palette.background.paper}
-                      strokeWidth={2}
-                    />
-                  ))}
-                </Pie>
-                {allocations.length ? (
-                  isMdUp ? (
-                    <Legend 
-                      layout="vertical" 
-                      verticalAlign="middle" 
-                      align="right" 
-                      iconType="circle" 
-                      iconSize={10} 
-                      wrapperStyle={{ paddingLeft: 16, marginLeft: 8 }} 
-                      itemGap={10} 
-                    />
-                  ) : (
-                    <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" iconSize={10} wrapperStyle={{ marginTop: 8 }} itemGap={12} />
-                  )
-                ) : null}
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Paper>
+          </Panel>
+        </Grid>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <Panel
+            title="Allocation"
+            subtitle={summary.holdingsCount ? `${summary.holdingsCount} positions` : 'Cash only'}
+          >
+            <AllocationList items={allocationItems} total={allocationTotal} />
+          </Panel>
         </Grid>
       </Grid>
 
-      {/* Holdings snapshot */}
       <HoldingsTable compact />
-
-      <Divider sx={{ my: 3 }} />
-      <Typography variant="caption" color="text.secondary">Legacy dashboard widgets are preserved separately in DashboardLegacy.jsx for backup.</Typography>
-    </Box>
+    </PageContent>
   );
 };
 

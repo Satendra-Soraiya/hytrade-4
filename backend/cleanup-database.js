@@ -1,115 +1,64 @@
-const mongoose = require('mongoose');
+#!/usr/bin/env node
+/**
+ * DANGER: Wipes all Hytrade v3 paper-trading data and legacy collections.
+ * Development use only. Run seed:instruments after reset.
+ */
 require('dotenv').config();
 
-// Import models
-const { CustomUserModel } = require('./model/CustomUserModel');
-const { HoldingsModel } = require('./model/HoldingsModel');
-const { OrdersModel } = require('./model/OrdersModel');
-const { PositionsModel } = require('./model/PositionsModel');
-const { WatchlistModel } = require('./model/WatchlistModel');
+const mongoose = require('mongoose');
+const { User } = require('./src/modules/users/user.model');
+const { Wallet, LedgerEntry } = require('./src/modules/wallet/wallet.model');
+const { Holding, Order } = require('./src/modules/trading/holding.model');
+const { Instrument, QuoteCache } = require('./src/modules/market/instrument.model');
+const { Watchlist } = require('./src/modules/market/watchlist.model');
+const { Session } = require('./src/modules/auth/session.model');
 
-async function cleanupDatabase() {
-  try {
-    console.log('🔄 Connecting to MongoDB Atlas...');
-    
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    
-    console.log('✅ Connected to MongoDB Atlas successfully');
-    console.log('🗑️  Starting database cleanup...\n');
+const LEGACY_COLLECTIONS = [
+  'customholdings',
+  'customorders',
+  'sessions',
+  'holdings',
+  'orders',
+  'watchlists',
+];
 
-    // Get counts before deletion
-    const userCount = await CustomUserModel.countDocuments();
-    const holdingsCount = await HoldingsModel.countDocuments();
-    const ordersCount = await OrdersModel.countDocuments();
-    const positionsCount = await PositionsModel.countDocuments();
-    const watchlistCount = await WatchlistModel.countDocuments();
-
-    console.log('📊 Current database state:');
-    console.log(`   Users: ${userCount}`);
-    console.log(`   Holdings: ${holdingsCount}`);
-    console.log(`   Orders: ${ordersCount}`);
-    console.log(`   Positions: ${positionsCount}`);
-    console.log(`   Watchlist items: ${watchlistCount}\n`);
-
-    if (userCount === 0) {
-      console.log('✅ Database is already clean - no users to delete');
-      return;
-    }
-
-    // Confirm deletion
-    console.log('⚠️  WARNING: This will permanently delete ALL user data!');
-    console.log('   This includes:');
-    console.log('   - All user accounts');
-    console.log('   - All holdings data');
-    console.log('   - All trading orders');
-    console.log('   - All positions');
-    console.log('   - All watchlist items');
-    console.log('   - All sessions\n');
-
-    // Delete all user-related data
-    console.log('🗑️  Deleting user data...');
-    
-    const deletionResults = await Promise.all([
-      CustomUserModel.deleteMany({}),
-      HoldingsModel.deleteMany({}),
-      OrdersModel.deleteMany({}),
-      PositionsModel.deleteMany({}),
-      WatchlistModel.deleteMany({})
-    ]);
-
-    console.log('✅ Deletion completed:');
-    console.log(`   Users deleted: ${deletionResults[0].deletedCount}`);
-    console.log(`   Holdings deleted: ${deletionResults[1].deletedCount}`);
-    console.log(`   Orders deleted: ${deletionResults[2].deletedCount}`);
-    console.log(`   Positions deleted: ${deletionResults[3].deletedCount}`);
-    console.log(`   Watchlist items deleted: ${deletionResults[4].deletedCount}`);
-
-    // Clear sessions collection
-    try {
-      const sessionsCollection = mongoose.connection.db.collection('sessions');
-      const sessionResult = await sessionsCollection.deleteMany({});
-      console.log(`   Sessions deleted: ${sessionResult.deletedCount}`);
-    } catch (sessionError) {
-      console.log('   Sessions: Collection not found or already empty');
-    }
-
-    console.log('\n🎉 Database cleanup completed successfully!');
-    console.log('✅ All user data has been removed');
-    console.log('✅ Database structure preserved');
-    console.log('✅ Ready for fresh user registrations\n');
-
-    // Verify cleanup
-    const finalUserCount = await CustomUserModel.countDocuments();
-    if (finalUserCount === 0) {
-      console.log('✅ Verification: Database is now clean');
-    } else {
-      console.log('❌ Warning: Some users may still exist');
-    }
-
-  } catch (error) {
-    console.error('❌ Error during database cleanup:', error);
+async function main() {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Refusing to run cleanup in production');
     process.exit(1);
-  } finally {
-    // Close connection
-    await mongoose.connection.close();
-    console.log('🔌 Database connection closed');
-    process.exit(0);
   }
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error('MONGODB_URI required');
+
+  await mongoose.connect(uri);
+
+  await Promise.all([
+    User.deleteMany({}),
+    Wallet.deleteMany({}),
+    LedgerEntry.deleteMany({}),
+    Holding.deleteMany({}),
+    Order.deleteMany({}),
+    Instrument.deleteMany({}),
+    QuoteCache.deleteMany({}),
+    Session.deleteMany({}),
+    Watchlist.deleteMany({}),
+  ]);
+
+  const db = mongoose.connection.db;
+  for (const name of LEGACY_COLLECTIONS) {
+    const collections = await db.listCollections({ name }).toArray();
+    if (collections.length > 0) {
+      await db.dropCollection(name);
+      console.log(`Dropped legacy collection: ${name}`);
+    }
+  }
+
+  console.log('Database reset complete. Run: npm run seed:instruments');
+  await mongoose.disconnect();
 }
 
-// Run cleanup if this script is executed directly
-if (require.main === module) {
-  console.log('🧹 Hytrade 4 Database Cleanup Tool');
-  console.log('=====================================\n');
-  
-  cleanupDatabase().catch(error => {
-    console.error('❌ Fatal error:', error);
-    process.exit(1);
-  });
-}
-
-module.exports = { cleanupDatabase };
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

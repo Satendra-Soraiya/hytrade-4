@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getApiUrl } from '../utils/api';
+import { getLandingUrl } from '../utils/landing';
 
 const AuthContext = createContext();
 
@@ -10,9 +12,7 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   // Auto-detect development environment
-  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const API_URL = import.meta.env.VITE_API_URL || 
-    (isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
+  const API_URL = getApiUrl();
 
   // Shared token cookie utilities for cross-subdomain SSO
   const getCookieToken = () => {
@@ -96,10 +96,23 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response.ok) {
+        const profileRes = await fetch(`${API_URL}/api/auth/profile`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData.user) {
+            setUser(profileData.user);
+            setToken(authToken);
+            localStorage.setItem('token', authToken);
+            localStorage.setItem('user', JSON.stringify(profileData.user));
+            setCookieToken(authToken);
+            return true;
+          }
+        }
         const data = await response.json();
         const { user: userData } = data;
         if (userData) {
-          console.log('Token valid for user:', userData.email);
           setUser(userData);
           setToken(authToken);
           localStorage.setItem('token', authToken);
@@ -160,12 +173,7 @@ export const AuthProvider = ({ children }) => {
     clearCookieToken();
     
     // Redirect to frontend with logout message
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const envFrontend = import.meta.env.VITE_FRONTEND_URL;
-    // Point to landing (frontend2). Local: Next dev on 3001. Prod: canonical domain.
-    const fallbackFrontend = isLocal ? 'http://localhost:3001' : 'https://www.hytrade.in';
-    const FRONTEND_URL = envFrontend || fallbackFrontend;
-    window.location.href = FRONTEND_URL + '?message=' + 
+    window.location.href = getLandingUrl() + '?message=' + 
       encodeURIComponent('You have been logged out successfully');
   };
 

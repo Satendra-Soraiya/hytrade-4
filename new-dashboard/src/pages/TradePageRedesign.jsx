@@ -39,7 +39,7 @@ const TradePage = () => {
     return Array.from({ length: 60 }, (_, i) => ({ t: i, v: Math.round(100 + Math.random() * 40) }));
   }, [symbol]);
 
-  const formatCurrency = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n || 0);
+  const formatCurrency = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(n || 0);
   const estPrice = mode === 'MARKET' ? undefined : (parseFloat(price) || 0);
   const estUnit = mode === 'MARKET' ? 0 : estPrice;
   const estCost = (mode === 'MARKET' ? 0 : estUnit) * (parseInt(qty || '0', 10));

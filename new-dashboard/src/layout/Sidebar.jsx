@@ -1,19 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
 import {
   Box,
-  Divider,
   Drawer,
   IconButton,
   List,
-  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Typography,
-  Avatar,
-  Tooltip,
+  Divider,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -23,233 +19,185 @@ import {
   Person as ProfileIcon,
   StarBorder as WatchlistIcon,
   Receipt as HistoryIcon,
-  Settings as SettingsIcon,
   Logout as LogoutIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import resolveAvatarSrc from '../utils/avatar';
+import { layoutTokens } from '../theme/hytradeTheme';
+import { getLandingUrl } from '../utils/landing';
 
-const drawerWidth = 260;
+const NAV = [
+  { label: 'Dashboard', path: '/', icon: <DashboardIcon fontSize="small" /> },
+  { label: 'Portfolio', path: '/portfolio', icon: <WalletIcon fontSize="small" /> },
+  { label: 'Markets', path: '/markets', icon: <ChartIcon fontSize="small" /> },
+  { label: 'Trade', path: '/trade', icon: <TradeIcon fontSize="small" /> },
+  { label: 'Watchlist', path: '/watchlist', icon: <WatchlistIcon fontSize="small" /> },
+  { label: 'History', path: '/history', icon: <HistoryIcon fontSize="small" /> },
+  { label: 'Profile', path: '/profile', icon: <ProfileIcon fontSize="small" /> },
+];
 
-const Sidebar = ({ open, onClose, isMobile }) => {
-  const theme = useTheme();
+const Sidebar = ({ isMobile, mobileOpen, handleDrawerClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const [activeItem, setActiveItem] = useState('dashboard');
+  const { logout, user } = useAuth();
+  const [active, setActive] = useState('/');
 
   useEffect(() => {
-    // Update active item based on current route
-    const path = location.pathname.split('/')[1] || 'dashboard';
-    setActiveItem(path);
-  }, [location]);
+    setActive(location.pathname);
+  }, [location.pathname]);
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: 'dashboard' },
-    { text: 'Portfolio', icon: <WalletIcon />, path: 'portfolio' },
-    { text: 'Markets', icon: <ChartIcon />, path: 'markets' },
-    { text: 'Trade', icon: <TradeIcon />, path: 'trade' },
-    // { text: 'Algorithms', icon: <ChartIcon />, path: 'algorithms' }, // HIDDEN TEMPORARILY
-    { text: 'Profile', icon: <ProfileIcon />, path: 'profile' },
-    { text: 'Watchlist', icon: <WatchlistIcon />, path: 'watchlist' },
-    { text: 'History', icon: <HistoryIcon />, path: 'history' },
-    { text: 'Settings', icon: <SettingsIcon />, path: 'settings' },
-  ];
-
-  const handleNavigation = (path) => {
-    if (path === 'dashboard') {
-      navigate('/');
-    } else {
-      navigate(`/${path}`);
-    }
-    if (isMobile) {
-      onClose();
-    }
+  const go = (path) => {
+    navigate(path);
+    if (isMobile) handleDrawerClose?.();
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const drawer = (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        bgcolor: 'background.paper',
-      }}
-    >
-      {/* Logo and Close Button */}
+  const content = (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'background.paper' }}>
       <Box
         sx={{
+          height: layoutTokens.topBarHeight,
+          position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: isMobile ? 'space-between' : 'center',
-          p: 2.5,
-          height: 80,
+          justifyContent: 'center',
           borderBottom: '1px solid',
           borderColor: 'divider',
-          backgroundColor: 'background.paper',
-          position: 'relative',
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            bottom: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '60%',
-            height: '2px',
-            background: 'linear-gradient(90deg, transparent 0%, primary.main 50%, transparent 100%)',
-            opacity: 0.3
-          }
+          flexShrink: 0,
+          px: 1,
         }}
       >
-        <Box 
+        <Box
           component="a"
-          href={`${(() => {
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const envUrl = import.meta.env.VITE_FRONTEND_URL;
-            const fallback = isLocal ? 'http://localhost:3004' : 'https://www.hytrade.in';
-            const base = (envUrl || fallback).replace(/[?&]+$/, '');
-
-            // Prefer robust URL construction to avoid double ? or &
-            let url;
-            try {
-              url = new URL(base);
-            } catch {
-              // Fallback: if base is missing protocol, assume https
-              url = new URL(base.startsWith('http') ? base : `https://${base}`);
-            }
-
-            const t = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-            if (t) url.searchParams.set('token', t);
-            return url.toString();
-          })()}`}
-          target="_self"
-          rel="noopener noreferrer"
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          href={getLandingUrl()}
+          aria-label="Hytrade home"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
-            position: 'relative',
             textDecoration: 'none',
-            cursor: 'pointer',
-            '&:hover': {
-              transform: 'scale(1.05)',
-              transition: 'transform 0.2s ease-in-out'
-            }
+            transition: 'opacity 0.2s ease, transform 0.2s ease',
+            '&:hover': { opacity: 0.88, transform: 'scale(1.02)' },
           }}
         >
-          <img 
-            src="/media/Images/logo.png" 
-            alt="Hytrade" 
-            style={{ 
-              height: 56,
+          <Box
+            component="img"
+            src="/media/Images/logo.png"
+            alt="Hytrade"
+            sx={{
+              height: 54,
               width: 'auto',
-              maxWidth: '100%',
+              maxWidth: `calc(${layoutTokens.drawerWidth}px - 20px)`,
+              display: 'block',
               objectFit: 'contain',
-              filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.1))'
-            }} 
+            }}
           />
         </Box>
         {isMobile && (
-          <IconButton 
-            onClick={onClose}
+          <IconButton
+            size="small"
+            onClick={handleDrawerClose}
+            aria-label="close menu"
             sx={{
-              '&:hover': {
-                backgroundColor: 'action.hover',
-                transform: 'scale(1.1)'
-              },
-              transition: 'all 0.2s ease-in-out'
+              position: 'absolute',
+              right: 4,
+              top: '50%',
+              transform: 'translateY(-50%)',
             }}
           >
-            {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            <CloseIcon fontSize="small" />
           </IconButton>
         )}
       </Box>
 
-
-      {/* Navigation Items */}
-      <List sx={{ flex: 1, overflowY: 'auto' }}>
-        {menuItems.map((item) => (
-          <ListItem key={item.path} disablePadding>
+      <List sx={{ flex: 1, py: 1.5, px: 1, overflowY: 'auto' }}>
+        {NAV.map((item) => {
+          const selected = active === item.path || (item.path !== '/' && active.startsWith(item.path));
+          return (
             <ListItemButton
-              selected={activeItem === item.path}
-              onClick={() => handleNavigation(item.path)}
+              key={item.path}
+              selected={selected}
+              onClick={() => go(item.path)}
               sx={{
+                borderRadius: 1.5,
+                mb: 0.5,
+                minHeight: 44,
                 '&.Mui-selected': {
-                  backgroundColor: 'action.selected',
-                  '&:hover': {
-                    backgroundColor: 'action.selected',
-                  },
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  '& .MuiListItemIcon-root': { color: 'primary.contrastText' },
+                  '&:hover': { bgcolor: 'primary.dark' },
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>
+              <ListItemIcon sx={{ minWidth: 36, color: selected ? 'inherit' : 'text.secondary' }}>
                 {item.icon}
               </ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }} />
             </ListItemButton>
-          </ListItem>
-        ))}
+          );
+        })}
       </List>
 
-      {/* Logout Button */}
-      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-        <ListItemButton onClick={handleLogout}>
-          <ListItemIcon sx={{ minWidth: 40 }}>
-            <LogoutIcon />
-          </ListItemIcon>
-          <ListItemText primary="Logout" />
+      <Divider />
+      <Box sx={{ p: 1.5, flexShrink: 0 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1, display: 'block', mb: 1 }}>
+          {user?.email}
+        </Typography>
+        <ListItemButton
+          onClick={() => { logout(); navigate('/login'); }}
+          sx={{ borderRadius: 1.5, minHeight: 44 }}
+        >
+          <ListItemIcon sx={{ minWidth: 36 }}><LogoutIcon fontSize="small" /></ListItemIcon>
+          <ListItemText primary="Logout" primaryTypographyProps={{ fontSize: '0.875rem' }} />
         </ListItemButton>
       </Box>
     </Box>
   );
 
+  const drawerPaperSx = {
+    width: layoutTokens.drawerWidth,
+    boxSizing: 'border-box',
+    border: 'none',
+    borderRight: '1px solid',
+    borderColor: 'divider',
+  };
+
   return (
     <Box
       component="nav"
-      sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
-      aria-label="mailbox folders"
+      sx={{
+        width: { md: layoutTokens.drawerWidth },
+        flexShrink: { md: 0 },
+      }}
     >
-      {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
-        open={open && isMobile}
-        onClose={onClose}
-        ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
-        }}
+        open={Boolean(mobileOpen) && isMobile}
+        onClose={handleDrawerClose}
+        ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: drawerWidth,
-            borderRight: 'none',
-          },
+          '& .MuiDrawer-paper': drawerPaperSx,
         }}
       >
-        {drawer}
+        {content}
       </Drawer>
-
-      {/* Desktop Drawer */}
       <Drawer
         variant="permanent"
+        open
         sx={{
           display: { xs: 'none', md: 'block' },
           '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
-            width: drawerWidth,
-            borderRight: 'none',
+            ...drawerPaperSx,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            height: '100vh',
+            overflow: 'hidden',
           },
         }}
-        open
       >
-        {drawer}
+        {content}
       </Drawer>
     </Box>
   );

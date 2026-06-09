@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { validatePasswordStrength, formatValidationErrors } from "@/lib/auth"
 
 export default function SignupPage() {
   const [firstName, setFirstName] = useState("")
@@ -30,7 +31,7 @@ export default function SignupPage() {
   const getDashboardUrl = () => {
     const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
     const envDash = process.env.NEXT_PUBLIC_DASHBOARD_URL
-    const fallback = isLocal ? "http://localhost:5173" : "https://dashboard.hytrade.in"
+    const fallback = isLocal ? "http://localhost:5174" : "https://dashboard.hytrade.in"
     return envDash || fallback
   }
 
@@ -47,7 +48,10 @@ export default function SignupPage() {
     if (!email.trim()) messages.push("Email is required")
     else if (!/\S+@\S+\.\S+/.test(email)) messages.push("Please enter a valid email address")
     if (!password) messages.push("Password is required")
-    else if (password.length < 8) messages.push("Password must be at least 8 characters long")
+    else {
+      const strength = validatePasswordStrength(password)
+      if (!strength.isValid) messages.push(...strength.errors)
+    }
     if (password !== confirmPassword) messages.push("Passwords do not match")
 
     if (messages.length) {
@@ -57,7 +61,7 @@ export default function SignupPage() {
     }
 
     try {
-      setBackendStatus("🔄 Connecting to server...")
+      setBackendStatus("Connecting to server…")
       const API_URL = getApiUrl()
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
@@ -70,7 +74,7 @@ export default function SignupPage() {
         }),
       })
       const data = await res.json()
-      setBackendStatus("✅ Server response received")
+      setBackendStatus("Server response received")
 
       if (res.ok && data.success && data.message === "Account created successfully") {
         if (data.token && data.user && data.session) {
@@ -79,36 +83,41 @@ export default function SignupPage() {
           localStorage.setItem("user", JSON.stringify(data.user))
           localStorage.setItem("session", JSON.stringify(data.session))
           localStorage.setItem("isLoggedIn", "true")
-          setSuccess("🎉 Welcome to Hytrade! Your account has been created successfully!")
-          setBackendStatus("✅ Account created | ✅ Session established | ✅ Auto-login enabled")
+          setSuccess("Welcome to Hytrade. Your account has been created.")
+          setBackendStatus("Account created. Session established. Redirecting to dashboard…")
           const DASHBOARD_URL = getDashboardUrl()
           setTimeout(() => {
             window.location.href = `${DASHBOARD_URL}?token=${data.token}`
           }, 1000)
         } else {
-          setSuccess("✅ Account created successfully! Please login to continue.")
-          setBackendStatus("✅ Account created | ⚠️ Manual login required")
+          setSuccess("Account created. Please sign in to continue.")
+          setBackendStatus("Account created. Sign in required.")
           setTimeout(() => {
             window.location.href = "/login?message=" + encodeURIComponent("Account created successfully. Please login.")
           }, 1500)
         }
       } else {
-        const errorMessage = data.error || data.message || "Registration failed"
-        setError(`Registration failed: ${errorMessage}`)
+        const errorMessage = formatValidationErrors(data)
+        setError(`Registration failed:\n${errorMessage}`)
         if (res.status === 400) {
-          if (errorMessage.includes("Email already registered")) setBackendStatus("❌ Email already exists | 💡 Try logging in instead")
-          else if (errorMessage.includes("Password must be at least 8 characters")) setBackendStatus("❌ Password too short | 💡 Minimum 8 characters required")
-          else if (errorMessage.includes("Invalid email format")) setBackendStatus("❌ Invalid email format | 💡 Check email address")
-          else setBackendStatus(`❌ Validation failed | 💡 ${errorMessage}`)
+          if (errorMessage.includes("already exists") || data.code === "EMAIL_EXISTS") {
+            setBackendStatus("Email already exists. Try signing in instead.")
+          } else if (errorMessage.toLowerCase().includes("password")) {
+            setBackendStatus("Password requirements not met. Use 8+ characters with upper, lower, number, and symbol.")
+          } else if (errorMessage.toLowerCase().includes("email")) {
+            setBackendStatus("Invalid email format. Check your email address.")
+          } else {
+            setBackendStatus(`Validation failed: ${errorMessage.replace(/\n/g, " ")}`)
+          }
         } else if (res.status === 500) {
-          setBackendStatus("❌ Server error | 💡 Please try again later")
+          setBackendStatus("Server error. Please try again later.")
         } else {
-          setBackendStatus(`❌ Request failed | 💡 ${errorMessage}`)
+          setBackendStatus(`Request failed: ${errorMessage}`)
         }
       }
     } catch (err) {
       setError("Unable to connect to server. Please check your internet connection and try again.")
-      setBackendStatus("❌ Connection failed | 💡 Check internet connection")
+      setBackendStatus("Connection failed. Check your internet connection.")
     } finally {
       setLoading(false)
     }
@@ -175,8 +184,11 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="Minimum 8 characters"
+              placeholder="Min 8 chars, upper, lower, number & symbol"
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              At least 8 characters with uppercase, lowercase, a number, and a special character (e.g. Monty1!)
+            </p>
           </div>
 
           <div>

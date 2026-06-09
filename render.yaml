@@ -13,5 +13,11 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      - key: MARKET_DATA_PROVIDER
+        value: finnhub
+      - key: MARKET_DATA_API_KEY
+        sync: false
+      - key: STARTING_BALANCE_INR
+        value: "100000"
     plan: free
     autoDeploy: true

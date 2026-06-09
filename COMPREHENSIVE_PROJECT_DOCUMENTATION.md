@@ -22,17 +22,18 @@
 **HYTRADE 4** is a comprehensive, modern trading platform built with cutting-edge technologies. It provides users with a complete ecosystem for stock trading, portfolio management, and market analysis.
 
 ### Key Features
-- **Real-time Trading**: Buy and sell stocks with live market data
-- **Portfolio Management**: Track investments, P&L, and performance analytics
-- **User Authentication**: Secure JWT-based authentication with session management
-- **Responsive Design**: Modern UI that works across all devices
-- **Market Data**: Live stock prices, market trends, and analysis tools
-- **Watchlist Management**: Monitor favorite stocks and receive alerts
+- **Paper Trading (INR)**: Virtual wallet with server-authoritative order execution
+- **Indian Markets**: NSE instruments with Finnhub quote integration
+- **Portfolio Management**: Holdings, P&L, and ledger-backed balances
+- **User Authentication**: JWT + hashed sessions, rate limiting, password policy
+- **Responsive Design**: Modern UI across landing (Next.js) and dashboard (Vite)
+- **Market Data**: Cached quotes via `/api/market/*` and `/api/trading/markets`
 
 ### Project Status
-- **Version**: 2.0.0
-- **Status**: Production Ready
-- **Last Updated**: December 2024
+- **Version**: 3.0.0 (backend rebuild)
+- **Status**: Paper-trading platform — not live brokerage
+- **Last Updated**: June 2026
+- **API contract**: See `backend/API_CONTRACT.md`
 
 ---
 

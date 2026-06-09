@@ -137,9 +137,16 @@ npm start       # Start the production server
 
 ## 🔒 Authentication
 
-### Test Account
-- **Email**: test@example.com
-- **Password**: password123
+Register a new account via the landing page (`/signup`). Passwords must be at least 8 characters with upper, lower, number, and special character.
+
+Legacy test accounts may exist in the database from development; use signup for new users.
+
+### Backend env (required)
+```bash
+# backend/.env
+MARKET_DATA_PROVIDER=finnhub
+MARKET_DATA_API_KEY=your_finnhub_key   # https://finnhub.io
+```
 
 ### API Authentication
 All API requests (except auth endpoints) require a JWT token in the Authorization header:

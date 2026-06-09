@@ -56,18 +56,23 @@ if exist "%ROOT%backend\.env" (
   )
 )
 if "%MONGODB_URI%"=="" (
-  REM Fallback to known cloud URI from start-local-dev.sh for zero-effort setup
-  set "MONGODB_URI=mongodb+srv://ShaliniGupta:shalinidb@hytradecluster.3fctevs.mongodb.net/hytrade?retryWrites=true&w=majority&appName=HytradeCluster"
+  echo [Error] MONGODB_URI is not set. Add it to backend\.env or set MONGODB_URI before running this script.
+  pause
+  exit /b 1
 )
 
 echo [1/4] Writing environment files...
 
 REM backend/.env
+set /p MARKET_DATA_API_KEY=Enter Finnhub API key (https://finnhub.io): 
 > "%ROOT%backend\.env" (
   echo PORT=%BACKEND_PORT%
   echo NODE_ENV=development
   echo MONGODB_URI=%MONGODB_URI%
   echo JWT_SECRET=%JWT_SECRET%
+  echo MARKET_DATA_PROVIDER=finnhub
+  echo MARKET_DATA_API_KEY=%MARKET_DATA_API_KEY%
+  echo STARTING_BALANCE_INR=100000
 )
 
 REM frontend2/.env.local

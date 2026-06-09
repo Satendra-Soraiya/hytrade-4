@@ -20,9 +20,11 @@ lsof -ti :5173 | xargs kill -9 2>/dev/null || true
 # Start Backend
 echo -e "${BLUE}🔗 Starting Backend Server (Port 3002)...${NC}"
 cd backend
-MONGODB_URI='mongodb+srv://ShaliniGupta:shalinidb@hytradecluster.3fctevs.mongodb.net/hytrade?retryWrites=true&w=majority&appName=HytradeCluster' \
-PORT=3002 \
-npm start &
+if [ ! -f .env ]; then
+  echo -e "${YELLOW}⚠️  backend/.env not found. Run ./bootstrap-local-dev.sh first or create backend/.env${NC}"
+  exit 1
+fi
+PORT=3002 npm start &
 BACKEND_PID=$!
 
 # Wait for backend to start

@@ -31,7 +31,7 @@ export default function LoginPage() {
   const getDashboardUrl = () => {
     const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
     const envDash = process.env.NEXT_PUBLIC_DASHBOARD_URL
-    const fallback = isLocal ? "http://localhost:5173" : "https://dashboard.hytrade.in"
+    const fallback = isLocal ? "http://localhost:5174" : "https://dashboard.hytrade.in"
     return envDash || fallback
   }
 
@@ -60,7 +60,7 @@ export default function LoginPage() {
         localStorage.setItem("isLoggedIn", "true")
         // Show immediate welcome message before redirecting
         try {
-          setInfo(`🎉 Welcome ${data?.user?.firstName || data?.user?.name || "to Hytrade"}! Redirecting...`)
+          setInfo(`Welcome, ${data?.user?.firstName || data?.user?.name || "trader"}. Redirecting…`)
         } catch {}
         const DASHBOARD_URL = getDashboardUrl()
         // Small delay so user can see the welcome message

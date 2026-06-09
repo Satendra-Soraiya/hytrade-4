@@ -9,9 +9,9 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "HYtrade - Invest in Everything",
+  title: "Hytrade — NSE Paper Trading",
   description:
-    "Your trusted partner in online trading and investment. Start your financial journey with our advanced trading platform.",
+    "Practice Indian stock trading with real NSE instruments, INR balances, and a full paper-trading dashboard.",
   generator: "v0.app",
 }
 
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased text-[17px] md:text-[18px]`}>
+      <body className="font-sans antialiased">
         <AuthProvider>
           {children}
         </AuthProvider>

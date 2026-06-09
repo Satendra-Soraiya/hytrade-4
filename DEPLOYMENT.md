@@ -15,7 +15,11 @@
 5. Set environment variables:
    - `NODE_ENV=production`
    - `MONGODB_URI=your_mongodb_connection_string`
-   - `JWT_SECRET=your_jwt_secret`
+   - `JWT_SECRET=your_jwt_secret` (long random string; app refuses to start without it)
+   - `MARKET_DATA_PROVIDER=finnhub`
+   - `MARKET_DATA_API_KEY=your_finnhub_api_key`
+   - `STARTING_BALANCE_INR=100000` (optional, paper trading starting balance)
+6. After first deploy, run `npm run seed:instruments` against the production DB (or seed locally then migrate)
 
 ### **2. Frontend (Vercel)**
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)

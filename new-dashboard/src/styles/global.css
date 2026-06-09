@@ -1,0 +1,62 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+}
+
+/* Themed scrollbars for inner panels (trade table, etc.) */
+.hytrade-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+
+.hytrade-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.hytrade-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hytrade-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}
+
+.hytrade-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+}
+
+.dark .hytrade-scroll {
+  scrollbar-color: rgba(100, 116, 139, 0.6) transparent;
+}
+
+.dark .hytrade-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+}

@@ -36,12 +36,18 @@ MONGODB_URI=${MONGODB_URI:-mongodb://localhost:27017/hytrade}
 
 JWT_SECRET=$(gen_secret)
 
+echo ""; read -r -p "Enter Finnhub API key (https://finnhub.io): " MARKET_DATA_API_KEY || true
+MARKET_DATA_API_KEY=${MARKET_DATA_API_KEY:-}
+
 # Write backend .env
 cat > backend/.env <<EOF
 PORT=3002
 NODE_ENV=development
 MONGODB_URI=${MONGODB_URI}
 JWT_SECRET=${JWT_SECRET}
+MARKET_DATA_PROVIDER=finnhub
+MARKET_DATA_API_KEY=${MARKET_DATA_API_KEY}
+STARTING_BALANCE_INR=100000
 EOF
 echo "Wrote backend/.env"
 

@@ -59,6 +59,9 @@ import {
   Cell
 } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
+import { getApiUrl, fetchWithAuth } from '../utils/api';
+import { formatInr, formatPercentage as formatPct } from '../utils/currency';
+import { PageContent, PageHeader } from '../components/layout/PageShell';
 
 // Mock market data - will be replaced with real API calls
 const mockMarketData = {
@@ -296,20 +299,8 @@ const MarketsPage = () => {
   const [watchlist, setWatchlist] = useState(new Set());
   const [error, setError] = useState(null);
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  // Format percentage
-  const formatPercentage = (value) => {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-  };
+  const formatCurrency = formatInr;
+  const formatPercentage = formatPct;
 
   // Format large numbers
   const formatLargeNumber = (num) => {
@@ -325,24 +316,52 @@ const MarketsPage = () => {
     setActiveTab(newValue);
   };
 
-  // Toggle watchlist
-  const toggleWatchlist = (symbol) => {
-    const newWatchlist = new Set(watchlist);
-    if (newWatchlist.has(symbol)) {
-      newWatchlist.delete(symbol);
-    } else {
-      newWatchlist.add(symbol);
+  const fetchWatchlist = async () => {
+    if (!token) return;
+    try {
+      const response = await fetchWithAuth('/api/watchlist', { token });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setWatchlist(new Set((result.watchlist || []).map((item) => item.symbol)));
+        }
+      }
+    } catch (err) {
+      console.warn('Watchlist fetch failed:', err);
     }
-    setWatchlist(newWatchlist);
+  };
+
+  const toggleWatchlist = async (symbol, stockName) => {
+    if (!token) return;
+    const isListed = watchlist.has(symbol);
+    const next = new Set(watchlist);
+    try {
+      if (isListed) {
+        const response = await fetchWithAuth(`/api/watchlist/${encodeURIComponent(symbol)}`, {
+          method: 'DELETE',
+          token,
+        });
+        if (response.ok) next.delete(symbol);
+      } else {
+        const response = await fetchWithAuth('/api/watchlist', {
+          method: 'POST',
+          token,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol, stockName }),
+        });
+        if (response.ok) next.add(symbol);
+      }
+      setWatchlist(next);
+    } catch (err) {
+      console.warn('Watchlist update failed:', err);
+    }
   };
 
   // Fetch market data from API
   const fetchMarketData = async () => {
     try {
       setError(null);
-      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const API_URL = isDevelopment ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com';
-      
+      const API_URL = getApiUrl();
       const response = await fetch(`${API_URL}/api/trading/markets`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -363,9 +382,7 @@ const MarketsPage = () => {
       }
     } catch (err) {
       console.error('Error fetching market data:', err);
-      setError(err.message);
-      // Fall back to mock data if API fails
-      setMarketData(mockMarketData);
+      setError(err.message || 'Failed to fetch market data');
     } finally {
       setLoading(false);
     }
@@ -382,6 +399,7 @@ const MarketsPage = () => {
   useEffect(() => {
     if (token) {
       fetchMarketData();
+      fetchWatchlist();
     }
   }, [token]);
 
@@ -456,30 +474,21 @@ const MarketsPage = () => {
   }
 
   return (
-    <Box sx={{ width: '100%' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-            Markets
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Global market analysis and stock research
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Refresh Data">
-            <IconButton onClick={handleRefresh} disabled={refreshing}>
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+    <PageContent>
+      <PageHeader
+        title="Markets"
+        subtitle="NSE movers, sectors, and live quotes"
+        actions={(
+          <IconButton onClick={handleRefresh} disabled={refreshing} aria-label="refresh">
+            <RefreshIcon />
+          </IconButton>
+        )}
+      />
 
       {/* Global Market Indices */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+      <Grid container spacing={3} sx={{ mb: 3, width: '100%' }}>
         {marketData.globalIndices.map((index) => (
-          <Grid item xs={12} sm={6} md={4} lg={2} key={index.symbol}>
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }} key={index.symbol}>
             <Card sx={{ height: '100%' }}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -520,7 +529,7 @@ const MarketsPage = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 placeholder="Search stocks, ETFs, or symbols..."
@@ -535,7 +544,7 @@ const MarketsPage = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <FormControl fullWidth>
                 <InputLabel>Sector</InputLabel>
                 <Select
@@ -555,7 +564,7 @@ const MarketsPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <FormControl fullWidth>
                 <InputLabel>Sort By</InputLabel>
                 <Select
@@ -570,7 +579,7 @@ const MarketsPage = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={2}>
+            <Grid size={{ xs: 12, md: 2 }}>
               <Button
                 fullWidth
                 variant="outlined"
@@ -675,7 +684,7 @@ const MarketsPage = () => {
                       <TableCell>
                         <IconButton
                           size="small"
-                          onClick={() => toggleWatchlist(stock.symbol)}
+                          onClick={() => toggleWatchlist(stock.symbol, stock.name)}
                         >
                           {watchlist.has(stock.symbol) ? (
                             <StarIcon color="primary" />
@@ -773,7 +782,7 @@ const MarketsPage = () => {
                       <TableCell>
                         <IconButton
                           size="small"
-                          onClick={() => toggleWatchlist(stock.symbol)}
+                          onClick={() => toggleWatchlist(stock.symbol, stock.name)}
                         >
                           {watchlist.has(stock.symbol) ? (
                             <StarIcon color="primary" />
@@ -864,7 +873,7 @@ const MarketsPage = () => {
                       <TableCell>
                         <IconButton
                           size="small"
-                          onClick={() => toggleWatchlist(stock.symbol)}
+                          onClick={() => toggleWatchlist(stock.symbol, stock.name)}
                         >
                           {watchlist.has(stock.symbol) ? (
                             <StarIcon color="primary" />
@@ -884,7 +893,7 @@ const MarketsPage = () => {
 
       {activeTab === 3 && (
         <Grid container spacing={3}>
-          <Grid item xs={12} lg={8}>
+          <Grid size={{ xs: 12, lg: 8 }}>
             <Card>
               <CardHeader
                 title="Sector Performance"
@@ -909,7 +918,7 @@ const MarketsPage = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} lg={4}>
+          <Grid size={{ xs: 12, lg: 4 }}>
             <Card>
               <CardHeader
                 title="Sector Summary"
@@ -954,7 +963,7 @@ const MarketsPage = () => {
           </Grid>
         </Grid>
       )}
-    </Box>
+    </PageContent>
   );
 };
 

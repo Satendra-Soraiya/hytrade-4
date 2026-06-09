@@ -7,7 +7,25 @@ export type LoginResponse = {
   sessionId?: string;
   user?: any;
   session?: any;
+  errors?: Array<{ field: string; message: string }>;
 };
+
+export function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (password.length < 8) errors.push('Password must be at least 8 characters long');
+  if (!/[A-Z]/.test(password)) errors.push('Password must contain at least one uppercase letter');
+  if (!/[a-z]/.test(password)) errors.push('Password must contain at least one lowercase letter');
+  if (!/\d/.test(password)) errors.push('Password must contain at least one number');
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push('Password must contain at least one special character');
+  return { isValid: errors.length === 0, errors };
+}
+
+export function formatValidationErrors(data: { message?: string; errors?: Array<{ field: string; message: string }> }): string {
+  if (data.errors?.length) {
+    return data.errors.map((e) => e.message).join('\n');
+  }
+  return data.message || 'Validation failed';
+}
 
 export const getApiUrl = () => {
   let api = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
@@ -16,7 +34,7 @@ export const getApiUrl = () => {
       const host = window.location.hostname;
       const port = window.location.port;
       const isHytradeProd = /(^|\.)hytrade\.in$/.test(host);
-      const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && (port === '3001' || port === '3004' || port === '3006');
+      const isLocalLanding = (host === 'localhost' || host === '127.0.0.1') && (port === '3000' || port === '3001' || port === '3004' || port === '3006');
       // Use same-origin path in both local dev and production domains; Next rewrites proxy to backend
       if (isHytradeProd || isLocalLanding) {
         return '';

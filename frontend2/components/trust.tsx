@@ -1,49 +1,58 @@
+"use client"
+
+import { BarChart3, Bell, Shield, Wallet } from "lucide-react"
+
 export default function Trust() {
   const trustPoints = [
     {
-      icon: "👥",
-      title: "Customer-first Always",
+      icon: Wallet,
+      title: "INR paper wallet",
       description:
-        "1.6+ crore customers trust HYtrade with ₹6 lakh crores of equity investments contributing to 15% of daily retail exchange volumes in India.",
+        "Practice with a virtual balance and a ledger that mirrors how real brokerage accounts track cash and holdings.",
     },
     {
-      icon: "🔔",
-      title: "No Spam or Gimmicks",
+      icon: Bell,
+      title: "No noise",
       description:
-        "No gimmicks, spam, or annoying push notifications. High quality apps that you use at your pace, the way you like.",
+        "No gimmicks or spammy notifications — just a focused workspace for learning how to trade NSE equities.",
     },
     {
-      icon: "⚡",
-      title: "The HYtrade Universe",
+      icon: BarChart3,
+      title: "Built for practice",
       description:
-        "Not just an app, but a whole ecosystem. Our investments in 30+ fintech startups offer you tailored services specific to your needs.",
+        "Watchlists, portfolio views, and trade history help you build habits before putting real money at risk.",
     },
     {
-      icon: "💰",
-      title: "Do Better with Money",
+      icon: Shield,
+      title: "Safe by design",
       description:
-        "With initiatives like Nudge and Kill Switch, we don't just facilitate transactions, but actively help you do better with your money.",
+        "Paper trading only. No bank linking, no live orders, and no capital at stake while you learn.",
     },
   ]
 
   return (
     <section className="py-20 md:py-32">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
-        <h2 className="text-5xl md:text-6xl font-bold text-center mb-16">
-          Trust with <span className="text-primary">Confidence</span>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="mb-16 text-center text-4xl font-bold md:text-5xl">
+          Trade with <span className="text-primary">confidence</span>
         </h2>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {trustPoints.map((point, index) => (
-            <div
-              key={index}
-              className="p-8 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors group"
-            >
-              <div className="text-4xl mb-4">{point.icon}</div>
-              <h3 className="text-xl font-bold mb-3">{point.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{point.description}</p>
-            </div>
-          ))}
+        <div className="grid gap-8 md:grid-cols-2">
+          {trustPoints.map((point) => {
+            const Icon = point.icon
+            return (
+              <div
+                key={point.title}
+                className="group rounded-xl border border-border bg-card p-8 transition-colors hover:border-primary/50"
+              >
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="mb-3 text-xl font-bold">{point.title}</h3>
+                <p className="leading-relaxed text-muted-foreground">{point.description}</p>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>
