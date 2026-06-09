@@ -65,6 +65,9 @@ coverage/
 /new-dashboard/.env
 backups/*.zip
 .tmp_v0_landing/
+.landing-extract/
+.pnpm-store/
+hy-trade-landing-page.zip
  
 # PIDs and runtime artifacts
 *.pid

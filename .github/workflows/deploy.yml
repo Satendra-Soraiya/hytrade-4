@@ -13,14 +13,10 @@ jobs:
       run:
         working-directory: frontend2
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
-
+          node-version: '20.x'
       - name: Deploy to Vercel (frontend2)
         if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_PROJECT_ID_FRONTEND2 != '' && secrets.VERCEL_ORG_ID != '' }}
         env:
@@ -30,6 +26,9 @@ jobs:
         run: |
           npx vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
           npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+      - name: Skip CLI deploy (Vercel Git integration handles this)
+        if: ${{ secrets.VERCEL_TOKEN == '' || secrets.VERCEL_PROJECT_ID_FRONTEND2 == '' || secrets.VERCEL_ORG_ID == '' }}
+        run: echo "No Vercel CLI secrets — production deploy relies on Vercel GitHub auto-deploy for hytrade-4."
 
   deploy-dashboard-vercel:
     name: Deploy new-dashboard to Vercel
@@ -38,14 +37,10 @@ jobs:
       run:
         working-directory: new-dashboard
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
-
+          node-version: '20.x'
       - name: Deploy to Vercel (dashboard)
         if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_PROJECT_ID_DASHBOARD != '' && secrets.VERCEL_ORG_ID != '' }}
         env:
@@ -55,17 +50,22 @@ jobs:
         run: |
           npx vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
           npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+      - name: Skip CLI deploy (Vercel Git integration handles this)
+        if: ${{ secrets.VERCEL_TOKEN == '' || secrets.VERCEL_PROJECT_ID_DASHBOARD == '' || secrets.VERCEL_ORG_ID == '' }}
+        run: echo "No Vercel CLI secrets — production deploy relies on Vercel GitHub auto-deploy for hytrade-dashboard."
 
   deploy-backend-render:
     name: Trigger backend deploy on Render
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Trigger Render Deploy Hook
+      - uses: actions/checkout@v4
+      - name: Trigger Render deploy hook
         if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
-        run: |
-          curl -X POST "$RENDER_DEPLOY_HOOK_URL"
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+      - name: Render hook not configured
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL == '' }}
+        run: |
+          echo "RENDER_DEPLOY_HOOK_URL is not set in GitHub secrets."
+          echo "Enable Auto-Deploy on branch main in Render dashboard for hytrade-backend, or add the deploy hook URL."

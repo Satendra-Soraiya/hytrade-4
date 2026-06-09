@@ -1,8 +1,10 @@
 services:
   - type: web
     name: hytrade-backend
-    env: node
-    buildCommand: npm install
+    runtime: node
+    rootDir: backend
+    branch: main
+    buildCommand: npm ci || npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
