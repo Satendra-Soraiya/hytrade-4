@@ -32,7 +32,11 @@ async function startServer() {
   startQuoteRefreshJob();
 
   const server = app.listen(config.port, () => {
-    console.log(`Hytrade API v3.0 running on port ${config.port} (${config.nodeEnv})`);
+    console.log('==================================================');
+    console.log('Hytrade API v3.0 — NSE paper trading backend');
+    console.log(`Port: ${config.port} | Env: ${config.nodeEnv}`);
+    console.log('Market: /api/market/instruments, /api/market/quotes');
+    console.log('==================================================');
   });
 
   const shutdown = () => {

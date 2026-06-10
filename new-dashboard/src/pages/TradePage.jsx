@@ -103,8 +103,11 @@ const TradePage = () => {
         .sort((a, b) => a.symbol.localeCompare(b.symbol));
       setStocks(mapped);
       if (mapped.length && !selectedStock.symbol) setSelectedStock(mapped[0]);
-    } catch {
-      setNotice({ type: 'error', text: 'Could not load market data' });
+    } catch (err) {
+      setNotice({
+        type: 'error',
+        text: err?.message || 'Could not load market data — production API must be v3.0 with /api/market/instruments',
+      });
     } finally {
       setLoadingMarket(false);
     }
