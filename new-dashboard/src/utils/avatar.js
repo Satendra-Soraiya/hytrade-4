@@ -5,7 +5,7 @@ const getApiUrl = () => {
   if (onViteDashboard) return '';
 
   const viteUrl = import.meta?.env?.VITE_API_URL || null;
-  return viteUrl?.replace(/\/$/, '') || (isLocal ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com');
+  return viteUrl?.replace(/\/$/, '') || (isLocal ? 'http://localhost:3002' : 'https://api.hytrade.in');
 };
 
 const normalizePath = (p) => {

@@ -4,7 +4,7 @@
 
 [![Open Live Preview](https://img.shields.io/badge/Open%20Live%20Preview-hytrade.in-2ea44f?style=for-the-badge)](https://hytrade.in)
 
-Hytrade 4 is a comprehensive trading platform with a modern, responsive interface for managing your investments, tracking market data, and executing trades.
+Hytrade is an **NSE paper-trading platform** (INR virtual wallet, 25 Indian stocks, no real money). Full platform report: **[HYTRADE_PLATFORM_REPORT.md](./HYTRADE_PLATFORM_REPORT.md)**
 
 ## 🌟 Features
 

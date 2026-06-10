@@ -3,6 +3,15 @@ const { config } = require('./config/env');
 const { connectDB } = require('./shared/db/connection');
 const { SessionService } = require('./modules/auth/session.service');
 const { startQuoteRefreshJob } = require('./modules/market/market-data.service');
+const { Instrument } = require('./modules/market/instrument.model');
+const { seedInstruments } = require('../scripts/seed-instruments');
+
+async function ensureInstrumentsSeeded() {
+  const count = await Instrument.countDocuments({ isTradable: true });
+  if (count > 0) return;
+  const seeded = await seedInstruments();
+  console.log(`Seeded ${seeded} NSE instruments on startup`);
+}
 
 async function startServer() {
   await connectDB();
@@ -12,6 +21,12 @@ async function startServer() {
     console.log(`Cleaned ${cleaned} expired sessions on startup`);
   } catch (err) {
     console.warn('Session cleanup warning:', err.message);
+  }
+
+  try {
+    await ensureInstrumentsSeeded();
+  } catch (err) {
+    console.warn('Instrument seed warning:', err.message);
   }
 
   startQuoteRefreshJob();

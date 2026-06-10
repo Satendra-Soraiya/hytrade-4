@@ -5,7 +5,7 @@ export function getApiUrl() {
   const isDev = typeof window !== 'undefined' && (
     window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   );
-  return isDev ? 'http://localhost:3002' : 'https://hytrade-backend.onrender.com';
+  return isDev ? 'http://localhost:3002' : 'https://api.hytrade.in';
 }
 
 export async function fetchWithAuth(path, { token, ...options } = {}) {

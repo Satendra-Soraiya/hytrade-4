@@ -66,14 +66,29 @@ const TradePage = () => {
     try {
       const instRes = await fetchWithAuth('/api/market/instruments?limit=50', { token });
       const instJson = await instRes.json();
-      if (!instJson.success || !instJson.data?.length) return;
+      if (!instRes.ok || !instJson.success) {
+        throw new Error(instJson.message || 'Instruments API unavailable — backend may need v3 deploy');
+      }
+      if (!instJson.data?.length) {
+        setNotice({ type: 'warning', text: 'No tradable instruments found. The server will auto-seed on next deploy.' });
+        return;
+      }
+
       const symbols = instJson.data.map((i) => i.symbol).join(',');
-      const qRes = await fetchWithAuth(`/api/market/quotes?symbols=${encodeURIComponent(symbols)}`, { token });
-      const qJson = await qRes.json();
+      let quotes = {};
+      try {
+        const qRes = await fetchWithAuth(`/api/market/quotes?symbols=${encodeURIComponent(symbols)}`, { token });
+        const qJson = await qRes.json();
+        if (qRes.ok && qJson.success) quotes = qJson.data || {};
+      } catch {
+        // Fall back to reference prices from instrument records
+      }
+
       const mapped = instJson.data
         .map((inst) => {
-          const q = qJson.data?.[inst.symbol] || {};
-          const price = Number(q.ltp) || 0;
+          const q = quotes[inst.symbol] || {};
+          const refPrice = inst.referencePricePaise ? inst.referencePricePaise / 100 : 0;
+          const price = Number(q.ltp) || refPrice;
           if (price <= 0) return null;
           return {
             symbol: inst.symbol,

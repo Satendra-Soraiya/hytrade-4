@@ -4,7 +4,7 @@ services:
     runtime: node
     rootDir: backend
     branch: main
-    buildCommand: npm ci || npm install
+    buildCommand: (npm ci || npm install) && (node scripts/seed-instruments.js || true)
     startCommand: npm start
     envVars:
       - key: NODE_ENV

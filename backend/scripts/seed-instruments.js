@@ -36,11 +36,7 @@ const NSE_INSTRUMENTS = [
   { symbol: 'M&M', name: 'Mahindra & Mahindra Ltd', sector: 'Auto', referencePriceInr: 2950 },
 ];
 
-async function main() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) throw new Error('MONGODB_URI required');
-
-  await mongoose.connect(uri);
+async function seedInstruments() {
   let upserted = 0;
 
   for (const item of NSE_INSTRUMENTS) {
@@ -61,11 +57,24 @@ async function main() {
     upserted += 1;
   }
 
+  return upserted;
+}
+
+async function main() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error('MONGODB_URI required');
+
+  await mongoose.connect(uri);
+  const upserted = await seedInstruments();
   console.log(`Seeded ${upserted} NSE instruments`);
   await mongoose.disconnect();
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { NSE_INSTRUMENTS, seedInstruments };

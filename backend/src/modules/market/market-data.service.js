@@ -14,11 +14,6 @@ function getProvider() {
   throw new Error(`Unsupported MARKET_DATA_PROVIDER: ${config.marketDataProvider}`);
 }
 
-function isPlaceholderApiKey() {
-  const key = config.marketDataApiKey || '';
-  return !key || key.includes('your_') || key === 'placeholder' || key === 'changeme';
-}
-
 async function getCachedQuote(symbol) {
   const upper = symbol.toUpperCase();
   const cached = await QuoteCache.findOne({ symbol: upper });
@@ -71,11 +66,8 @@ async function getQuoteForSymbol(symbol, { bypassCache = false } = {}) {
     return upsertQuoteCache(upper, quote);
   } catch (err) {
     if (instrument.referencePricePaise) {
-      const allowFallback = config.isDevelopment || isPlaceholderApiKey();
-      if (allowFallback) {
-        console.warn(`Using reference price for ${upper}: ${err.message}`);
-        return upsertQuoteCache(upper, buildReferenceQuote(instrument));
-      }
+      console.warn(`Using reference price for ${upper}: ${err.message}`);
+      return upsertQuoteCache(upper, buildReferenceQuote(instrument));
     }
     throw new Error(`Market quote unavailable for ${upper}. Configure a valid MARKET_DATA_API_KEY.`);
   }
@@ -161,7 +153,7 @@ async function refreshInstrumentQuotes() {
       const quote = await getProvider().getQuote(inst.symbol, inst.exchange);
       await upsertQuoteCache(inst.symbol, quote);
     } catch (err) {
-      if (inst.referencePricePaise && (config.isDevelopment || isPlaceholderApiKey())) {
+      if (inst.referencePricePaise) {
         await upsertQuoteCache(inst.symbol, buildReferenceQuote(inst));
       } else {
         console.warn(`Background quote refresh failed for ${inst.symbol}:`, err.message);

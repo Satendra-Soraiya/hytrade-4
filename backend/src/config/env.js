@@ -21,8 +21,9 @@ const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
   bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10),
 
-  marketDataProvider: requireEnv('MARKET_DATA_PROVIDER'),
-  marketDataApiKey: requireEnv('MARKET_DATA_API_KEY'),
+  // Optional for paper trading — reference prices used when live quotes fail
+  marketDataProvider: process.env.MARKET_DATA_PROVIDER || 'finnhub',
+  marketDataApiKey: process.env.MARKET_DATA_API_KEY || '',
   quoteCacheTtlMs: parseInt(process.env.QUOTE_CACHE_TTL_MS || '60000', 10),
 
   startingBalanceInr: parseInt(process.env.STARTING_BALANCE_INR || '100000', 10),
