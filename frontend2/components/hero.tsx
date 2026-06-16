@@ -14,7 +14,6 @@ export default function Hero() {
         <div className="grid items-center gap-14 md:grid-cols-2 lg:gap-16">
           <div className="space-y-8">
             <div className="space-y-5">
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary">NSE paper trading</p>
               <h1 className="text-4xl font-bold leading-[1.08] tracking-tight text-foreground md:text-5xl lg:text-6xl">
                 Practice Indian markets with a{" "}
                 <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
